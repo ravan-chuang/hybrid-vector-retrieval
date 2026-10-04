@@ -10,6 +10,7 @@ from backend.api.database import create_connection_pool
 from backend.api.routers.documents import router as documents_router
 from backend.api.routers.search import router as search_router
 from backend.api.routers.system import router as system_router
+from backend.api.routers.tags import router as tags_router
 
 
 @asynccontextmanager
@@ -51,6 +52,7 @@ app = FastAPI(
 app.include_router(search_router)
 app.include_router(documents_router)
 app.include_router(system_router)
+app.include_router(tags_router)
 
 
 app.add_middleware(
