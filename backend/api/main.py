@@ -258,6 +258,13 @@ def vector_search(request: VectorSearchRequest):
         time.perf_counter() - total_start
     ) * 1000.0
 
+    log_search_history(
+        query_text=request.query,
+        search_type="vector",
+        result_count=len(results),
+        latency_ms=total_ms,
+    )
+
     return VectorSearchResponse(
         query=request.query,
         method="hnsw_cosine",
@@ -373,6 +380,13 @@ def lexical_search(request: LexicalSearchRequest):
     total_ms = (
         time.perf_counter() - total_start
     ) * 1000.0
+
+    log_search_history(
+        query_text=request.query,
+        search_type="keyword",
+        result_count=len(results),
+        latency_ms=total_ms,
+    )
 
     return LexicalSearchResponse(
         query=request.query,
@@ -640,6 +654,13 @@ def hybrid_search(request: HybridSearchRequest):
     total_ms = (
         time.perf_counter() - total_start
     ) * 1000.0
+
+    log_search_history(
+        query_text=request.query,
+        search_type="hybrid",
+        result_count=len(results),
+        latency_ms=total_ms,
+    )
 
     return HybridSearchResponse(
         query=request.query,
@@ -1165,3 +1186,120 @@ def delete_document(document_id: int):
         "deleted": True,
         "document_id": document_id,
     }
+
+
+# ============================================================
+# Search History
+# ============================================================
+
+class SearchHistoryItem(BaseModel):
+    search_id: int
+    query_text: str
+    search_type: str
+    result_count: int | None
+    latency_ms: float | None
+    created_at: str
+
+
+def log_search_history(
+    query_text: str,
+    search_type: str,
+    result_count: int,
+    latency_ms: float,
+) -> None:
+    """
+    Persist one successful search event.
+
+    Logging failure must not cause the search request itself to fail.
+    """
+    if db_pool is None:
+        return
+
+    try:
+        with db_pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO search_history (
+                        user_id,
+                        query_text,
+                        search_type,
+                        result_count,
+                        latency_ms
+                    )
+                    VALUES (
+                        NULL,
+                        %s,
+                        %s,
+                        %s,
+                        %s
+                    )
+                    """,
+                    (
+                        query_text,
+                        search_type,
+                        result_count,
+                        latency_ms,
+                    ),
+                )
+    except Exception as exc:
+        print(f"Search history logging failed: {exc}")
+
+
+@app.get(
+    "/search/history",
+    response_model=list[SearchHistoryItem],
+    tags=["Search History"],
+)
+def get_search_history(
+    limit: int = 20,
+    offset: int = 0,
+):
+    if db_pool is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection pool is not ready.",
+        )
+
+    limit = max(1, min(limit, 100))
+    offset = max(0, offset)
+
+    try:
+        with db_pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        search_id,
+                        query_text,
+                        search_type,
+                        result_count,
+                        latency_ms,
+                        created_at
+                    FROM search_history
+                    ORDER BY search_id DESC
+                    LIMIT %s
+                    OFFSET %s
+                    """,
+                    (limit, offset),
+                )
+
+                rows = cur.fetchall()
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load search history: {exc}",
+        )
+
+    return [
+        SearchHistoryItem(
+            search_id=row[0],
+            query_text=row[1],
+            search_type=row[2],
+            result_count=row[3],
+            latency_ms=row[4],
+            created_at=row[5].isoformat(),
+        )
+        for row in rows
+    ]
