@@ -6,9 +6,9 @@ approximate nearest-neighbor (ANN) indexing, and Reciprocal Rank Fusion
 (RRF).
 
 > **Status:** Core database, retrieval, 500K scalability evaluation,
-> REST API, CRUD, search history, and many-to-many tag management are
-> complete. Web UI/dashboard, ER diagram, and final report/demo
-> materials remain in progress.
+> REST API, relational CRUD, search history, many-to-many tag management,
+> and the React/Vite web dashboard are complete. The remaining work is
+> final documentation, figures, presentation material, and the live demo.
 
 ## Overview
 
@@ -31,6 +31,9 @@ Current capabilities include:
 -   FastAPI REST API with PostgreSQL connection pooling
 -   Document CRUD and persisted search history
 -   Many-to-many document/tag API with FK cascade validation
+-   React/Vite retrieval and relational database dashboard
+-   End-to-end Lexical, Vector, and Hybrid search UI
+-   Browser-based document CRUD and tag-association management
 
 The project is designed as both a **database systems project** and a
 **retrieval engineering project**, with emphasis on schema design,
@@ -38,54 +41,66 @@ indexing, query execution, performance measurement, and scalability.
 
 ## Architecture
 
-``` text
-                         ┌─────────────────┐
-                         │   User Query    │
-                         └────────┬────────┘
-                                  │
-                  ┌───────────────┴───────────────┐
-                  │                               │
-                  ▼                               ▼
-        ┌──────────────────┐           ┌──────────────────┐
-        │ PostgreSQL FTS   │           │ MiniLM Encoder   │
-        │ lexical search   │           │ 384-d embedding  │
-        └────────┬─────────┘           └────────┬─────────┘
-                 │                              │
-                 ▼                              ▼
-        ┌──────────────────┐           ┌──────────────────┐
-        │    GIN Index     │           │     pgvector     │
-        └────────┬─────────┘           └────────┬─────────┘
-                 │                     ┌─────────┴─────────┐
-                 │                     │                   │
-                 │                     ▼                   ▼
-                 │               ┌──────────┐        ┌──────────┐
-                 │               │   HNSW   │        │ IVFFlat │
-                 │               └────┬─────┘        └────┬─────┘
-                 │                    │                   │
-                 └────────────────────┴─────────┬─────────┘
-                                                ▼
-                                   ┌────────────────────────┐
-                                   │ Reciprocal Rank Fusion │
-                                   │        (RRF)           │
-                                   └───────────┬────────────┘
-                                               ▼
-                                       ┌──────────────┐
-                                       │ Top-K Results│
-                                       └──────────────┘
+The system separates the normalized application schema from the large
+retrieval-serving corpus while keeping both workloads in PostgreSQL.
+
+```text
+┌──────────────────────────────┐
+│      React / Vite Web UI     │
+│ Retrieval + Database Manager │
+└──────────────┬───────────────┘
+               │ REST / JSON
+               ▼
+┌──────────────────────────────┐
+│        FastAPI Backend       │
+│ Search · CRUD · Tags · Stats│
+│ History · Connection Pooling │
+└───────┬──────────────┬───────┘
+        │              │
+        │              └───────────────┐
+        ▼                              ▼
+┌───────────────────┐        ┌──────────────────────────┐
+│ MiniLM Encoder    │        │ PostgreSQL 17 + pgvector│
+│ 384-d normalized  │        │                          │
+│ query embeddings  │        │ Normalized schema:       │
+└─────────┬─────────┘        │ users / documents       │
+          │                  │ document_chunks / tags  │
+          │                  │ document_tags / history │
+          │                  └────────────┬─────────────┘
+          │                               │
+          └──────────────┬────────────────┘
+                         ▼
+              ┌───────────────────────┐
+              │ 500K MS MARCO Corpus │
+              │ serving / benchmark  │
+              └───────┬───────┬──────┘
+                      │       │
+             ┌────────▼─┐   ┌─▼────────────┐
+             │ FTS + GIN│   │ HNSW cosine │
+             │ lexical  │   │ vector ANN  │
+             └─────┬────┘   └──────┬──────┘
+                   │               │
+                   └───────┬───────┘
+                           ▼
+                  ┌─────────────────┐
+                  │ RRF Hybrid Rank │
+                  │  Top-K Results  │
+                  └─────────────────┘
 ```
+
+IVFFlat is retained as an experimental ANN baseline; the serving path
+uses HNSW.
 
 ## Technology Stack
 
-**Database** - PostgreSQL 17 - pgvector - PostgreSQL Full-Text Search -
-GIN, HNSW, and IVFFlat indexes
-
-**Backend / Evaluation** - Python 3 - psycopg - NumPy - Sentence
-Transformers - Hugging Face Datasets
-
-**Embedding Model** - `sentence-transformers/all-MiniLM-L6-v2` - 384
-dimensions - normalized embeddings
-
-**Infrastructure** - Docker - Docker Compose
+- **Database:** PostgreSQL 17, pgvector, PostgreSQL Full-Text Search
+- **Indexes:** B-tree, GIN, HNSW, IVFFlat
+- **Backend / API:** Python 3, FastAPI, psycopg, psycopg_pool, Uvicorn
+- **Retrieval / Evaluation:** NumPy, Sentence Transformers, Hugging Face Datasets
+- **Embedding model:** `sentence-transformers/all-MiniLM-L6-v2`, 384 dimensions,
+  normalized embeddings
+- **Frontend:** React 19, Vite 8, plain CSS
+- **Infrastructure:** Docker, Docker Compose
 
 ## Database Design
 
@@ -107,6 +122,22 @@ retrieval, and relational metadata + vector data integration.
 Separate benchmark tables isolate performance and scalability
 experiments from the primary application schema.
 
+### Relational Integrity
+
+The normalized application schema includes the following integrity rules:
+
+- `documents → document_chunks`: one-to-many, `ON DELETE CASCADE`
+- `documents ↔ tags`: many-to-many through `document_tags`
+- `document_tags`: composite primary key `(document_id, tag_id)`
+- `document_chunks`: unique `(document_id, chunk_index)`
+- `users → search_history`: nullable foreign key with `ON DELETE SET NULL`
+- `tags.name`, `users.username`, and `users.email`: unique constraints
+- `search_history.search_type`: constrained to `keyword`, `vector`, or `hybrid`
+
+Frontend CRUD tests were verified directly against PostgreSQL. Deleting a
+document removed its `document_chunks` and `document_tags` rows while the
+referenced tag rows remained available for reuse by other documents.
+
 ## Retrieval Methods
 
 ### Exact Vector Search
@@ -114,7 +145,7 @@ experiments from the primary application schema.
 Queries and documents are represented as normalized 384-dimensional
 embeddings. Exact cosine-distance retrieval uses pgvector:
 
-``` sql
+```\1
 SELECT document_id,
        content,
        embedding <=> %s::vector AS distance
@@ -125,7 +156,7 @@ LIMIT 10;
 
 For normalized vectors:
 
-``` text
+```\1
 cosine_distance = 1 - cosine_similarity
 ```
 
@@ -135,7 +166,7 @@ Exact retrieval is also used as ground truth for ANN Recall@10.
 
 HNSW provides low-latency approximate nearest-neighbor retrieval.
 
-``` sql
+```\1
 CREATE INDEX idx_benchmark_embedding_hnsw
 ON benchmark_documents
 USING hnsw (embedding vector_cosine_ops)
@@ -152,7 +183,7 @@ Experiments vary `hnsw.ef_search` to evaluate recall/latency trade-offs.
 IVFFlat partitions vector space into lists and searches selected
 partitions.
 
-``` sql
+```\1
 CREATE INDEX idx_benchmark_embedding_ivfflat
 ON benchmark_documents
 USING ivfflat (embedding vector_cosine_ops)
@@ -166,7 +197,7 @@ Experiments vary `ivfflat.probes`.
 Lexical retrieval uses PostgreSQL `tsvector` and `tsquery`, accelerated
 by a GIN index.
 
-``` sql
+```\1
 CREATE INDEX idx_benchmark_search_vector
 ON benchmark_documents
 USING GIN (search_vector);
@@ -179,7 +210,7 @@ A trigger keeps `search_vector` synchronized with document content.
 Hybrid retrieval combines lexical and semantic candidates using
 Reciprocal Rank Fusion:
 
-``` text
+```\1
 RRF(d) = Σ 1 / (k + rank(d))
 ```
 
@@ -195,7 +226,7 @@ QPS.
 
 ANN Recall@10 is measured against exact vector Top-K:
 
-``` text
+```\1
 Recall@10 = |Top10_ANN ∩ Top10_Exact| / 10
 ```
 
@@ -427,7 +458,7 @@ search and graph-based ANN retrieval on the tested workload.
 
 The initial 100K HNSW build used PostgreSQL's default:
 
-``` text
+```\1
 maintenance_work_mem = 64MB
 ```
 
@@ -441,13 +472,13 @@ PostgreSQL reported that the HNSW graph stopped fitting in
 
 The Docker container's shared memory was increased to:
 
-``` yaml
+```\1
 shm_size: '2gb'
 ```
 
 and the tuned build used:
 
-``` sql
+```\1
 SET maintenance_work_mem = '1GB';
 ```
 
@@ -466,7 +497,7 @@ connection pool and warms the MiniLM embedding model during startup.
 
 Run the API:
 
-``` bash
+```\1
 set -a
 source .env
 set +a
@@ -526,7 +557,7 @@ Interactive OpenAPI documentation is available at
 
 Vector search:
 
-``` bash
+```\1
 curl -X POST http://127.0.0.1:8000/search/vector \
   -H "Content-Type: application/json" \
   -d '{"query":"Manhattan Project","top_k":5,"ef_search":40}'
@@ -534,7 +565,7 @@ curl -X POST http://127.0.0.1:8000/search/vector \
 
 Hybrid search:
 
-``` bash
+```\1
 curl -X POST http://127.0.0.1:8000/search/hybrid \
   -H "Content-Type: application/json" \
   -d '{"query":"atomic bomb World War II","top_k":5,"candidate_k":50,"ef_search":40,"rrf_k":60}'
@@ -542,7 +573,7 @@ curl -X POST http://127.0.0.1:8000/search/hybrid \
 
 Attach a tag:
 
-``` bash
+```\1
 curl -X POST http://127.0.0.1:8000/documents/1/tags \
   -H "Content-Type: application/json" \
   -d '{"name":"database"}'
@@ -556,7 +587,7 @@ not delete the tag, and deleting a document cascades to its
 
 ### Backend Architecture
 
-``` text
+```\1
 backend/api/
 ├── main.py
 ├── config.py
@@ -585,9 +616,35 @@ pooled connections.
 Search-history logging is performed after the measured retrieval timing,
 so the history insert itself is not included in reported search latency.
 
+## Web Dashboard
+
+The React/Vite frontend provides a single engineering dashboard for both
+retrieval and relational database operations.
+
+### Retrieval UI
+
+- Switch between **Hybrid**, **Vector**, and **Lexical** search
+- Inspect embedding, retrieval, fusion, and total latency
+- View similarity, FTS rank, RRF score, and component ranks
+- Inspect recent persisted search history
+- View live database, corpus, model, and index statistics
+
+### Database Management UI
+
+- List and inspect normalized application documents
+- Create, read, update, and delete documents
+- Generate/update document embeddings through the backend
+- Create or reuse tags and attach them to documents
+- Remove only the `document_tags` association without deleting the tag
+- Demonstrate database-managed FK cascades when deleting a document
+
+The UI is intentionally a thin client: relational integrity, vector
+operations, and persistence remain enforced by the FastAPI/PostgreSQL
+backend.
+
 ## Project Structure
 
-``` text
+```\1
 .
 ├── backend/
 │   ├── api/
@@ -625,6 +682,16 @@ so the history insert itself is not included in reported search latency.
 │   ├── 10_scalability_large_hnsw.sql
 │   └── 11_large_fulltext.sql
 ├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── DocumentManager.jsx
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
 ├── docs/
 ├── .env.example
 ├── .gitignore
@@ -637,21 +704,21 @@ so the history insert itself is not included in reported search latency.
 
 ### 1. Clone
 
-``` bash
+```\1
 git clone https://github.com/ravan-chuang/hybrid-vector-retrieval.git
 cd hybrid-vector-retrieval
 ```
 
 ### 2. Configure Environment Variables
 
-``` bash
+```\1
 cp .env.example .env
 ```
 
 Edit `.env` and replace the example password with a local development
 password.
 
-``` dotenv
+```\1
 POSTGRES_DB=retrieval_db
 POSTGRES_USER=retrieval
 POSTGRES_PASSWORD=change_me
@@ -663,19 +730,19 @@ Never commit the real `.env`.
 
 ### 3. Start PostgreSQL + pgvector
 
-``` bash
+```\1
 docker compose up -d
 ```
 
 Verify:
 
-``` bash
+```\1
 docker exec hybrid-retrieval-db pg_isready -U retrieval -d retrieval_db
 ```
 
 ### 4. Create Python Environment
 
-``` bash
+```\1
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -684,7 +751,7 @@ python -m pip install -r requirements.txt
 
 ### 5. Load Environment Variables
 
-``` bash
+```\1
 set -a
 source .env
 set +a
@@ -692,17 +759,34 @@ set +a
 
 ### 6. Initialize Schema
 
-``` bash
+```\1
 docker exec -i hybrid-retrieval-db psql -U retrieval -d retrieval_db < database/01_schema.sql
 ```
 
 ### 7. Run the API
 
-``` bash
+```\1
 uvicorn backend.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open `http://127.0.0.1:8000/docs` for the interactive API documentation.
+
+### 8. Run the Web Dashboard
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+The development frontend expects the API at `http://127.0.0.1:8000`.
+The backend CORS configuration permits the Vite development origin.
+
+### 9. Optional Normalized-Schema Demo Data
 
 For the small normalized-schema demo, `backend/seed_documents.py` can be
 used to seed application documents. The 500K corpus itself is
@@ -781,9 +865,9 @@ intentionally not committed to Git.
 -   [x] FK cascade validation
 -   [x] Modular backend architecture
 -   [x] OpenAPI/API regression validation
--   [ ] Web interface/dashboard
--   [ ] Scalability plots for final presentation
--   [ ] ER diagram
+-   [x] Web interface/dashboard
+-   [ ] Final presentation figures / scalability plots
+-   [x] ER diagram design / schema validation
 -   [ ] Final report and live demo
 
 A 1M-document benchmark is **not required for the current project
@@ -829,34 +913,51 @@ question.
     model.
 -   The serving system uses HNSW; IVFFlat is retained as a benchmark
     comparison.
--   The Web UI/dashboard, ER diagram, and final report artifacts are not
-    yet complete.
+-   The web dashboard is complete; final report/presentation artifacts remain
+    outside the runtime system.
 
 Future relevance evaluation could use real queries and qrels to report
 MRR@10, nDCG@10, and relevance-oriented Recall@10. These should remain
 conceptually separate from ANN recall against exact vector search.
 
+## Suggested Demo Flow
+
+1. Show the normalized relational schema and explain PK/FK, M:N tags,
+   unique/check constraints, and cascade behavior.
+2. Open the dashboard and verify the live PostgreSQL/pgvector statistics.
+3. Run the same query with Lexical, Vector, and Hybrid retrieval.
+4. Explain GIN, HNSW, and RRF using the returned timing/ranking fields.
+5. Create a document, edit it, attach/reuse tags, remove a tag association,
+   and delete the document to demonstrate CRUD and referential integrity.
+6. Close with the 500K benchmark: at `ef_search=40`, HNSW achieved
+   **0.981 Recall@10**, **2.215 ms P50**, and approximately **46.47×**
+   P50 speedup over exact retrieval on the validated benchmark.
+
 ## Roadmap
 
-``` text
-Core relational database                 DONE
+```text
+Core relational database                         DONE
         ↓
-Exact / HNSW / IVFFlat retrieval         DONE
+Exact / HNSW / IVFFlat retrieval                 DONE
         ↓
-PostgreSQL FTS + GIN                     DONE
+PostgreSQL FTS + GIN                             DONE
         ↓
-Hybrid RRF retrieval                     DONE
+Hybrid RRF retrieval                             DONE
         ↓
-500K scalability evaluation              DONE
+500K scalability evaluation                      DONE
         ↓
-FastAPI + CRUD + history + tags          DONE
+FastAPI + CRUD + history + tags                  DONE
         ↓
-Web interface / evaluation dashboard     NEXT
+React/Vite retrieval + database dashboard        DONE
         ↓
-ER diagram + final figures
+ERD / architecture / final documentation         IN PROGRESS
         ↓
-Final report + live demo
+Final report + presentation + live demo          NEXT
 ```
+
+A 1M-document benchmark is intentionally outside the current project scope.
+The validated 500K experiment is the final planned large-scale benchmark
+unless a later research question requires additional scale.
 
 ## Author
 
