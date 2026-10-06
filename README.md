@@ -44,52 +44,22 @@ indexing, query execution, performance measurement, and scalability.
 The system separates the normalized application schema from the large
 retrieval-serving corpus while keeping both workloads in PostgreSQL.
 
-```text
-┌──────────────────────────────┐
-│      React / Vite Web UI     │
-│ Retrieval + Database Manager │
-└──────────────┬───────────────┘
-               │ REST / JSON
-               ▼
-┌──────────────────────────────┐
-│        FastAPI Backend       │
-│ Search · CRUD · Tags · Stats│
-│ History · Connection Pooling │
-└───────┬──────────────┬───────┘
-        │              │
-        │              └───────────────┐
-        ▼                              ▼
-┌───────────────────┐        ┌──────────────────────────┐
-│ MiniLM Encoder    │        │ PostgreSQL 17 + pgvector│
-│ 384-d normalized  │        │                          │
-│ query embeddings  │        │ Normalized schema:       │
-└─────────┬─────────┘        │ users / documents       │
-          │                  │ document_chunks / tags  │
-          │                  │ document_tags / history │
-          │                  └────────────┬─────────────┘
-          │                               │
-          └──────────────┬────────────────┘
-                         ▼
-              ┌───────────────────────┐
-              │ 500K MS MARCO Corpus │
-              │ serving / benchmark  │
-              └───────┬───────┬──────┘
-                      │       │
-             ┌────────▼─┐   ┌─▼────────────┐
-             │ FTS + GIN│   │ HNSW cosine │
-             │ lexical  │   │ vector ANN  │
-             └─────┬────┘   └──────┬──────┘
-                   │               │
-                   └───────┬───────┘
-                           ▼
-                  ┌─────────────────┐
-                  │ RRF Hybrid Rank │
-                  │  Top-K Results  │
-                  └─────────────────┘
-```
+![System Architecture](docs/system-architecture.png)
 
-IVFFlat is retained as an experimental ANN baseline; the serving path
-uses HNSW.
+**Figure 1. System Architecture of the Hybrid Vector Retrieval System.**
+
+The React/Vite dashboard communicates with the FastAPI backend through
+REST/JSON. FastAPI uses psycopg 3 and `psycopg_pool`, invokes the local
+`sentence-transformers/all-MiniLM-L6-v2` encoder for normalized
+384-dimensional embeddings, and accesses PostgreSQL 17 with pgvector.
+Lexical retrieval uses PostgreSQL full-text search with GIN and
+`websearch_to_tsquery`; vector retrieval uses pgvector HNSW with cosine
+distance; hybrid retrieval combines both ranked candidate lists using
+Reciprocal Rank Fusion (RRF).
+
+The normalized application schema is kept separate from the large-scale
+benchmark/serving corpus. IVFFlat is retained as an experimental ANN
+baseline, while the serving path uses HNSW.
 
 ## Technology Stack
 
@@ -103,6 +73,11 @@ uses HNSW.
 - **Infrastructure:** Docker, Docker Compose
 
 ## Database Design
+
+![Database ERD](docs/database-erd.jpg)
+
+**Figure 2. Entity-Relationship Diagram of the normalized application schema.**
+
 
 The primary relational schema contains:
 
@@ -145,7 +120,7 @@ referenced tag rows remained available for reuse by other documents.
 Queries and documents are represented as normalized 384-dimensional
 embeddings. Exact cosine-distance retrieval uses pgvector:
 
-```\1
+```
 SELECT document_id,
        content,
        embedding <=> %s::vector AS distance
@@ -156,7 +131,7 @@ LIMIT 10;
 
 For normalized vectors:
 
-```\1
+```
 cosine_distance = 1 - cosine_similarity
 ```
 
@@ -166,7 +141,7 @@ Exact retrieval is also used as ground truth for ANN Recall@10.
 
 HNSW provides low-latency approximate nearest-neighbor retrieval.
 
-```\1
+```
 CREATE INDEX idx_benchmark_embedding_hnsw
 ON benchmark_documents
 USING hnsw (embedding vector_cosine_ops)
@@ -183,7 +158,7 @@ Experiments vary `hnsw.ef_search` to evaluate recall/latency trade-offs.
 IVFFlat partitions vector space into lists and searches selected
 partitions.
 
-```\1
+```
 CREATE INDEX idx_benchmark_embedding_ivfflat
 ON benchmark_documents
 USING ivfflat (embedding vector_cosine_ops)
@@ -197,7 +172,7 @@ Experiments vary `ivfflat.probes`.
 Lexical retrieval uses PostgreSQL `tsvector` and `tsquery`, accelerated
 by a GIN index.
 
-```\1
+```
 CREATE INDEX idx_benchmark_search_vector
 ON benchmark_documents
 USING GIN (search_vector);
@@ -210,7 +185,7 @@ A trigger keeps `search_vector` synchronized with document content.
 Hybrid retrieval combines lexical and semantic candidates using
 Reciprocal Rank Fusion:
 
-```\1
+```
 RRF(d) = Σ 1 / (k + rank(d))
 ```
 
@@ -226,7 +201,7 @@ QPS.
 
 ANN Recall@10 is measured against exact vector Top-K:
 
-```\1
+```
 Recall@10 = |Top10_ANN ∩ Top10_Exact| / 10
 ```
 
@@ -458,7 +433,7 @@ search and graph-based ANN retrieval on the tested workload.
 
 The initial 100K HNSW build used PostgreSQL's default:
 
-```\1
+```
 maintenance_work_mem = 64MB
 ```
 
@@ -472,13 +447,13 @@ PostgreSQL reported that the HNSW graph stopped fitting in
 
 The Docker container's shared memory was increased to:
 
-```\1
+```
 shm_size: '2gb'
 ```
 
 and the tuned build used:
 
-```\1
+```
 SET maintenance_work_mem = '1GB';
 ```
 
@@ -497,7 +472,7 @@ connection pool and warms the MiniLM embedding model during startup.
 
 Run the API:
 
-```\1
+```
 set -a
 source .env
 set +a
@@ -557,7 +532,7 @@ Interactive OpenAPI documentation is available at
 
 Vector search:
 
-```\1
+```
 curl -X POST http://127.0.0.1:8000/search/vector \
   -H "Content-Type: application/json" \
   -d '{"query":"Manhattan Project","top_k":5,"ef_search":40}'
@@ -565,7 +540,7 @@ curl -X POST http://127.0.0.1:8000/search/vector \
 
 Hybrid search:
 
-```\1
+```
 curl -X POST http://127.0.0.1:8000/search/hybrid \
   -H "Content-Type: application/json" \
   -d '{"query":"atomic bomb World War II","top_k":5,"candidate_k":50,"ef_search":40,"rrf_k":60}'
@@ -573,7 +548,7 @@ curl -X POST http://127.0.0.1:8000/search/hybrid \
 
 Attach a tag:
 
-```\1
+```
 curl -X POST http://127.0.0.1:8000/documents/1/tags \
   -H "Content-Type: application/json" \
   -d '{"name":"database"}'
@@ -587,7 +562,7 @@ not delete the tag, and deleting a document cascades to its
 
 ### Backend Architecture
 
-```\1
+```
 backend/api/
 ├── main.py
 ├── config.py
@@ -644,7 +619,7 @@ backend.
 
 ## Project Structure
 
-```\1
+```
 .
 ├── backend/
 │   ├── api/
@@ -693,6 +668,8 @@ backend.
 │   ├── package.json
 │   └── vite.config.js
 ├── docs/
+│   ├── system-architecture.png
+│   └── database-erd.jpg
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
@@ -704,21 +681,21 @@ backend.
 
 ### 1. Clone
 
-```\1
+```
 git clone https://github.com/ravan-chuang/hybrid-vector-retrieval.git
 cd hybrid-vector-retrieval
 ```
 
 ### 2. Configure Environment Variables
 
-```\1
+```
 cp .env.example .env
 ```
 
 Edit `.env` and replace the example password with a local development
 password.
 
-```\1
+```
 POSTGRES_DB=retrieval_db
 POSTGRES_USER=retrieval
 POSTGRES_PASSWORD=change_me
@@ -730,19 +707,19 @@ Never commit the real `.env`.
 
 ### 3. Start PostgreSQL + pgvector
 
-```\1
+```
 docker compose up -d
 ```
 
 Verify:
 
-```\1
+```
 docker exec hybrid-retrieval-db pg_isready -U retrieval -d retrieval_db
 ```
 
 ### 4. Create Python Environment
 
-```\1
+```
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -751,7 +728,7 @@ python -m pip install -r requirements.txt
 
 ### 5. Load Environment Variables
 
-```\1
+```
 set -a
 source .env
 set +a
@@ -759,13 +736,13 @@ set +a
 
 ### 6. Initialize Schema
 
-```\1
+```
 docker exec -i hybrid-retrieval-db psql -U retrieval -d retrieval_db < database/01_schema.sql
 ```
 
 ### 7. Run the API
 
-```\1
+```
 uvicorn backend.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
@@ -866,7 +843,8 @@ intentionally not committed to Git.
 -   [x] Modular backend architecture
 -   [x] OpenAPI/API regression validation
 -   [x] Web interface/dashboard
--   [ ] Final presentation figures / scalability plots
+-   [x] System architecture and database ERD figures
+-   [ ] Final scalability plots for presentation
 -   [x] ER diagram design / schema validation
 -   [ ] Final report and live demo
 
@@ -950,7 +928,9 @@ FastAPI + CRUD + history + tags                  DONE
         ↓
 React/Vite retrieval + database dashboard        DONE
         ↓
-ERD / architecture / final documentation         IN PROGRESS
+ERD + architecture figures                       DONE
+        ↓
+Final documentation / presentation                IN PROGRESS
         ↓
 Final report + presentation + live demo          NEXT
 ```
