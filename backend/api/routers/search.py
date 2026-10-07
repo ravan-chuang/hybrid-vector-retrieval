@@ -66,6 +66,11 @@ def vector_search(request: VectorSearchRequest):
 
     vector = vector_to_pg(query_embedding)
 
+    effective_ef_search = max(
+        int(request.ef_search),
+        int(request.top_k),
+    )
+
     # -------------------------
     # PostgreSQL HNSW search
     # -------------------------
@@ -79,21 +84,14 @@ def vector_search(request: VectorSearchRequest):
                         cur,
                         vector=vector,
                         limit=request.top_k,
-                        ef_search=max(
-                            request.ef_search,
-                            request.top_k,
-                        ),
+                        ef_search=effective_ef_search,
                     )
                 else:
                     # Benchmark corpus: explicitly use HNSW.
                     cur.execute("SET LOCAL enable_seqscan = off")
 
-                    ef = max(
-                        int(request.ef_search),
-                        int(request.top_k),
-                    )
                     cur.execute(
-                        f"SET LOCAL hnsw.ef_search = {ef}"
+                        f"SET LOCAL hnsw.ef_search = {effective_ef_search}"
                     )
 
                     cur.execute(
@@ -157,6 +155,7 @@ def vector_search(request: VectorSearchRequest):
         method="hnsw_cosine",
         top_k=request.top_k,
         ef_search=request.ef_search,
+        effective_ef_search=effective_ef_search,
         embedding_ms=round(embedding_ms, 3),
         retrieval_ms=round(retrieval_ms, 3),
         total_ms=round(total_ms, 3),
@@ -498,6 +497,7 @@ def hybrid_search(request: HybridSearchRequest):
         top_k=request.top_k,
         candidate_k=request.candidate_k,
         ef_search=request.ef_search,
+        effective_ef_search=effective_ef_search,
         rrf_k=request.rrf_k,
         embedding_ms=round(embedding_ms, 3),
         lexical_ms=round(lexical_ms, 3),

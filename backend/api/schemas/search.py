@@ -44,6 +44,7 @@ class VectorSearchResponse(BaseModel):
     method: str
     top_k: int
     ef_search: int
+    effective_ef_search: int
     embedding_ms: float
     retrieval_ms: float
     total_ms: float
@@ -146,6 +147,7 @@ class HybridSearchResponse(BaseModel):
     top_k: int
     candidate_k: int
     ef_search: int
+    effective_ef_search: int
     rrf_k: int
     embedding_ms: float
     lexical_ms: float
