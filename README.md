@@ -255,26 +255,18 @@ comparison.
 
 ## Final Relevance Results
 
-  --------------------------------------------------------------------------
-  Pipeline                      MRR@10            nDCG@10          Recall@10
-  ----------------- ------------------ ------------------ ------------------
-  Lexical                       0.2239             0.2645             0.3950
-
-  Dense                         0.5207             0.5993             0.8487
-
-  Equal RRF                     0.4754             0.5620             0.8407
-
-  Dense Top-50 →                0.5796             0.6633             0.9257
-  Cross-Encoder                                           
-
-  **Dense ∪ Lexical         **0.5931**         **0.6788**         **0.9493**
-  → Cross-Encoder**                                       
-  --------------------------------------------------------------------------
+| Pipeline | MRR@10 | nDCG@10 | Recall@10 |
+|---|---:|---:|---:|
+| Lexical | 0.2239 | 0.2645 | 0.3950 |
+| Dense | 0.5207 | 0.5993 | 0.8487 |
+| Equal RRF | 0.4754 | 0.5620 | 0.8407 |
+| Dense Top-50 → Cross-Encoder | 0.5796 | 0.6633 | 0.9257 |
+| **Dense ∪ Lexical → Cross-Encoder** | **0.5931** | **0.6788** | **0.9493** |
 
 Candidate union before reranking improved nDCG@10 by **+0.0155**, with
-paired-bootstrap 95% CI **\[+0.0070, +0.0253\]**. MRR@10 improved by
-**+0.0134** (95% CI **\[+0.0052, +0.0233\]**) and Recall@10 by
-**+0.0237** (95% CI **\[+0.0120, +0.0373\]**).
+paired-bootstrap 95% CI **[+0.0070, +0.0253]**. MRR@10 improved by
+**+0.0134** (95% CI **[+0.0052, +0.0233]**) and Recall@10 by
+**+0.0237** (95% CI **[+0.0120, +0.0373]**).
 
 Lexical-rescue analysis found 14 relevant documents absent from Dense
 Top-50 but present in the lexical-only candidate set; **13/14** were
@@ -876,8 +868,7 @@ intentionally not committed to Git.
   `09_scalability_large.sql`         500K scalability schema
   `10_scalability_large_hnsw.sql`    500K HNSW index
   `11_large_fulltext.sql`            500K stored full-text vector and GIN index
-  2_application_retrieval.sql\` Ap   plication FTS/GIN + HNSW retrieval indexes
-
+  `12_application_retrieval.sql`       Application FTS/GIN + HNSW retrieval indexes
 ## Current Progress
 
 -   [x] PostgreSQL 17 + pgvector
@@ -935,7 +926,7 @@ question.
 4.  **Lexical retrieval is valuable as complementary candidate
     generation.** Dense ∪ Lexical → Cross-Encoder reached **0.6788
     nDCG@10** and **0.9493 Recall@10**; ΔnDCG@10 over Dense → CE was
-    +0.0155 with 95% CI \[+0.0070, +0.0253\].
+    +0.0155 with 95% CI [+0.0070, +0.0253].
 5.  **The rescue mechanism is observable.** Lexical retrieval
     contributed 14 relevant documents absent from Dense Top-50, and 13
     were promoted into the final Top-10 by the Cross-Encoder.
@@ -989,8 +980,8 @@ question.
     Recall@10**, **2.215 ms P50**, and approximately **46.47×** lower
     P50 than exact retrieval.
 6.  Close with relevance evaluation: Dense → CE reached 0.6633 nDCG@10;
-    Dense ∪ Lexical → CE reached **0.6788**, with 95% CI **\[+0.0070,
-    +0.0253\]** for the +0.0155 improvement.
+    Dense ∪ Lexical → CE reached **0.6788**, with 95% CI **[+0.0070,
+    +0.0253]** for the +0.0155 improvement.
 
 ## Roadmap
 
