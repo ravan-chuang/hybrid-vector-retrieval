@@ -1,4 +1,9 @@
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, model_validator
+
+
+SearchCorpus = Literal["benchmark", "application"]
 
 
 class VectorSearchRequest(BaseModel):
@@ -7,6 +12,10 @@ class VectorSearchRequest(BaseModel):
         min_length=1,
         max_length=1000,
         description="Natural-language search query",
+    )
+    corpus: SearchCorpus = Field(
+        default="benchmark",
+        description="Search corpus: benchmark or application",
     )
     top_k: int = Field(
         default=10,
@@ -48,6 +57,10 @@ class LexicalSearchRequest(BaseModel):
         max_length=1000,
         description="Natural-language or keyword search query",
     )
+    corpus: SearchCorpus = Field(
+        default="benchmark",
+        description="Search corpus: benchmark or application",
+    )
     top_k: int = Field(
         default=10,
         ge=1,
@@ -79,6 +92,10 @@ class HybridSearchRequest(BaseModel):
         max_length=1000,
         description="Natural-language hybrid search query",
     )
+    corpus: SearchCorpus = Field(
+        default="benchmark",
+        description="Search corpus: benchmark or application",
+    )
     top_k: int = Field(
         default=10,
         ge=1,
@@ -103,6 +120,15 @@ class HybridSearchRequest(BaseModel):
         le=200,
         description="RRF rank constant",
     )
+
+    @model_validator(mode="after")
+    def validate_retrieval_parameters(self):
+        if self.candidate_k < self.top_k:
+            raise ValueError(
+                "candidate_k must be greater than or equal to top_k"
+            )
+
+        return self
 
 
 class HybridSearchResult(BaseModel):

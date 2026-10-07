@@ -22,6 +22,9 @@ CREATE TABLE document_chunks (
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
     embedding VECTOR(384),
+    search_vector TSVECTOR GENERATED ALWAYS AS (
+        to_tsvector('english', content)
+    ) STORED,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_chunk_document
@@ -32,6 +35,16 @@ CREATE TABLE document_chunks (
     CONSTRAINT uq_document_chunk
         UNIQUE (document_id, chunk_index)
 );
+
+CREATE INDEX idx_document_chunks_search_vector_gin
+ON document_chunks
+USING GIN (search_vector);
+
+CREATE INDEX idx_document_chunks_embedding_hnsw
+ON document_chunks
+USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+
 
 CREATE TABLE tags (
     tag_id BIGSERIAL PRIMARY KEY,

@@ -5,6 +5,10 @@ from fastapi import APIRouter, HTTPException
 from backend.api import runtime
 from backend.api.config import SEARCH_TABLE
 from backend.api.services.embedding import vector_to_pg
+from backend.api.services.application_retrieval import (
+    lexical_search as application_lexical_search,
+    vector_search as application_vector_search,
+)
 from backend.api.schemas.search import (
     VectorSearchRequest,
     SearchResult,
@@ -70,34 +74,47 @@ def vector_search(request: VectorSearchRequest):
     try:
         with db_pool.connection() as conn:
             with conn.cursor() as cur:
-                # This endpoint explicitly uses HNSW.
-                cur.execute("SET LOCAL enable_seqscan = off")
+                if request.corpus == "application":
+                    rows = application_vector_search(
+                        cur,
+                        vector=vector,
+                        limit=request.top_k,
+                        ef_search=max(
+                            request.ef_search,
+                            request.top_k,
+                        ),
+                    )
+                else:
+                    # Benchmark corpus: explicitly use HNSW.
+                    cur.execute("SET LOCAL enable_seqscan = off")
 
-                # SET does not support bind parameters here.
-                ef = int(request.ef_search)
-                cur.execute(
-                    f"SET LOCAL hnsw.ef_search = {ef}"
-                )
+                    ef = max(
+                        int(request.ef_search),
+                        int(request.top_k),
+                    )
+                    cur.execute(
+                        f"SET LOCAL hnsw.ef_search = {ef}"
+                    )
 
-                cur.execute(
-                    f"""
-                    SELECT
-                        document_id,
-                        external_id,
-                        content,
-                        embedding <=> %s::vector AS distance
-                    FROM {SEARCH_TABLE}
-                    ORDER BY embedding <=> %s::vector
-                    LIMIT %s
-                    """,
-                    (
-                        vector,
-                        vector,
-                        request.top_k,
-                    ),
-                )
+                    cur.execute(
+                        f"""
+                        SELECT
+                            document_id,
+                            external_id,
+                            content,
+                            embedding <=> %s::vector AS distance
+                        FROM {SEARCH_TABLE}
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s
+                        """,
+                        (
+                            vector,
+                            vector,
+                            request.top_k,
+                        ),
+                    )
 
-                rows = cur.fetchall()
+                    rows = cur.fetchall()
 
     except Exception as exc:
         raise HTTPException(
@@ -166,35 +183,42 @@ def lexical_search(request: LexicalSearchRequest):
     try:
         with db_pool.connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    WITH query AS (
-                        SELECT websearch_to_tsquery(
-                            'english',
-                            %s
-                        ) AS q
+                if request.corpus == "application":
+                    rows = application_lexical_search(
+                        cur,
+                        query=request.query,
+                        limit=request.top_k,
                     )
-                    SELECT
-                        d.document_id,
-                        d.external_id,
-                        d.content,
-                        ts_rank_cd(
-                            d.search_vector,
-                            query.q
-                        ) AS score
-                    FROM {SEARCH_TABLE} AS d
-                    CROSS JOIN query
-                    WHERE d.search_vector @@ query.q
-                    ORDER BY score DESC, d.document_id
-                    LIMIT %s
-                    """,
-                    (
-                        request.query,
-                        request.top_k,
-                    ),
-                )
+                else:
+                    cur.execute(
+                        f"""
+                        WITH query AS (
+                            SELECT websearch_to_tsquery(
+                                'english',
+                                %s
+                            ) AS q
+                        )
+                        SELECT
+                            d.document_id,
+                            d.external_id,
+                            d.content,
+                            ts_rank_cd(
+                                d.search_vector,
+                                query.q
+                            ) AS score
+                        FROM {SEARCH_TABLE} AS d
+                        CROSS JOIN query
+                        WHERE d.search_vector @@ query.q
+                        ORDER BY score DESC, d.document_id
+                        LIMIT %s
+                        """,
+                        (
+                            request.query,
+                            request.top_k,
+                        ),
+                    )
 
-                rows = cur.fetchall()
+                    rows = cur.fetchall()
 
     except Exception as exc:
         raise HTTPException(
@@ -285,36 +309,47 @@ def hybrid_search(request: HybridSearchRequest):
                 # -------------------------
                 lexical_start = time.perf_counter()
 
-                cur.execute(
-                    f"""
-                    WITH query AS (
-                        SELECT websearch_to_tsquery(
-                            'english',
-                            %s
-                        ) AS q
+                if request.corpus == "application":
+                    lexical_scored_rows = application_lexical_search(
+                        cur,
+                        query=request.query,
+                        limit=request.candidate_k,
                     )
-                    SELECT
-                        d.document_id,
-                        d.external_id,
-                        d.content
-                    FROM {SEARCH_TABLE} AS d
-                    CROSS JOIN query
-                    WHERE d.search_vector @@ query.q
-                    ORDER BY
-                        ts_rank_cd(
-                            d.search_vector,
-                            query.q
-                        ) DESC,
-                        d.document_id
-                    LIMIT %s
-                    """,
-                    (
-                        request.query,
-                        request.candidate_k,
-                    ),
-                )
+                    lexical_rows = [
+                        row[:3]
+                        for row in lexical_scored_rows
+                    ]
+                else:
+                    cur.execute(
+                        f"""
+                        WITH query AS (
+                            SELECT websearch_to_tsquery(
+                                'english',
+                                %s
+                            ) AS q
+                        )
+                        SELECT
+                            d.document_id,
+                            d.external_id,
+                            d.content
+                        FROM {SEARCH_TABLE} AS d
+                        CROSS JOIN query
+                        WHERE d.search_vector @@ query.q
+                        ORDER BY
+                            ts_rank_cd(
+                                d.search_vector,
+                                query.q
+                            ) DESC,
+                            d.document_id
+                        LIMIT %s
+                        """,
+                        (
+                            request.query,
+                            request.candidate_k,
+                        ),
+                    )
 
-                lexical_rows = cur.fetchall()
+                    lexical_rows = cur.fetchall()
 
                 lexical_ms = (
                     time.perf_counter() - lexical_start
@@ -325,30 +360,45 @@ def hybrid_search(request: HybridSearchRequest):
                 # -------------------------
                 vector_start = time.perf_counter()
 
-                cur.execute("SET LOCAL enable_seqscan = off")
-
-                ef = int(request.ef_search)
-                cur.execute(
-                    f"SET LOCAL hnsw.ef_search = {ef}"
+                effective_ef_search = max(
+                    int(request.ef_search),
+                    int(request.candidate_k),
                 )
 
-                cur.execute(
-                    f"""
-                    SELECT
-                        document_id,
-                        external_id,
-                        content
-                    FROM {SEARCH_TABLE}
-                    ORDER BY embedding <=> %s::vector
-                    LIMIT %s
-                    """,
-                    (
-                        vector,
-                        request.candidate_k,
-                    ),
-                )
+                if request.corpus == "application":
+                    vector_scored_rows = application_vector_search(
+                        cur,
+                        vector=vector,
+                        limit=request.candidate_k,
+                        ef_search=effective_ef_search,
+                    )
+                    vector_rows = [
+                        row[:3]
+                        for row in vector_scored_rows
+                    ]
+                else:
+                    cur.execute("SET LOCAL enable_seqscan = off")
+                    cur.execute(
+                        f"SET LOCAL hnsw.ef_search = {effective_ef_search}"
+                    )
 
-                vector_rows = cur.fetchall()
+                    cur.execute(
+                        f"""
+                        SELECT
+                            document_id,
+                            external_id,
+                            content
+                        FROM {SEARCH_TABLE}
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s
+                        """,
+                        (
+                            vector,
+                            request.candidate_k,
+                        ),
+                    )
+
+                    vector_rows = cur.fetchall()
 
                 vector_ms = (
                     time.perf_counter() - vector_start
