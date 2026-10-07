@@ -446,6 +446,24 @@ def main():
         default=SEED,
     )
 
+    parser.add_argument(
+        "--query-file",
+        type=Path,
+        default=None,
+        help=(
+            "Frozen JSONL query manifest. "
+            "When provided, --queries and random sampling "
+            "are not used."
+        ),
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=RESULTS_DIR,
+        help="Directory for evaluation outputs",
+    )
+
     args = parser.parse_args()
 
     database_url = os.environ.get("DATABASE_URL")
@@ -455,7 +473,7 @@ def main():
             "DATABASE_URL is not set"
         )
 
-    RESULTS_DIR.mkdir(
+    args.output_dir.mkdir(
         parents=True,
         exist_ok=True,
     )
@@ -467,7 +485,11 @@ def main():
     print(f"candidate_k: {CANDIDATE_K}")
     print(f"ef_search:   {EF_SEARCH}")
     print(f"rrf_k:       {RRF_K}")
-    print(f"sample size: {args.queries}")
+    if args.query_file is not None:
+        print(f"query file:  {args.query_file}")
+    else:
+        print(f"sample size: {args.queries}")
+
     print(f"seed:        {args.seed}")
     print()
 
@@ -495,23 +517,54 @@ def main():
                 coverage_metadata,
             )
 
-        if args.queries > len(eligible):
-            raise ValueError(
-                "Requested more queries than eligible"
-            )
+        if args.query_file is not None:
+            evaluation_queries = []
 
-        rng = random.Random(args.seed)
-        evaluation_queries = rng.sample(
-            eligible,
-            args.queries,
-        )
+            with args.query_file.open(
+                "r",
+                encoding="utf-8",
+            ) as handle:
+                for line in handle:
+                    line = line.strip()
+
+                    if line:
+                        evaluation_queries.append(
+                            json.loads(line)
+                        )
+
+            if not evaluation_queries:
+                raise ValueError(
+                    "Query file is empty"
+                )
+
+            query_ids = [
+                str(row["query_id"])
+                for row in evaluation_queries
+            ]
+
+            if len(query_ids) != len(set(query_ids)):
+                raise ValueError(
+                    "Query file contains duplicate query IDs"
+                )
+
+        else:
+            if args.queries > len(eligible):
+                raise ValueError(
+                    "Requested more queries than eligible"
+                )
+
+            rng = random.Random(args.seed)
+            evaluation_queries = rng.sample(
+                eligible,
+                args.queries,
+            )
 
         evaluation_queries.sort(
             key=lambda x: int(x["query_id"])
         )
 
         query_path = (
-            RESULTS_DIR
+            args.output_dir
             / "evaluation_queries.jsonl"
         )
 
@@ -628,6 +681,16 @@ def main():
                     hybrid_top
                 ),
 
+                # Preserve the complete candidate rankings used by RRF.
+                # These enable offline weighted-fusion experiments without
+                # rerunning PostgreSQL retrieval or query embedding.
+                "lexical_candidates": "|".join(
+                    lexical_candidates
+                ),
+                "vector_candidates": "|".join(
+                    vector_candidates
+                ),
+
                 "lexical_mrr@10":
                     reciprocal_rank_at_k(
                         lexical_top,
@@ -704,7 +767,7 @@ def main():
             )
 
         csv_path = (
-            RESULTS_DIR
+            args.output_dir
             / "per_query_results.csv"
         )
 
@@ -732,6 +795,11 @@ def main():
                 "rrf_k": RRF_K,
                 "sample_size": len(rows),
                 "seed": args.seed,
+                "query_file": (
+                    str(args.query_file)
+                    if args.query_file is not None
+                    else None
+                ),
             },
             "coverage": coverage_metadata,
             "lexical": aggregate(
@@ -749,7 +817,7 @@ def main():
         }
 
         summary_path = (
-            RESULTS_DIR / "summary.json"
+            args.output_dir / "summary.json"
         )
 
         summary_path.write_text(
