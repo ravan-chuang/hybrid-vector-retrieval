@@ -1,0 +1,58 @@
+{
+  "evaluation": {
+    "split": "frozen untouched final test",
+    "queries": 500,
+    "primary_metric": "nDCG@10",
+    "bootstrap_samples": 10000,
+    "comparison": "Dense Top-50 -> Cross-Encoder vs Dense Top-50 union Lexical Top-50 -> Cross-Encoder"
+  },
+  "paired_results": {
+    "mrr@10": {
+      "dense_mean": 0.5796388888888889,
+      "union_mean": 0.5930634920634921,
+      "delta_union_minus_dense": 0.013424603174603174,
+      "ci95_lower": 0.005235575396825396,
+      "ci95_upper": 0.02327797619047619,
+      "wins": 12,
+      "ties": 482,
+      "losses": 6,
+      "bootstrap_p_approx": 0.0
+    },
+    "ndcg@10": {
+      "dense_mean": 0.663291636330245,
+      "union_mean": 0.6788268377417565,
+      "delta_union_minus_dense": 0.015535201411511284,
+      "ci95_lower": 0.006969664968626589,
+      "ci95_upper": 0.025331585984525146,
+      "wins": 13,
+      "ties": 481,
+      "losses": 6,
+      "bootstrap_p_approx": 0.0
+    },
+    "recall@10": {
+      "dense_mean": 0.9256666666666666,
+      "union_mean": 0.9493333333333333,
+      "delta_union_minus_dense": 0.02366666666666667,
+      "ci95_lower": 0.012,
+      "ci95_upper": 0.037333333333333336,
+      "wins": 13,
+      "ties": 487,
+      "losses": 0,
+      "bootstrap_p_approx": 0.0
+    }
+  },
+  "lexical_rescue": {
+    "queries": 500,
+    "queries_with_lexical_only_candidates": 211,
+    "queries_with_lexical_only_relevant": 14,
+    "rescued_queries": 14,
+    "rescued_relevant_documents": 14,
+    "queries_where_rescued_relevant_reaches_union_top10": 13,
+    "rescued_relevant_documents_promoted_to_union_top10": 13,
+    "promotion_rate_per_rescued_query": 0.9285714285714286,
+    "promotion_rate_per_rescued_document": 0.9285714285714286,
+    "dense_available_relevant_documents": 484,
+    "union_available_relevant_documents": 498,
+    "additional_relevant_documents_in_union": 14
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "purpose": "Untouched one-shot final evaluation split for adaptive hybrid retrieval",
+  "seed": 20261008,
+  "eligible_query_count": 27329,
+  "baseline_query_count": 500,
+  "development_query_count": 1000,
+  "fixed_weight_holdout_query_count": 500,
+  "used_before_adaptive_final": 2000,
+  "remaining_before_sampling": 25329,
+  "adaptive_final_query_count": 500,
+  "adaptive_final_file": "results/relevance/splits/adaptive_final_500.jsonl",
+  "constraints": {
+    "disjoint_from_baseline": true,
+    "disjoint_from_development": true,
+    "disjoint_from_fixed_weight_holdout": true,
+    "must_not_be_evaluated_before_model_freeze": true
+  }
+}

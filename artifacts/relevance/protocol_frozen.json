@@ -1,0 +1,39 @@
+{
+  "status": "FROZEN_BEFORE_FINAL_EVALUATION",
+  "final_query_file": "results/relevance/splits/adaptive_final_500.jsonl",
+  "query_count": 500,
+  "first_stage": {
+    "lexical": {
+      "engine": "PostgreSQL full-text search",
+      "query_parser": "websearch_to_tsquery('english', query)",
+      "candidate_k": 50
+    },
+    "dense": {
+      "model": "sentence-transformers/all-MiniLM-L6-v2",
+      "index": "HNSW",
+      "ef_search": 50,
+      "candidate_k": 50
+    }
+  },
+  "candidate_pool": {
+    "method": "set union",
+    "ordering_before_reranking": "dense candidates followed by lexical-only candidates",
+    "maximum_candidates": 100
+  },
+  "reranker": {
+    "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "final_top_k": 10
+  },
+  "primary_metric": "nDCG@10",
+  "secondary_metrics": [
+    "MRR@10",
+    "Recall@10"
+  ],
+  "primary_comparison": "Dense Top-50 -> Cross-Encoder vs Dense Top-50 union Lexical Top-50 -> Cross-Encoder",
+  "development_result_not_used_as_final": {
+    "dense_ce_ndcg@10": 0.6894,
+    "union_ce_ndcg@10": 0.7034,
+    "delta_ndcg@10": 0.014
+  },
+  "rule": "No method, model, candidate depth, ef_search, fusion, or reranking changes may be made based on final-test results."
+}

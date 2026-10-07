@@ -1,0 +1,47 @@
+{
+  "protocol": {
+    "dataset": "MS MARCO 500K subset",
+    "table": "scalability_large_documents",
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "top_k": 10,
+    "candidate_k": 50,
+    "ef_search": 50,
+    "rrf_k": 60,
+    "sample_size": 500,
+    "seed": 42,
+    "query_file": "results/relevance/splits/adaptive_final_500.jsonl"
+  },
+  "coverage": {
+    "labeled_query_count": 400282,
+    "eligible_query_count": 27329,
+    "excluded_query_count": 372953,
+    "original_relevant_judgments": 417462,
+    "local_relevant_judgments": 28329,
+    "relevant_judgment_coverage": 0.0678600687008638,
+    "local_corpus_size": 500000
+  },
+  "lexical": {
+    "MRR@10": 0.22393968253968255,
+    "nDCG@10": 0.26453176519290356,
+    "Recall@10": 0.395,
+    "mean_latency_ms": 0.7295851001690608,
+    "p50_latency_ms": 0.6025624970789067,
+    "p95_latency_ms": 1.4022131508681919
+  },
+  "vector": {
+    "MRR@10": 0.5206936507936508,
+    "nDCG@10": 0.5993199865162078,
+    "Recall@10": 0.8486666666666667,
+    "mean_latency_ms": 4.607766064145835,
+    "p50_latency_ms": 4.409812499943655,
+    "p95_latency_ms": 6.925156554643761
+  },
+  "hybrid": {
+    "MRR@10": 0.4754087301587302,
+    "nDCG@10": 0.5619508645043264,
+    "Recall@10": 0.8406666666666667,
+    "mean_latency_ms": 5.401446648174897,
+    "p50_latency_ms": 5.126229494635481,
+    "p95_latency_ms": 7.930613140342757
+  }
+}
