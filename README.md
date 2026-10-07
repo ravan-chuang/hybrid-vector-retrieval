@@ -944,3 +944,10 @@ unless a later research question requires additional scale.
 **Ravan Chuang**
 
 Computer Science · Information Retrieval · Backend & Systems Engineering
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.
+
+Third-party datasets, models, libraries, and other dependencies remain subject
+to their respective licenses and terms.
