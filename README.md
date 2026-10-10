@@ -817,7 +817,7 @@ backend.
 │       ├── dense_integrity_10k.json
 │       └── multistage_10k_summary.json
     ├── docs/
-    │   ├── system-architecture.png
+    │   ├── system-architecture.jpeg
     │   └── database-erd.jpg
     ├── .env.example
     ├── .gitignore
