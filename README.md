@@ -742,73 +742,80 @@ backend.
 
 ## Project Structure
 
-    .
-    ├── backend/
-    │   ├── api/
-    │   │   ├── main.py
-    │   │   ├── config.py
-    │   │   ├── database.py
-    │   │   ├── runtime.py
-    │   │   ├── routers/
-    │   │   ├── schemas/
-    │   │   └── services/
-    │   ├── scripts/
+```text
+.
+├── backend/
+│   ├── api/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   ├── runtime.py
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   └── services/
+│   ├── scripts/
 │   │   ├── ingest_msmarco_full.py
 │   │   ├── embed_msmarco_full.py
 │   │   ├── benchmark_msmarco_full_ann.py
+│   │   ├── build_msmarco_full_eval.py
 │   │   ├── build_msmarco_full_eval_10k.py
+│   │   ├── evaluate_msmarco_full_retrieval.py
 │   │   ├── evaluate_msmarco_full_retrieval_10k.py
+│   │   ├── extract_msmarco_full_ce_candidates.py
 │   │   ├── extract_msmarco_full_ce_candidates_10k.py
+│   │   ├── rerank_msmarco_full_ce.py
 │   │   └── rerank_msmarco_full_ce_10k.py
 │   ├── benchmark_exact.py
-    │   ├── benchmark_hnsw.py
-    │   ├── benchmark_ivfflat.py
-    │   ├── benchmark_scalability_exact.py
-    │   ├── benchmark_scalability_hnsw.py
-    │   ├── benchmark_scalability_large_exact.py
-    │   ├── benchmark_scalability_large_hnsw.py
-    │   ├── hybrid_search.py
-    │   ├── evaluate_relevance.py
-    │   ├── evaluate_cross_encoder_reranking.py
-    │   ├── analyze_reranking.py
-    │   ├── sweep_weighted_rrf.py
-    │   ├── sweep_score_fusion.py
-    │   ├── ingest_benchmark.py
-    │   ├── ingest_scalability.py
-    │   ├── ingest_scalability_large.py
-    │   ├── search.py
-    │   ├── seed_documents.py
-    │   └── test_embedding.py
-    ├── database/
-    │   ├── 01_schema.sql
-    │   ├── 02_benchmark.sql
-    │   ├── 03_hnsw.sql
-    │   ├── 04_ivfflat.sql
-    │   ├── 05_fulltext.sql
-    │   ├── 06_scalability.sql
-    │   ├── 07_scalability_hnsw.sql
-    │   ├── 08_scalability_hnsw_tuned.sql
-    │   ├── 09_scalability_large.sql
-    │   ├── 10_scalability_large_hnsw.sql
-    │   ├── 11_large_fulltext.sql
-    │   └── 12_application_retrieval.sql
-    ├── frontend/
-    │   ├── public/
-    │   ├── src/
-    │   │   ├── components/
-    │   │   │   └── DocumentManager.jsx
-    │   │   ├── App.jsx
-    │   │   ├── api.js
-    │   │   ├── index.css
-    │   │   └── main.jsx
-    │   ├── package.json
-    │   └── vite.config.js
-    ├── artifacts/
-    │   ├── relevance/
-    │       ├── protocol_frozen.json
-    │       ├── final_retrieval_summary.json
-    │       ├── final_reranking_analysis.json
-    │   │   └── final_split_manifest.json
+│   ├── benchmark_hnsw.py
+│   ├── benchmark_ivfflat.py
+│   ├── benchmark_scalability_exact.py
+│   ├── benchmark_scalability_hnsw.py
+│   ├── benchmark_scalability_large_exact.py
+│   ├── benchmark_scalability_large_hnsw.py
+│   ├── hybrid_search.py
+│   ├── evaluate_relevance.py
+│   ├── evaluate_cross_encoder_reranking.py
+│   ├── analyze_reranking.py
+│   ├── sweep_weighted_rrf.py
+│   ├── sweep_score_fusion.py
+│   ├── ingest_benchmark.py
+│   ├── ingest_scalability.py
+│   ├── ingest_scalability_large.py
+│   ├── search.py
+│   ├── seed_documents.py
+│   └── test_embedding.py
+├── database/
+│   ├── 01_schema.sql
+│   ├── 02_benchmark.sql
+│   ├── 03_hnsw.sql
+│   ├── 04_ivfflat.sql
+│   ├── 05_fulltext.sql
+│   ├── 06_scalability.sql
+│   ├── 07_scalability_hnsw.sql
+│   ├── 08_scalability_hnsw_tuned.sql
+│   ├── 09_scalability_large.sql
+│   ├── 10_scalability_large_hnsw.sql
+│   ├── 11_large_fulltext.sql
+│   ├── 12_application_retrieval.sql
+│   ├── 13_msmarco_full.sql
+│   └── 14_msmarco_full_indexes.sql
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── DocumentManager.jsx
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── artifacts/
+│   ├── relevance/
+│   │   ├── protocol_frozen.json
+│   │   ├── final_retrieval_summary.json
+│   │   ├── final_reranking_analysis.json
+│   │   └── final_split_manifest.json
 │   └── msmarco_full/
 │       ├── ann_benchmark.json
 │       ├── eval_manifest_10k.json
@@ -816,15 +823,17 @@ backend.
 │       ├── ce_rerank_10k_summary.json
 │       ├── dense_integrity_10k.json
 │       └── multistage_10k_summary.json
-    ├── docs/
-    │   ├── system-architecture.jpeg
-    │   └── database-erd.jpg
-    ├── .env.example
-    ├── .gitignore
-    ├── docker-compose.yml
-    ├── requirements.txt
-    └── README.md
-
+├── docs/
+│   ├── system-overview.jpeg
+│   ├── system-architecture.jpeg
+│   └── database-erd.jpg
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── pytest.ini
+├── requirements.txt
+└── README.md
+```
 ## Setup
 
 ### 1. Clone
