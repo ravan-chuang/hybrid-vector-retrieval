@@ -5,12 +5,19 @@ relational database design, full-text search, dense vector retrieval,
 approximate nearest-neighbor (ANN) indexing, hybrid candidate
 generation, and Cross-Encoder reranking.
 
-> **Status:** Core database, application retrieval lifecycle, 500K
-> scalability evaluation, qrels-based relevance evaluation, multi-stage
-> reranking, REST API, relational CRUD, search history, many-to-many tag
-> management, regression tests, and the React/Vite dashboard are
-> complete. The remaining work is final presentation/report polish and
-> the live demo.
+> **Status:** Core database, application retrieval lifecycle, full-corpus
+> MS MARCO ingestion and indexing, ANN evaluation, 10K-query relevance
+> evaluation, multi-stage reranking, REST API, relational CRUD, search
+> history, many-to-many tag management, regression tests, and the
+> React/Vite dashboard are complete. The remaining work is final
+> presentation/report polish and the live demo.
+
+
+## Project Overview
+
+![Hybrid Vector Retrieval System Overview](docs/system-overview.jpeg)
+
+**Figure 1. Project status and key results on the full 8.84M-passage MS MARCO corpus.**
 
 ## Overview
 
@@ -32,7 +39,7 @@ Current capabilities include:
 -   ANN recall, latency, throughput, index-size, and build-time
     evaluation
 -   PostgreSQL/Docker resource tuning
--   10K, 100K, and 500K scalability experiments
+-   10K, 100K, 500K, and full 8.84M-passage scalability experiments
 -   FastAPI REST API with PostgreSQL connection pooling
 -   Document CRUD and persisted search history
 -   Many-to-many document/tag API with FK cascade validation
@@ -49,9 +56,9 @@ indexing, query execution, performance measurement, and scalability.
 The system separates the normalized application schema from the large
 retrieval-serving corpus while keeping both workloads in PostgreSQL.
 
-![System Architecture](docs/system-architecture.png)
+![System Architecture](docs/system-architecture.jpeg)
 
-**Figure 1. System Architecture of the Hybrid Vector Retrieval System.**
+**Figure 2. System Architecture of the Hybrid Vector Retrieval System.**
 
 The React/Vite dashboard communicates with the FastAPI backend through
 REST/JSON. FastAPI uses psycopg 3 and `psycopg_pool`, invokes the local
@@ -62,7 +69,9 @@ Lexical retrieval uses PostgreSQL full-text search with GIN and
 distance. RRF and normalized score fusion are retained as first-stage
 baselines. The strongest relevance pipeline retrieves lexical and dense
 Top-50 candidates, forms their union, and reranks the candidate set with
-`cross-encoder/ms-marco-MiniLM-L-6-v2` before returning Top-10.
+`cross-encoder/ms-marco-MiniLM-L-6-v2` before returning Top-10. The
+primary large-scale relevance result is evaluated on an independent
+10,000-query sample over the full 8,841,823-passage MS MARCO corpus.
 
 The normalized application schema is kept separate from the large-scale
 benchmark/serving corpus. IVFFlat is retained as an experimental ANN
@@ -84,7 +93,7 @@ baseline, while the serving path uses HNSW.
 
 ![Database ERD](docs/database-erd.jpg)
 
-**Figure 2. Entity-Relationship Diagram of the normalized application
+**Figure 3. Entity-Relationship Diagram of the normalized application
 schema.**
 
 The primary relational schema contains:
@@ -235,47 +244,67 @@ human-judged end-to-end relevance.
 ## Relevance Evaluation Methodology
 
 ANN Recall@10 and human-relevance evaluation are reported separately.
-ANN Recall@10 measures HNSW agreement with exact vector neighbors.
-Relevance evaluation uses filtered binary relevance judgments from the
-MS MARCO `labeled-list` training split restricted to the local
-500K-passage corpus.
+ANN Recall@10 measures HNSW agreement with exact dense Top-10 neighbors.
+Relevance evaluation uses binary positive relevance judgments from the
+MS MARCO `labeled-list` training split. These are **not** official MS
+MARCO dev or leaderboard qrels.
 
-The local subset contains 28,329 relevant judgments across 27,329
-eligible queries, corresponding to 6.786% of the original relevant
-judgments. This subset therefore has incomplete judgments and
-corpus-subset bias and is not presented as an official MS MARCO
-leaderboard result.
+The full 8,841,823-passage corpus contains all 408,158 unique positive
+passages represented by this judgment source, covering 417,462 unique
+positive query-passage judgments across 400,282 eligible queries. This
+100% corpus coverage means that all positives from this source are
+present locally; it does not imply complete human relevance judgments.
 
-Query partitions were frozen before final evaluation. Development data
-was used for weighted-RRF, score-fusion, adaptive-routing, and reranking
-experiments. The final 500-query test set was opened only after the
-Cross-Encoder pipeline was frozen. Paired 10,000-sample bootstrap
-confidence intervals are used for the final Dense-CE vs Union-CE
-comparison.
+Method choices were frozen before the independent 10,000-query
+full-corpus validation sample was evaluated. The sample uses seed 43 and
+is disjoint from the earlier frozen 500-query full-corpus sample.
+Weighted RRF uses `k=60`, lexical weight `0.1`, and dense weight `0.9`.
+The large-scale relevance pipeline uses HNSW `ef_search=160` to reduce
+ANN approximation effects during evaluation. Paired bootstrap confidence
+intervals use 10,000 resamples.
 
 ## Final Relevance Results
 
+### Full-Corpus 10K Evaluation (Primary)
+
 | Pipeline | MRR@10 | nDCG@10 | Recall@10 |
 |---|---:|---:|---:|
-| Lexical | 0.2239 | 0.2645 | 0.3950 |
-| Dense | 0.5207 | 0.5993 | 0.8487 |
-| Equal RRF | 0.4754 | 0.5620 | 0.8407 |
-| Dense Top-50 → Cross-Encoder | 0.5796 | 0.6633 | 0.9257 |
-| **Dense ∪ Lexical → Cross-Encoder** | **0.5931** | **0.6788** | **0.9493** |
+| Lexical | 0.1633 | 0.1940 | 0.2982 |
+| Dense HNSW (`ef=160`) | 0.3101 | 0.3741 | 0.5879 |
+| Weighted RRF (`0.1 lexical / 0.9 dense`) | 0.3219 | 0.3863 | 0.6010 |
+| Dense Top-50 → Cross-Encoder | 0.4022 | 0.4703 | 0.6950 |
+| **Dense ∪ Lexical Top-50 → Cross-Encoder** | **0.4166** | **0.4876** | **0.7211** |
 
-Candidate union before reranking improved nDCG@10 by **+0.0155**, with
-paired-bootstrap 95% CI **[+0.0070, +0.0253]**. MRR@10 improved by
-**+0.0134** (95% CI **[+0.0052, +0.0233]**) and Recall@10 by
-**+0.0237** (95% CI **[+0.0120, +0.0373]**).
+On this independent 10,000-query validation sample, weighted RRF
+outperformed dense retrieval by **+0.0122 nDCG@10** and **+0.0131
+Recall@10**. The largest gain came from Cross-Encoder reranking: Dense
+Top-50 → CE reached 0.4703 nDCG@10, while lexical+dense candidate union
+reached **0.4876**.
 
-Lexical-rescue analysis found 14 relevant documents absent from Dense
-Top-50 but present in the lexical-only candidate set; **13/14** were
-promoted into the final Union Top-10. This supports the interpretation
-that lexical retrieval is most useful here as complementary candidate
-generation rather than naïve equal-weight first-stage fusion.
+Union CE versus Dense CE improved MRR@10 by **+0.0145** (95% CI
+**[+0.0121, +0.0170]**), nDCG@10 by **+0.0173** (95% CI
+**[+0.0147, +0.0199]**), and Recall@10 by **+0.0261** (95% CI
+**[+0.0223, +0.0299]**). Lexical retrieval supplied 485 relevant
+passages absent from Dense Top-50; **339/485 (69.9%)** were promoted into
+the final Union Top-10 by the Cross-Encoder. At the query level, 336 of
+480 affected queries (70.0%) received at least one promoted lexical-only
+relevant passage. This supports lexical retrieval as complementary
+candidate generation rather than establishing a new retrieval algorithm.
 
-Compact frozen protocol and result artifacts are versioned under
-`artifacts/relevance/`; large per-query outputs remain excluded from
+Repeated HNSW executions under the same `ef_search=160` protocol showed
+98.04% exact ordered Top-10 agreement. Another 1.79% of queries had the
+same Top-10 membership with ordering differences, only 0.17% had a
+membership difference, and mean Top-10 overlap was 9.9983/10.
+
+### Earlier 500-Query Evaluation (Supporting)
+
+The earlier held-out evaluation remains as supporting evidence. On that
+protocol, Dense → CE reached 0.6633 nDCG@10 and Dense ∪ Lexical → CE
+reached 0.6788, with a +0.0155 paired improvement. The primary result
+reported above is the larger independent 10K full-corpus evaluation.
+
+Compact full-corpus protocol and result artifacts are versioned under
+`artifacts/msmarco_full/`; large per-query outputs remain excluded from
 Git.
 
 ## Experimental Results
@@ -470,6 +499,43 @@ cost: the table rewrite caused HNSW to be rebuilt. Under lower/default
 maintenance memory, this made the migration substantially more
 expensive.
 
+## Full 8.84M MS MARCO Corpus
+
+The final scale extension ingests and embeds the complete local MS MARCO
+passage corpus used by this project: **8,841,823 passages** with
+384-dimensional normalized MiniLM embeddings. PostgreSQL stores the
+corpus and pgvector HNSW index; PostgreSQL FTS uses a GIN expression
+index. The full database reached approximately 39 GB, with the HNSW index
+approximately 17 GB.
+
+### Full-Corpus Exact vs HNSW
+
+The ANN benchmark uses 100 real MS MARCO training queries. Query vectors
+are generated client-side so the exact baseline does not accidentally
+include a corpus scan to obtain the query embedding. QPS is reported as
+`1000 / mean latency` for this sequential benchmark and is not concurrent
+throughput.
+
+| Method | ANN Recall@10 | Mean (ms) | P50 (ms) | P95 (ms) | Approx. QPS |
+|---|---:|---:|---:|---:|---:|
+| Exact | 1.000 | 5781.9 | 5751.5 | 6949.7 | 0.17 |
+| HNSW `ef=10` | 0.692 | 49.5 | 45.7 | 79.8 | 20.19 |
+| HNSW `ef=20` | 0.780 | 22.0 | 17.5 | 52.9 | 45.52 |
+| HNSW `ef=40` | 0.858 | 38.4 | 31.9 | 92.5 | 26.04 |
+| HNSW `ef=80` | 0.905 | 61.6 | 57.8 | 118.3 | 16.23 |
+| HNSW `ef=160` | 0.939 | 102.6 | 95.6 | 169.6 | 9.74 |
+
+`ef_search=40` is retained as an efficiency-oriented operating point,
+while `ef_search=160` is used for the 10K relevance evaluation to reduce
+ANN approximation effects. The anomalous `ef=10` versus `ef=20` latency
+ordering is treated as an empirical benchmark artifact rather than a
+theoretical property of HNSW.
+
+The full-corpus GIN index is approximately 904 MB. The HNSW graph was
+built with `m=16` and `ef_construction=64`; the container shared-memory
+allocation was increased to 8 GB to support the large index build. The
+exact HNSW build duration was not recorded and is therefore not reported.
+
 ## Scalability Summary
 
 The experiments use different corpora at different stages, so
@@ -515,7 +581,7 @@ PostgreSQL reported that the HNSW graph stopped fitting in
 
 The Docker container's shared memory was increased to:
 
-    shm_size: '2gb'
+    shm_size: '8gb'
 
 and the tuned build used:
 
@@ -686,7 +752,15 @@ backend.
     │   │   ├── routers/
     │   │   ├── schemas/
     │   │   └── services/
-    │   ├── benchmark_exact.py
+    │   ├── scripts/
+│   │   ├── ingest_msmarco_full.py
+│   │   ├── embed_msmarco_full.py
+│   │   ├── benchmark_msmarco_full_ann.py
+│   │   ├── build_msmarco_full_eval_10k.py
+│   │   ├── evaluate_msmarco_full_retrieval_10k.py
+│   │   ├── extract_msmarco_full_ce_candidates_10k.py
+│   │   └── rerank_msmarco_full_ce_10k.py
+│   ├── benchmark_exact.py
     │   ├── benchmark_hnsw.py
     │   ├── benchmark_ivfflat.py
     │   ├── benchmark_scalability_exact.py
@@ -730,11 +804,18 @@ backend.
     │   ├── package.json
     │   └── vite.config.js
     ├── artifacts/
-    │   └── relevance/
+    │   ├── relevance/
     │       ├── protocol_frozen.json
     │       ├── final_retrieval_summary.json
     │       ├── final_reranking_analysis.json
-    │       └── final_split_manifest.json
+    │   │   └── final_split_manifest.json
+│   └── msmarco_full/
+│       ├── ann_benchmark.json
+│       ├── eval_manifest_10k.json
+│       ├── first_stage_10k_paired.json
+│       ├── ce_rerank_10k_summary.json
+│       ├── dense_integrity_10k.json
+│       └── multistage_10k_summary.json
     ├── docs/
     │   ├── system-architecture.png
     │   └── database-erd.jpg
@@ -869,6 +950,8 @@ intentionally not committed to Git.
   `10_scalability_large_hnsw.sql`    500K HNSW index
   `11_large_fulltext.sql`            500K stored full-text vector and GIN index
   `12_application_retrieval.sql`       Application FTS/GIN + HNSW retrieval indexes
+`13_msmarco_full.sql`              Full 8.84M MS MARCO corpus table
+`14_msmarco_full_indexes.sql`      Full-corpus GIN + HNSW indexes
 ## Current Progress
 
 -   [x] PostgreSQL 17 + pgvector
@@ -891,6 +974,11 @@ intentionally not committed to Git.
 -   [x] 10K benchmark
 -   [x] 100K scalability benchmark
 -   [x] 500K MS MARCO scalability benchmark
+-   [x] Full 8.84M MS MARCO corpus ingestion and embeddings
+-   [x] Full-corpus GIN + HNSW indexes
+-   [x] Full-corpus ANN benchmark
+-   [x] Independent 10K-query full-corpus relevance evaluation
+-   [x] 10K Cross-Encoder reranking and lexical-rescue analysis
 -   [x] ANN recall/latency evaluation
 -   [x] HNSW build-memory tuning
 -   [x] FastAPI REST API
@@ -907,85 +995,70 @@ intentionally not committed to Git.
 -   [x] ER diagram design / schema validation
 -   [ ] Final report and live demo
 
-A 1M-document benchmark is **not required for the current project
-scope**. The completed 500K experiment is the final planned large-scale
-benchmark unless additional scale is needed for a later research
-question.
-
 ## Key Engineering Findings
 
-1.  **HNSW provides a large speedup at high ANN recall.** At 500K,
-    `ef_search=40` achieved 0.981 exact-neighbor Recall@10 with 2.215 ms
-    P50, versus 102.918 ms for exact retrieval: approximately **46.47×**
-    lower P50.
-2.  **Naïve hybrid fusion is not automatically better.** Equal RRF
-    reached 0.5620 nDCG@10 versus 0.5993 for dense retrieval on the
-    final set.
-3.  **Reranking produces the largest relevance gain.** Dense Top-50 →
-    Cross-Encoder increased nDCG@10 from 0.5993 to 0.6633.
-4.  **Lexical retrieval is valuable as complementary candidate
-    generation.** Dense ∪ Lexical → Cross-Encoder reached **0.6788
-    nDCG@10** and **0.9493 Recall@10**; ΔnDCG@10 over Dense → CE was
-    +0.0155 with 95% CI [+0.0070, +0.0253].
-5.  **The rescue mechanism is observable.** Lexical retrieval
-    contributed 14 relevant documents absent from Dense Top-50, and 13
-    were promoted into the final Top-10 by the Cross-Encoder.
-6.  **Embedding generation dominates large-scale ingestion.** At 500K,
-    embedding generation took 849.79 s while PostgreSQL insertion took
-    42.36 s.
-7.  **Index-build memory materially affects build time.** At 100K,
-    increasing `maintenance_work_mem` from 64 MB to 1 GB reduced HNSW
-    build time from 37.848 s to 12.038 s.
-8.  **Database correctness remains part of the retrieval system.**
-    Application create → search → update → search → delete → search
-    behavior is covered by integration/regression tests alongside PK/FK,
-    M:N tags, and cascades.
+1. **HNSW remains practical at full-corpus scale.** On 8.84M passages,
+   `ef_search=40` achieved 0.858 ANN Recall@10 with 31.9 ms P50 versus
+   5751.5 ms for exact dense retrieval.
+2. **Dense-dominant hybrid fusion is reproducibly useful.** On the
+   independent 10K evaluation, weighted RRF improved nDCG@10 from 0.3741
+   to 0.3863 and Recall@10 from 0.5879 to 0.6010.
+3. **Reranking produces the largest relevance gain.** Dense Top-50 → CE
+   increased nDCG@10 from 0.3741 to 0.4703.
+4. **Lexical candidates add complementary relevance.** Union CE reached
+   **0.4876 nDCG@10** and **0.7211 Recall@10**; ΔnDCG@10 over Dense CE
+   was +0.0173 with 95% CI [+0.0147, +0.0199].
+5. **The rescue mechanism is observable at 10K scale.** 339 of 485
+   lexical-only relevant passages (69.9%) were promoted into final Top-10.
+6. **The full-corpus relevance protocol is stable across repeated ANN
+   executions.** Mean Top-10 overlap was 9.9983/10 under `ef_search=160`.
+7. **Database resource configuration matters at index-build scale.** The
+   full-corpus HNSW build required increasing Docker shared memory to 8 GB
+   while using 4 GB `maintenance_work_mem`.
+8. **Database correctness remains part of the retrieval system.**
+   Application create → search → update → search → delete → search behavior
+   is covered by integration/regression tests alongside PK/FK, M:N tags,
+   and cascades.
 
 ## Limitations
 
--   Relevance judgments are filtered from the MS MARCO `labeled-list`
-    training split to the local 500K passage subset; they are incomplete
-    and are not official MS MARCO leaderboard results.
--   The local corpus retains 6.786% of the original relevant judgments,
-    introducing subset and judgment-coverage bias.
--   ANN Recall@10 measures exact-neighbor agreement; relevance Recall@10
-    uses qrels. They answer different questions.
--   10K, 100K, and 500K experiments are not a perfectly controlled
-    scaling study.
--   Latency depends on hardware, cache state, PostgreSQL configuration,
-    query distribution, and workload.
--   Formal database retrieval latency excludes query-embedding
-    inference.
--   Cross-Encoder latency is an engineering measurement rather than a
-    controlled concurrent-serving benchmark; Dense-CE and Union-CE were
-    not randomized in execution order.
--   Cross-Encoder reranking and hybrid candidate generation are
-    established techniques; this project evaluates and integrates them
-    rather than claiming a new retrieval algorithm.
--   The system is an engineering/research prototype, not a production
-    service with authentication, observability, replication/failover,
-    online index maintenance, SLOs, backup/recovery, and sustained load
-    testing.
+- Relevance judgments are binary positives from the MS MARCO
+  `labeled-list` training split, not official dev/leaderboard qrels.
+- Full-corpus coverage is 100% for positives represented by this source,
+  but the judgments are still incomplete as human relevance labels.
+- ANN Recall@10 measures exact-neighbor agreement; relevance Recall@10
+  uses qrels. They answer different questions.
+- Latency depends on hardware, cache state, PostgreSQL configuration,
+  query distribution, and workload.
+- Formal database retrieval latency excludes query-embedding inference.
+- Cross-Encoder latency reported by the relevance pipeline is reranker
+  inference latency, not end-to-end or concurrent-serving latency.
+- Cross-Encoder reranking, RRF, and hybrid candidate generation are
+  established techniques; this project evaluates and integrates them
+  rather than claiming a new retrieval algorithm.
+- The system is an engineering/research prototype, not a production
+  service with authentication, observability, replication/failover,
+  online index maintenance, SLOs, backup/recovery, and sustained load
+  testing.
 
 ## Suggested Demo Flow
 
-1.  Show the normalized schema: PK/FK, M:N tags, constraints, generated
-    FTS vectors, GIN/HNSW indexes, and cascade behavior.
-2.  Open the dashboard and verify PostgreSQL/pgvector statistics.
-3.  Demonstrate the application corpus lifecycle: create → search →
-    update → search → tag → delete → search.
-4.  Run a benchmark query with Lexical, Vector, and Hybrid retrieval and
-    explain GIN, HNSW, RRF, candidate depth, and `ef_search`.
-5.  Present the 500K ANN result: HNSW `ef_search=40` achieved **0.981
-    Recall@10**, **2.215 ms P50**, and approximately **46.47×** lower
-    P50 than exact retrieval.
-6.  Close with relevance evaluation: Dense → CE reached 0.6633 nDCG@10;
-    Dense ∪ Lexical → CE reached **0.6788**, with 95% CI **[+0.0070,
-    +0.0253]** for the +0.0155 improvement.
+1. Show the normalized schema: PK/FK, M:N tags, constraints, generated FTS
+   vectors, GIN/HNSW indexes, and cascade behavior.
+2. Open the dashboard and verify PostgreSQL/pgvector statistics.
+3. Demonstrate the application corpus lifecycle: create → search → update
+   → search → tag → delete → search.
+4. Run a benchmark query with Lexical, Vector, and Hybrid retrieval and
+   explain GIN, HNSW, RRF, candidate depth, and `ef_search`.
+5. Present the full 8.84M ANN result: exact P50 5751.5 ms versus HNSW
+   `ef_search=40` P50 31.9 ms at 0.858 ANN Recall@10.
+6. Close with the independent 10K relevance evaluation: Dense 0.3741 →
+   Weighted RRF 0.3863 → Dense CE 0.4703 → **Union CE 0.4876 nDCG@10**,
+   with Union-vs-Dense-CE 95% CI **[+0.0147, +0.0199]**.
 
 ## Roadmap
 
-``` text
+```text
 Core relational database                         DONE
         ↓
 Exact / HNSW / IVFFlat retrieval                 DONE
@@ -996,22 +1069,18 @@ PostgreSQL FTS + GIN                             DONE
         ↓
 Application CRUD ↔ retrieval lifecycle           DONE
         ↓
-Qrels-based relevance evaluation                 DONE
+Full 8.84M MS MARCO ingestion + indexing         DONE
         ↓
-Fusion / adaptive ablations                      DONE
+Full-corpus ANN benchmark                        DONE
         ↓
-Cross-Encoder multi-stage reranking               DONE
+Independent 10K relevance evaluation             DONE
         ↓
-Frozen final evaluation + paired analysis         DONE
+Cross-Encoder + lexical-rescue analysis           DONE
         ↓
 React/Vite dashboard                              DONE
         ↓
 Final report + presentation + live demo           IN PROGRESS
 ```
-
-A 1M-document benchmark is intentionally outside the current project
-scope. The validated 500K experiment is the final planned large-scale
-benchmark unless a later research question requires additional scale.
 
 ## Author
 

@@ -1,0 +1,14 @@
+{
+  "protocol": "msmarco-full-10k-dense-integrity-v2",
+  "queries": 10000,
+  "ef_search": 160,
+  "candidate_k": 50,
+  "top_k": 10,
+  "exact_ordered_top10": 9804,
+  "exact_ordered_top10_rate": 0.9804,
+  "same_membership_order_only": 179,
+  "same_membership_order_only_rate": 0.0179,
+  "membership_differences": 17,
+  "membership_difference_rate": 0.0017,
+  "mean_top10_overlap": 9.9983
+}

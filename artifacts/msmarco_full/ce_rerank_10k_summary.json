@@ -1,0 +1,83 @@
+{
+  "protocol": {
+    "name": "msmarco-full-ce-rerank-10k-v1",
+    "corpus_documents": 8841823,
+    "queries": 10000,
+    "candidate_source": "results/msmarco_full/relevance/ce_candidates_10k.json",
+    "candidate_k": 50,
+    "candidate_generation_requested_ef_search": 160,
+    "candidate_generation_effective_ef_search": 160,
+    "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "top_k": 10,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 42
+  },
+  "summary": {
+    "dense_ce": {
+      "mrr_at_10": 0.402175,
+      "ndcg_at_10": 0.47030785600168895,
+      "recall_at_10": 0.69505
+    },
+    "union_ce": {
+      "mrr_at_10": 0.41664349206349205,
+      "ndcg_at_10": 0.48757835166935154,
+      "recall_at_10": 0.7211333333333333
+    },
+    "latency": {
+      "dense_ce": {
+        "mean_ms": 74.23710783895804,
+        "p50_ms": 68.44458350678906,
+        "p95_ms": 105.65856040338983
+      },
+      "union_ce": {
+        "mean_ms": 98.15764240837598,
+        "p50_ms": 85.87447949685156,
+        "p95_ms": 161.82657565514083
+      }
+    },
+    "paired_bootstrap": {
+      "mrr_at_10": {
+        "dense_mean": 0.402175,
+        "union_mean": 0.41664349206349205,
+        "delta": 0.014468492063492062,
+        "ci95": [
+          0.012098797619047618,
+          0.017017434523809518
+        ],
+        "wins": 326,
+        "ties": 9326,
+        "losses": 348
+      },
+      "ndcg_at_10": {
+        "dense_mean": 0.47030785600168895,
+        "union_mean": 0.4875783516693515,
+        "delta": 0.017270495667662582,
+        "ci95": [
+          0.014711428385821965,
+          0.019911430928798258
+        ],
+        "wins": 336,
+        "ties": 9304,
+        "losses": 360
+      },
+      "recall_at_10": {
+        "dense_mean": 0.69505,
+        "union_mean": 0.7211333333333334,
+        "delta": 0.02608333333333333,
+        "ci95": [
+          0.02235,
+          0.02992520833333333
+        ],
+        "wins": 336,
+        "ties": 9595,
+        "losses": 69
+      }
+    },
+    "lexical_rescue": {
+      "queries_with_lexical_only_relevant": 480,
+      "lexical_only_relevant_documents": 485,
+      "queries_with_promoted_lexical_only_relevant": 336,
+      "promoted_lexical_only_relevant_documents": 339
+    }
+  }
+}

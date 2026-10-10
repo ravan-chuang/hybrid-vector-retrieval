@@ -1,0 +1,5072 @@
+{
+  "protocol": "msmarco-full-relevance-v1",
+  "seed": 42,
+  "sample_size": 500,
+  "selection": "Uniform random sample without replacement from queries having >=1 positive labeled-list judgment present in the full local MS MARCO passage corpus and available query text.",
+  "qrels_source": "sentence-transformers/msmarco labeled-list training split",
+  "corpus_size": 8841823,
+  "queries": [
+    {
+      "query_id": "841558",
+      "query": "what is the proper name for the common seagull especially",
+      "relevant_pids": [
+        3520662
+      ],
+      "relevant_document_ids": [
+        3520663
+      ]
+    },
+    {
+      "query_id": "1184029",
+      "query": "dramatization meaning",
+      "relevant_pids": [
+        6620240
+      ],
+      "relevant_document_ids": [
+        6620241
+      ]
+    },
+    {
+      "query_id": "1033458",
+      "query": "who is harry styles music",
+      "relevant_pids": [
+        2640480
+      ],
+      "relevant_document_ids": [
+        2640481
+      ]
+    },
+    {
+      "query_id": "978146",
+      "query": "where is big prairie, ohio",
+      "relevant_pids": [
+        2287398
+      ],
+      "relevant_document_ids": [
+        2287399
+      ]
+    },
+    {
+      "query_id": "360569",
+      "query": "how to get a breech baby to turn",
+      "relevant_pids": [
+        908055
+      ],
+      "relevant_document_ids": [
+        908056
+      ]
+    },
+    {
+      "query_id": "306468",
+      "query": "how much do neuropsychologists make",
+      "relevant_pids": [
+        5746158
+      ],
+      "relevant_document_ids": [
+        5746159
+      ]
+    },
+    {
+      "query_id": "276489",
+      "query": "how many calories does a small sweet potato have",
+      "relevant_pids": [
+        6001960
+      ],
+      "relevant_document_ids": [
+        6001961
+      ]
+    },
+    {
+      "query_id": "153507",
+      "query": "distance from cle to indianapolis, in",
+      "relevant_pids": [
+        6348302
+      ],
+      "relevant_document_ids": [
+        6348303
+      ]
+    },
+    {
+      "query_id": "972511",
+      "query": "where does arancini come from",
+      "relevant_pids": [
+        5392453
+      ],
+      "relevant_document_ids": [
+        5392454
+      ]
+    },
+    {
+      "query_id": "1174994",
+      "query": "is deferred profit sharing plan pre-tax?",
+      "relevant_pids": [
+        7045073
+      ],
+      "relevant_document_ids": [
+        7045074
+      ]
+    },
+    {
+      "query_id": "891358",
+      "query": "what reyes gloves do pros use",
+      "relevant_pids": [
+        5066539
+      ],
+      "relevant_document_ids": [
+        5066540
+      ]
+    },
+    {
+      "query_id": "977314",
+      "query": "where is astroturf located",
+      "relevant_pids": [
+        5060413
+      ],
+      "relevant_document_ids": [
+        5060414
+      ]
+    },
+    {
+      "query_id": "72201",
+      "query": "can papillomavirus hpv  cause warts that cover your lung",
+      "relevant_pids": [
+        780213
+      ],
+      "relevant_document_ids": [
+        780214
+      ]
+    },
+    {
+      "query_id": "1160515",
+      "query": "what does takers of last resort mean",
+      "relevant_pids": [
+        568675
+      ],
+      "relevant_document_ids": [
+        568676
+      ]
+    },
+    {
+      "query_id": "778958",
+      "query": "what is official language of nigeria",
+      "relevant_pids": [
+        3465010
+      ],
+      "relevant_document_ids": [
+        3465011
+      ]
+    },
+    {
+      "query_id": "566749",
+      "query": "what are tangible items",
+      "relevant_pids": [
+        2453605
+      ],
+      "relevant_document_ids": [
+        2453606
+      ]
+    },
+    {
+      "query_id": "1041178",
+      "query": "who is the oldest baseball player",
+      "relevant_pids": [
+        3152325
+      ],
+      "relevant_document_ids": [
+        3152326
+      ]
+    },
+    {
+      "query_id": "103867",
+      "query": "cost of endoscopic sleeve gastroplasty",
+      "relevant_pids": [
+        4850767
+      ],
+      "relevant_document_ids": [
+        4850768
+      ]
+    },
+    {
+      "query_id": "1167280",
+      "query": "western union help phone number",
+      "relevant_pids": [
+        6595153
+      ],
+      "relevant_document_ids": [
+        6595154
+      ]
+    },
+    {
+      "query_id": "270223",
+      "query": "how long to cook sweet potatoes in the oven",
+      "relevant_pids": [
+        2718484
+      ],
+      "relevant_document_ids": [
+        2718485
+      ]
+    },
+    {
+      "query_id": "289002",
+      "query": "how many miles is the amazon river",
+      "relevant_pids": [
+        6603530
+      ],
+      "relevant_document_ids": [
+        6603531
+      ]
+    },
+    {
+      "query_id": "66994",
+      "query": "can electronics get cold",
+      "relevant_pids": [
+        3824389
+      ],
+      "relevant_document_ids": [
+        3824390
+      ]
+    },
+    {
+      "query_id": "793241",
+      "query": "what is sales tax in green valley, arizona?",
+      "relevant_pids": [
+        3284590
+      ],
+      "relevant_document_ids": [
+        3284591
+      ]
+    },
+    {
+      "query_id": "1035056",
+      "query": "who is l. night shyamalan",
+      "relevant_pids": [
+        3524539
+      ],
+      "relevant_document_ids": [
+        3524540
+      ]
+    },
+    {
+      "query_id": "741894",
+      "query": "what is dvi device",
+      "relevant_pids": [
+        2080199
+      ],
+      "relevant_document_ids": [
+        2080200
+      ]
+    },
+    {
+      "query_id": "241810",
+      "query": "how long can cooked shrimp stay in the fridge",
+      "relevant_pids": [
+        1325621
+      ],
+      "relevant_document_ids": [
+        1325622
+      ]
+    },
+    {
+      "query_id": "945733",
+      "query": "when does a human embryo become male of female",
+      "relevant_pids": [
+        4906200
+      ],
+      "relevant_document_ids": [
+        4906201
+      ]
+    },
+    {
+      "query_id": "855299",
+      "query": "what is the zip code of eureka ca",
+      "relevant_pids": [
+        2786405
+      ],
+      "relevant_document_ids": [
+        2786406
+      ]
+    },
+    {
+      "query_id": "925083",
+      "query": "what works for heartburn",
+      "relevant_pids": [
+        2405851
+      ],
+      "relevant_document_ids": [
+        2405852
+      ]
+    },
+    {
+      "query_id": "721529",
+      "query": "what is average width of door opening",
+      "relevant_pids": [
+        1682301
+      ],
+      "relevant_document_ids": [
+        1682302
+      ]
+    },
+    {
+      "query_id": "563602",
+      "query": "what are pressed beads",
+      "relevant_pids": [
+        7900184
+      ],
+      "relevant_document_ids": [
+        7900185
+      ]
+    },
+    {
+      "query_id": "272793",
+      "query": "how long until after the flu are you contagious",
+      "relevant_pids": [
+        5225161
+      ],
+      "relevant_document_ids": [
+        5225162
+      ]
+    },
+    {
+      "query_id": "603312",
+      "query": "what county is bolingbrook il in",
+      "relevant_pids": [
+        5044778
+      ],
+      "relevant_document_ids": [
+        5044779
+      ]
+    },
+    {
+      "query_id": "777480",
+      "query": "what is normal distribution",
+      "relevant_pids": [
+        453153
+      ],
+      "relevant_document_ids": [
+        453154
+      ]
+    },
+    {
+      "query_id": "36994",
+      "query": "average height for air hostess",
+      "relevant_pids": [
+        3031730
+      ],
+      "relevant_document_ids": [
+        3031731
+      ]
+    },
+    {
+      "query_id": "1007877",
+      "query": "which county is harrison ny located",
+      "relevant_pids": [
+        2328742
+      ],
+      "relevant_document_ids": [
+        2328743
+      ]
+    },
+    {
+      "query_id": "994993",
+      "query": "where is the cincinnati music festival held",
+      "relevant_pids": [
+        3337282
+      ],
+      "relevant_document_ids": [
+        3337283
+      ]
+    },
+    {
+      "query_id": "180792",
+      "query": "enterprise model definition",
+      "relevant_pids": [
+        486400
+      ],
+      "relevant_document_ids": [
+        486401
+      ]
+    },
+    {
+      "query_id": "920787",
+      "query": "what was the goal of the workers rights movement in the united states",
+      "relevant_pids": [
+        3095740
+      ],
+      "relevant_document_ids": [
+        3095741
+      ]
+    },
+    {
+      "query_id": "567591",
+      "query": "what are the best fitness apps",
+      "relevant_pids": [
+        1408587,
+        1408590
+      ],
+      "relevant_document_ids": [
+        1408588,
+        1408591
+      ]
+    },
+    {
+      "query_id": "457831",
+      "query": "most expensive thing ever stolen",
+      "relevant_pids": [
+        5506978
+      ],
+      "relevant_document_ids": [
+        5506979
+      ]
+    },
+    {
+      "query_id": "368874",
+      "query": "how to make fonts smaller in outlook",
+      "relevant_pids": [
+        383375
+      ],
+      "relevant_document_ids": [
+        383376
+      ]
+    },
+    {
+      "query_id": "17540",
+      "query": "an adult definition",
+      "relevant_pids": [
+        1008973
+      ],
+      "relevant_document_ids": [
+        1008974
+      ]
+    },
+    {
+      "query_id": "265514",
+      "query": "how long is xanax detected in urine",
+      "relevant_pids": [
+        1054944
+      ],
+      "relevant_document_ids": [
+        1054945
+      ]
+    },
+    {
+      "query_id": "452849",
+      "query": "mesenchyme definition",
+      "relevant_pids": [
+        7290685
+      ],
+      "relevant_document_ids": [
+        7290686
+      ]
+    },
+    {
+      "query_id": "1174733",
+      "query": "is the pharynx layered with stratified squamous epithelium",
+      "relevant_pids": [
+        2134944
+      ],
+      "relevant_document_ids": [
+        2134945
+      ]
+    },
+    {
+      "query_id": "1166311",
+      "query": "what are some advancements does computer engineering",
+      "relevant_pids": [
+        7494047
+      ],
+      "relevant_document_ids": [
+        7494048
+      ]
+    },
+    {
+      "query_id": "511496",
+      "query": "temecula average weather",
+      "relevant_pids": [
+        1708636
+      ],
+      "relevant_document_ids": [
+        1708637
+      ]
+    },
+    {
+      "query_id": "1169893",
+      "query": "temperature for temecula california",
+      "relevant_pids": [
+        1050272
+      ],
+      "relevant_document_ids": [
+        1050273
+      ]
+    },
+    {
+      "query_id": "481690",
+      "query": "prime rib cost",
+      "relevant_pids": [
+        2236230
+      ],
+      "relevant_document_ids": [
+        2236231
+      ]
+    },
+    {
+      "query_id": "462727",
+      "query": "nature color meanings",
+      "relevant_pids": [
+        160737
+      ],
+      "relevant_document_ids": [
+        160738
+      ]
+    },
+    {
+      "query_id": "795406",
+      "query": "what is severe ectasia of right lower anterior descending and circumflex artery",
+      "relevant_pids": [
+        2251464
+      ],
+      "relevant_document_ids": [
+        2251465
+      ]
+    },
+    {
+      "query_id": "336309",
+      "query": "how old is rick leach",
+      "relevant_pids": [
+        5167479
+      ],
+      "relevant_document_ids": [
+        5167480
+      ]
+    },
+    {
+      "query_id": "105589",
+      "query": "cost of ministry truck inspection",
+      "relevant_pids": [
+        6936626
+      ],
+      "relevant_document_ids": [
+        6936627
+      ]
+    },
+    {
+      "query_id": "963994",
+      "query": "when will period start back up after breastfeeding",
+      "relevant_pids": [
+        94144
+      ],
+      "relevant_document_ids": [
+        94145
+      ]
+    },
+    {
+      "query_id": "61154",
+      "query": "calories in whole wheat loaf of bread",
+      "relevant_pids": [
+        6404345
+      ],
+      "relevant_document_ids": [
+        6404346
+      ]
+    },
+    {
+      "query_id": "71015",
+      "query": "can lvns delegate",
+      "relevant_pids": [
+        5710950
+      ],
+      "relevant_document_ids": [
+        5710951
+      ]
+    },
+    {
+      "query_id": "133771",
+      "query": "definition of cyclothymic disorder",
+      "relevant_pids": [
+        6013566
+      ],
+      "relevant_document_ids": [
+        6013567
+      ]
+    },
+    {
+      "query_id": "509308",
+      "query": "syncope causes and symptoms",
+      "relevant_pids": [
+        1209444
+      ],
+      "relevant_document_ids": [
+        1209445
+      ]
+    },
+    {
+      "query_id": "1152407",
+      "query": "what is table of contents word",
+      "relevant_pids": [
+        1364181
+      ],
+      "relevant_document_ids": [
+        1364182
+      ]
+    },
+    {
+      "query_id": "730055",
+      "query": "what is chiffon used for",
+      "relevant_pids": [
+        7739722
+      ],
+      "relevant_document_ids": [
+        7739723
+      ]
+    },
+    {
+      "query_id": "399960",
+      "query": "is a foundation degree undergraduate",
+      "relevant_pids": [
+        5563533
+      ],
+      "relevant_document_ids": [
+        5563534
+      ]
+    },
+    {
+      "query_id": "827611",
+      "query": "what is the latin abbreviation for l ear",
+      "relevant_pids": [
+        968598
+      ],
+      "relevant_document_ids": [
+        968599
+      ]
+    },
+    {
+      "query_id": "814304",
+      "query": "what is the deadline for making roth ira contributions",
+      "relevant_pids": [
+        5160505
+      ],
+      "relevant_document_ids": [
+        5160506
+      ]
+    },
+    {
+      "query_id": "48538",
+      "query": "balm define",
+      "relevant_pids": [
+        6616359
+      ],
+      "relevant_document_ids": [
+        6616360
+      ]
+    },
+    {
+      "query_id": "76267",
+      "query": "can you carry nimh batteries",
+      "relevant_pids": [
+        1508136
+      ],
+      "relevant_document_ids": [
+        1508137
+      ]
+    },
+    {
+      "query_id": "231782",
+      "query": "how far is mulberry from indianapolis",
+      "relevant_pids": [
+        1053094
+      ],
+      "relevant_document_ids": [
+        1053095
+      ]
+    },
+    {
+      "query_id": "929024",
+      "query": "what years were president john f kennedy in office",
+      "relevant_pids": [
+        2487435
+      ],
+      "relevant_document_ids": [
+        2487436
+      ]
+    },
+    {
+      "query_id": "1142268",
+      "query": "when was sarbanes oxley act put in place",
+      "relevant_pids": [
+        601733
+      ],
+      "relevant_document_ids": [
+        601734
+      ]
+    },
+    {
+      "query_id": "1058813",
+      "query": "who wrote the book entitled five dollars and a pork chop",
+      "relevant_pids": [
+        3151923
+      ],
+      "relevant_document_ids": [
+        3151924
+      ]
+    },
+    {
+      "query_id": "869868",
+      "query": "what kind of panda is extinct",
+      "relevant_pids": [
+        3787678,
+        3787681
+      ],
+      "relevant_document_ids": [
+        3787679,
+        3787682
+      ]
+    },
+    {
+      "query_id": "282572",
+      "query": "how many dogs survived the titanic",
+      "relevant_pids": [
+        2690571
+      ],
+      "relevant_document_ids": [
+        2690572
+      ]
+    },
+    {
+      "query_id": "394891",
+      "query": "incidence of glaucoma",
+      "relevant_pids": [
+        7325742
+      ],
+      "relevant_document_ids": [
+        7325743
+      ]
+    },
+    {
+      "query_id": "1153386",
+      "query": "cost of education to be a marine biologist",
+      "relevant_pids": [
+        1268639
+      ],
+      "relevant_document_ids": [
+        1268640
+      ]
+    },
+    {
+      "query_id": "289127",
+      "query": "how many miles should a new car have on it at delivery",
+      "relevant_pids": [
+        6606122
+      ],
+      "relevant_document_ids": [
+        6606123
+      ]
+    },
+    {
+      "query_id": "1173667",
+      "query": "meaning of factoid",
+      "relevant_pids": [
+        214863
+      ],
+      "relevant_document_ids": [
+        214864
+      ]
+    },
+    {
+      "query_id": "511731",
+      "query": "temperature conversion fahrenheit to celsius",
+      "relevant_pids": [
+        4107944
+      ],
+      "relevant_document_ids": [
+        4107945
+      ]
+    },
+    {
+      "query_id": "369169",
+      "query": "how to make lava for a homemade volcano",
+      "relevant_pids": [
+        4223335
+      ],
+      "relevant_document_ids": [
+        4223336
+      ]
+    },
+    {
+      "query_id": "606627",
+      "query": "what county is grandview indiana",
+      "relevant_pids": [
+        739086
+      ],
+      "relevant_document_ids": [
+        739087
+      ]
+    },
+    {
+      "query_id": "836768",
+      "query": "what is the normal range for a man's psa test",
+      "relevant_pids": [
+        3618245
+      ],
+      "relevant_document_ids": [
+        3618246
+      ]
+    },
+    {
+      "query_id": "489970",
+      "query": "root meaning of opia",
+      "relevant_pids": [
+        5544245
+      ],
+      "relevant_document_ids": [
+        5544246
+      ]
+    },
+    {
+      "query_id": "185007",
+      "query": "famous people who survived testicular cancer",
+      "relevant_pids": [
+        5819612,
+        5819616
+      ],
+      "relevant_document_ids": [
+        5819613,
+        5819617
+      ]
+    },
+    {
+      "query_id": "49743",
+      "query": "behaviorist learning theory definition",
+      "relevant_pids": [
+        5729796
+      ],
+      "relevant_document_ids": [
+        5729797
+      ]
+    },
+    {
+      "query_id": "477437",
+      "query": "population of christian county kentucky",
+      "relevant_pids": [
+        1108116
+      ],
+      "relevant_document_ids": [
+        1108117
+      ]
+    },
+    {
+      "query_id": "25737",
+      "query": "are there orcas in alaska",
+      "relevant_pids": [
+        2241809
+      ],
+      "relevant_document_ids": [
+        2241810
+      ]
+    },
+    {
+      "query_id": "882618",
+      "query": "what occurs during the calvin cycle",
+      "relevant_pids": [
+        5095159
+      ],
+      "relevant_document_ids": [
+        5095160
+      ]
+    },
+    {
+      "query_id": "340327",
+      "query": "how tall are standard kitchen bottom cabinets",
+      "relevant_pids": [
+        1743622,
+        1743628
+      ],
+      "relevant_document_ids": [
+        1743623,
+        1743629
+      ]
+    },
+    {
+      "query_id": "925873",
+      "query": "what year did al gore run for pres",
+      "relevant_pids": [
+        2369071
+      ],
+      "relevant_document_ids": [
+        2369072
+      ]
+    },
+    {
+      "query_id": "900592",
+      "query": "what team does tebow play on",
+      "relevant_pids": [
+        3553999
+      ],
+      "relevant_document_ids": [
+        3554000
+      ]
+    },
+    {
+      "query_id": "852877",
+      "query": "what is the vanadium made for",
+      "relevant_pids": [
+        2607187
+      ],
+      "relevant_document_ids": [
+        2607188
+      ]
+    },
+    {
+      "query_id": "1144157",
+      "query": "what would a pioneer species be",
+      "relevant_pids": [
+        2138895
+      ],
+      "relevant_document_ids": [
+        2138896
+      ]
+    },
+    {
+      "query_id": "802085",
+      "query": "what is talc used for",
+      "relevant_pids": [
+        4489113,
+        4489114
+      ],
+      "relevant_document_ids": [
+        4489114,
+        4489115
+      ]
+    },
+    {
+      "query_id": "835935",
+      "query": "what is the nationality is trump",
+      "relevant_pids": [
+        688137
+      ],
+      "relevant_document_ids": [
+        688138
+      ]
+    },
+    {
+      "query_id": "19669",
+      "query": "ao pye in wow",
+      "relevant_pids": [
+        2644403
+      ],
+      "relevant_document_ids": [
+        2644404
+      ]
+    },
+    {
+      "query_id": "707458",
+      "query": "what is acetoin",
+      "relevant_pids": [
+        511172
+      ],
+      "relevant_document_ids": [
+        511173
+      ]
+    },
+    {
+      "query_id": "963122",
+      "query": "when was yayoi kusama born",
+      "relevant_pids": [
+        4340018
+      ],
+      "relevant_document_ids": [
+        4340019
+      ]
+    },
+    {
+      "query_id": "306342",
+      "query": "how much do medical technologists make",
+      "relevant_pids": [
+        5669328
+      ],
+      "relevant_document_ids": [
+        5669329
+      ]
+    },
+    {
+      "query_id": "18609",
+      "query": "annuity age restrictions",
+      "relevant_pids": [
+        3791675
+      ],
+      "relevant_document_ids": [
+        3791676
+      ]
+    },
+    {
+      "query_id": "613674",
+      "query": "what county is thousand oaks california in",
+      "relevant_pids": [
+        3505841
+      ],
+      "relevant_document_ids": [
+        3505842
+      ]
+    },
+    {
+      "query_id": "510863",
+      "query": "taylor swift education",
+      "relevant_pids": [
+        6836484
+      ],
+      "relevant_document_ids": [
+        6836485
+      ]
+    },
+    {
+      "query_id": "345736",
+      "query": "how to become more empathetic",
+      "relevant_pids": [
+        6183528
+      ],
+      "relevant_document_ids": [
+        6183529
+      ]
+    },
+    {
+      "query_id": "842318",
+      "query": "what is the purpose of creating a template",
+      "relevant_pids": [
+        3101334
+      ],
+      "relevant_document_ids": [
+        3101335
+      ]
+    },
+    {
+      "query_id": "907447",
+      "query": "what to expect after a total knee replacement",
+      "relevant_pids": [
+        3278540
+      ],
+      "relevant_document_ids": [
+        3278541
+      ]
+    },
+    {
+      "query_id": "736387",
+      "query": "what is cstr in vb",
+      "relevant_pids": [
+        6734409
+      ],
+      "relevant_document_ids": [
+        6734410
+      ]
+    },
+    {
+      "query_id": "271632",
+      "query": "how long to mow after fertilizing",
+      "relevant_pids": [
+        1183387
+      ],
+      "relevant_document_ids": [
+        1183388
+      ]
+    },
+    {
+      "query_id": "902007",
+      "query": "what temperature should a incubator for chicken eggs be at",
+      "relevant_pids": [
+        3266144
+      ],
+      "relevant_document_ids": [
+        3266145
+      ]
+    },
+    {
+      "query_id": "437644",
+      "query": "largest wolf species",
+      "relevant_pids": [
+        1068994
+      ],
+      "relevant_document_ids": [
+        1068995
+      ]
+    },
+    {
+      "query_id": "1075812",
+      "query": "why was the no child left behind act passed",
+      "relevant_pids": [
+        6305119
+      ],
+      "relevant_document_ids": [
+        6305120
+      ]
+    },
+    {
+      "query_id": "28410",
+      "query": "at what age does menopause start",
+      "relevant_pids": [
+        701424
+      ],
+      "relevant_document_ids": [
+        701425
+      ]
+    },
+    {
+      "query_id": "1041562",
+      "query": "who is the q in a play card",
+      "relevant_pids": [
+        3590465
+      ],
+      "relevant_document_ids": [
+        3590466
+      ]
+    },
+    {
+      "query_id": "426500",
+      "query": "is the hse a regulatory body",
+      "relevant_pids": [
+        2004816
+      ],
+      "relevant_document_ids": [
+        2004817
+      ]
+    },
+    {
+      "query_id": "540142",
+      "query": "was is itv encore",
+      "relevant_pids": [
+        726376
+      ],
+      "relevant_document_ids": [
+        726377
+      ]
+    },
+    {
+      "query_id": "34114",
+      "query": "average cost of new freight tractor",
+      "relevant_pids": [
+        3762168
+      ],
+      "relevant_document_ids": [
+        3762169
+      ]
+    },
+    {
+      "query_id": "1139077",
+      "query": "who created the first box of chocolates for valentine's day",
+      "relevant_pids": [
+        2627733
+      ],
+      "relevant_document_ids": [
+        2627734
+      ]
+    },
+    {
+      "query_id": "259595",
+      "query": "how long does someone last in hospice",
+      "relevant_pids": [
+        2840963
+      ],
+      "relevant_document_ids": [
+        2840964
+      ]
+    },
+    {
+      "query_id": "749500",
+      "query": "what is functional departmentalization",
+      "relevant_pids": [
+        2177141
+      ],
+      "relevant_document_ids": [
+        2177142
+      ]
+    },
+    {
+      "query_id": "948736",
+      "query": "when does your cervix move",
+      "relevant_pids": [
+        2464883
+      ],
+      "relevant_document_ids": [
+        2464884
+      ]
+    },
+    {
+      "query_id": "425565",
+      "query": "is texting illegal in florida",
+      "relevant_pids": [
+        6060144
+      ],
+      "relevant_document_ids": [
+        6060145
+      ]
+    },
+    {
+      "query_id": "261882",
+      "query": "how long i have to wait for citizenship after i failed test",
+      "relevant_pids": [
+        2318790
+      ],
+      "relevant_document_ids": [
+        2318791
+      ]
+    },
+    {
+      "query_id": "862266",
+      "query": "what is watsu",
+      "relevant_pids": [
+        1370597
+      ],
+      "relevant_document_ids": [
+        1370598
+      ]
+    },
+    {
+      "query_id": "660823",
+      "query": "what foods are anti inflammatory",
+      "relevant_pids": [
+        6259544
+      ],
+      "relevant_document_ids": [
+        6259545
+      ]
+    },
+    {
+      "query_id": "532561",
+      "query": "universities that offer a mba hrm",
+      "relevant_pids": [
+        2054495
+      ],
+      "relevant_document_ids": [
+        2054496
+      ]
+    },
+    {
+      "query_id": "845963",
+      "query": "what is the scientific name for ferns",
+      "relevant_pids": [
+        5227881
+      ],
+      "relevant_document_ids": [
+        5227882
+      ]
+    },
+    {
+      "query_id": "611058",
+      "query": "what county is paron ar in",
+      "relevant_pids": [
+        8358008
+      ],
+      "relevant_document_ids": [
+        8358009
+      ]
+    },
+    {
+      "query_id": "157893",
+      "query": "do mosquito nets work against the prevention of malaria",
+      "relevant_pids": [
+        5715767
+      ],
+      "relevant_document_ids": [
+        5715768
+      ]
+    },
+    {
+      "query_id": "336813",
+      "query": "how old is thylane blondeau",
+      "relevant_pids": [
+        5760105
+      ],
+      "relevant_document_ids": [
+        5760106
+      ]
+    },
+    {
+      "query_id": "153608",
+      "query": "distance from minneapolis to springfield mo",
+      "relevant_pids": [
+        5647045
+      ],
+      "relevant_document_ids": [
+        5647046
+      ]
+    },
+    {
+      "query_id": "309140",
+      "query": "how much does a credit union branch manager make",
+      "relevant_pids": [
+        3917082
+      ],
+      "relevant_document_ids": [
+        3917083
+      ]
+    },
+    {
+      "query_id": "981581",
+      "query": "where is douglas school located",
+      "relevant_pids": [
+        3379796
+      ],
+      "relevant_document_ids": [
+        3379797
+      ]
+    },
+    {
+      "query_id": "742021",
+      "query": "what is dysgraphia symptoms",
+      "relevant_pids": [
+        921153
+      ],
+      "relevant_document_ids": [
+        921154
+      ]
+    },
+    {
+      "query_id": "713804",
+      "query": "what is an epacket delivery",
+      "relevant_pids": [
+        6663860
+      ],
+      "relevant_document_ids": [
+        6663861
+      ]
+    },
+    {
+      "query_id": "3335",
+      "query": "History of Microchip Timeline",
+      "relevant_pids": [
+        5321016
+      ],
+      "relevant_document_ids": [
+        5321017
+      ]
+    },
+    {
+      "query_id": "983561",
+      "query": "where is goose bay elementary school",
+      "relevant_pids": [
+        2549317
+      ],
+      "relevant_document_ids": [
+        2549318
+      ]
+    },
+    {
+      "query_id": "771698",
+      "query": "what is mi paste",
+      "relevant_pids": [
+        2415269
+      ],
+      "relevant_document_ids": [
+        2415270
+      ]
+    },
+    {
+      "query_id": "575306",
+      "query": "what are the types of epithelial tissue membranes",
+      "relevant_pids": [
+        947893
+      ],
+      "relevant_document_ids": [
+        947894
+      ]
+    },
+    {
+      "query_id": "770293",
+      "query": "what is media liability coverage",
+      "relevant_pids": [
+        5062713
+      ],
+      "relevant_document_ids": [
+        5062714
+      ]
+    },
+    {
+      "query_id": "537945",
+      "query": "vitamins that affect thyroid function",
+      "relevant_pids": [
+        4615233
+      ],
+      "relevant_document_ids": [
+        4615234
+      ]
+    },
+    {
+      "query_id": "485944",
+      "query": "recipe for spicy rice pilaf",
+      "relevant_pids": [
+        2049157
+      ],
+      "relevant_document_ids": [
+        2049158
+      ]
+    },
+    {
+      "query_id": "271209",
+      "query": "how long to i let stain dry for",
+      "relevant_pids": [
+        6401835
+      ],
+      "relevant_document_ids": [
+        6401836
+      ]
+    },
+    {
+      "query_id": "151983",
+      "query": "disable an html anchor tag",
+      "relevant_pids": [
+        7105011
+      ],
+      "relevant_document_ids": [
+        7105012
+      ]
+    },
+    {
+      "query_id": "675205",
+      "query": "what is a bombe",
+      "relevant_pids": [
+        2188192
+      ],
+      "relevant_document_ids": [
+        2188193
+      ]
+    },
+    {
+      "query_id": "652981",
+      "query": "what does the symbol hco3 represents",
+      "relevant_pids": [
+        2559065
+      ],
+      "relevant_document_ids": [
+        2559066
+      ]
+    },
+    {
+      "query_id": "116418",
+      "query": "deduction of loan origination fees",
+      "relevant_pids": [
+        3381650
+      ],
+      "relevant_document_ids": [
+        3381651
+      ]
+    },
+    {
+      "query_id": "992001",
+      "query": "where is rydalmere",
+      "relevant_pids": [
+        4789056
+      ],
+      "relevant_document_ids": [
+        4789057
+      ]
+    },
+    {
+      "query_id": "106059",
+      "query": "cost of passport uk",
+      "relevant_pids": [
+        867645
+      ],
+      "relevant_document_ids": [
+        867646
+      ]
+    },
+    {
+      "query_id": "1182512",
+      "query": "hemingway located in what sc county",
+      "relevant_pids": [
+        1432336
+      ],
+      "relevant_document_ids": [
+        1432337
+      ]
+    },
+    {
+      "query_id": "171810",
+      "query": "does stress cause thrush",
+      "relevant_pids": [
+        1662823
+      ],
+      "relevant_document_ids": [
+        1662824
+      ]
+    },
+    {
+      "query_id": "826106",
+      "query": "what is the instrument that measures wind speed called",
+      "relevant_pids": [
+        4704047
+      ],
+      "relevant_document_ids": [
+        4704048
+      ]
+    },
+    {
+      "query_id": "181162",
+      "query": "epworth sleepiness scale score meaning",
+      "relevant_pids": [
+        5503617
+      ],
+      "relevant_document_ids": [
+        5503618
+      ]
+    },
+    {
+      "query_id": "896660",
+      "query": "what souvenir to buy in india",
+      "relevant_pids": [
+        3685074,
+        3685076,
+        3685080
+      ],
+      "relevant_document_ids": [
+        3685075,
+        3685077,
+        3685081
+      ]
+    },
+    {
+      "query_id": "56704",
+      "query": "bruce pritchard net worth",
+      "relevant_pids": [
+        6936265
+      ],
+      "relevant_document_ids": [
+        6936266
+      ]
+    },
+    {
+      "query_id": "786257",
+      "query": "what is prednisolone used for",
+      "relevant_pids": [
+        1762049
+      ],
+      "relevant_document_ids": [
+        1762050
+      ]
+    },
+    {
+      "query_id": "113167",
+      "query": "crystal meaning serpentine",
+      "relevant_pids": [
+        4991624
+      ],
+      "relevant_document_ids": [
+        4991625
+      ]
+    },
+    {
+      "query_id": "517160",
+      "query": "the meaning of the last name collins",
+      "relevant_pids": [
+        6800575
+      ],
+      "relevant_document_ids": [
+        6800576
+      ]
+    },
+    {
+      "query_id": "513378",
+      "query": "terri copeland pearson's birth mother",
+      "relevant_pids": [
+        6820025
+      ],
+      "relevant_document_ids": [
+        6820026
+      ]
+    },
+    {
+      "query_id": "785638",
+      "query": "what is possum animal",
+      "relevant_pids": [
+        3958692
+      ],
+      "relevant_document_ids": [
+        3958693
+      ]
+    },
+    {
+      "query_id": "620560",
+      "query": "what did vincent price die of?",
+      "relevant_pids": [
+        2389614
+      ],
+      "relevant_document_ids": [
+        2389615
+      ]
+    },
+    {
+      "query_id": "700801",
+      "query": "what is a source control drawing",
+      "relevant_pids": [
+        6085586
+      ],
+      "relevant_document_ids": [
+        6085587
+      ]
+    },
+    {
+      "query_id": "316375",
+      "query": "how much does it cost to put siding on house",
+      "relevant_pids": [
+        103500
+      ],
+      "relevant_document_ids": [
+        103501
+      ]
+    },
+    {
+      "query_id": "731521",
+      "query": "what is clove spice",
+      "relevant_pids": [
+        1686090
+      ],
+      "relevant_document_ids": [
+        1686091
+      ]
+    },
+    {
+      "query_id": "1015799",
+      "query": "which of the following surrounds the individual muscle cell",
+      "relevant_pids": [
+        4848196
+      ],
+      "relevant_document_ids": [
+        4848197
+      ]
+    },
+    {
+      "query_id": "896352",
+      "query": "what software is pdf",
+      "relevant_pids": [
+        54318
+      ],
+      "relevant_document_ids": [
+        54319
+      ]
+    },
+    {
+      "query_id": "952741",
+      "query": "when is the eclipse this year",
+      "relevant_pids": [
+        1014862
+      ],
+      "relevant_document_ids": [
+        1014863
+      ]
+    },
+    {
+      "query_id": "120501",
+      "query": "define divine natural law",
+      "relevant_pids": [
+        4245442
+      ],
+      "relevant_document_ids": [
+        4245443
+      ]
+    },
+    {
+      "query_id": "898139",
+      "query": "what state of mexico is puerto penasco",
+      "relevant_pids": [
+        1588219
+      ],
+      "relevant_document_ids": [
+        1588220
+      ]
+    },
+    {
+      "query_id": "71112",
+      "query": "can managing committee levy maintenance charges during housing society redevelopment",
+      "relevant_pids": [
+        3000705
+      ],
+      "relevant_document_ids": [
+        3000706
+      ]
+    },
+    {
+      "query_id": "987170",
+      "query": "where is malawi in africa",
+      "relevant_pids": [
+        5222648
+      ],
+      "relevant_document_ids": [
+        5222649
+      ]
+    },
+    {
+      "query_id": "340073",
+      "query": "how sports teach discipline",
+      "relevant_pids": [
+        5899786
+      ],
+      "relevant_document_ids": [
+        5899787
+      ]
+    },
+    {
+      "query_id": "843568",
+      "query": "what is the recommended dose of biotin",
+      "relevant_pids": [
+        2353392
+      ],
+      "relevant_document_ids": [
+        2353393
+      ]
+    },
+    {
+      "query_id": "457730",
+      "query": "most expensive koi fish ever",
+      "relevant_pids": [
+        8491137,
+        8491141
+      ],
+      "relevant_document_ids": [
+        8491138,
+        8491142
+      ]
+    },
+    {
+      "query_id": "1184236",
+      "query": "does crystal springs water contain fluoride",
+      "relevant_pids": [
+        4578060
+      ],
+      "relevant_document_ids": [
+        4578061
+      ]
+    },
+    {
+      "query_id": "400390",
+      "query": "is a millipede a herbivore",
+      "relevant_pids": [
+        1796813
+      ],
+      "relevant_document_ids": [
+        1796814
+      ]
+    },
+    {
+      "query_id": "583819",
+      "query": "what cause hydraulic hose to fail",
+      "relevant_pids": [
+        502028,
+        502029
+      ],
+      "relevant_document_ids": [
+        502029,
+        502030
+      ]
+    },
+    {
+      "query_id": "178913",
+      "query": "effects of sleep deprivation pdf",
+      "relevant_pids": [
+        6642875,
+        6642877
+      ],
+      "relevant_document_ids": [
+        6642876,
+        6642878
+      ]
+    },
+    {
+      "query_id": "606861",
+      "query": "what county is hale michigan in",
+      "relevant_pids": [
+        989060
+      ],
+      "relevant_document_ids": [
+        989061
+      ]
+    },
+    {
+      "query_id": "100371",
+      "query": "cost basis of fund when sell and have didvidends reinvested",
+      "relevant_pids": [
+        3228385,
+        3228387
+      ],
+      "relevant_document_ids": [
+        3228386,
+        3228388
+      ]
+    },
+    {
+      "query_id": "954572",
+      "query": "when should i seed a new lawn in new york",
+      "relevant_pids": [
+        2240136
+      ],
+      "relevant_document_ids": [
+        2240137
+      ]
+    },
+    {
+      "query_id": "951301",
+      "query": "when is newark mayor election",
+      "relevant_pids": [
+        2587089
+      ],
+      "relevant_document_ids": [
+        2587090
+      ]
+    },
+    {
+      "query_id": "334544",
+      "query": "how old is buddy handleson",
+      "relevant_pids": [
+        2708403
+      ],
+      "relevant_document_ids": [
+        2708404
+      ]
+    },
+    {
+      "query_id": "662707",
+      "query": "what friction is difficult to overcome",
+      "relevant_pids": [
+        6916293
+      ],
+      "relevant_document_ids": [
+        6916294
+      ]
+    },
+    {
+      "query_id": "998496",
+      "query": "where is the yukon region",
+      "relevant_pids": [
+        3433455
+      ],
+      "relevant_document_ids": [
+        3433456
+      ]
+    },
+    {
+      "query_id": "206316",
+      "query": "hourly rate for house cleaning services",
+      "relevant_pids": [
+        2790108
+      ],
+      "relevant_document_ids": [
+        2790109
+      ]
+    },
+    {
+      "query_id": "673032",
+      "query": "what is The liquid part of blood in which other components are suspended",
+      "relevant_pids": [
+        2617023,
+        2617026
+      ],
+      "relevant_document_ids": [
+        2617024,
+        2617027
+      ]
+    },
+    {
+      "query_id": "1179107",
+      "query": "how many diapers a day should an infant make",
+      "relevant_pids": [
+        4913306
+      ],
+      "relevant_document_ids": [
+        4913307
+      ]
+    },
+    {
+      "query_id": "82322",
+      "query": "capitalization economics definition",
+      "relevant_pids": [
+        6926283
+      ],
+      "relevant_document_ids": [
+        6926284
+      ]
+    },
+    {
+      "query_id": "406213",
+      "query": "is chisk a undertale character",
+      "relevant_pids": [
+        907597
+      ],
+      "relevant_document_ids": [
+        907598
+      ]
+    },
+    {
+      "query_id": "840746",
+      "query": "what is the primary focus of mechanical engineering?",
+      "relevant_pids": [
+        2332531
+      ],
+      "relevant_document_ids": [
+        2332532
+      ]
+    },
+    {
+      "query_id": "673013",
+      "query": "what is TDS in water",
+      "relevant_pids": [
+        3214252
+      ],
+      "relevant_document_ids": [
+        3214253
+      ]
+    },
+    {
+      "query_id": "801835",
+      "query": "what is systemic disease",
+      "relevant_pids": [
+        3401961
+      ],
+      "relevant_document_ids": [
+        3401962
+      ]
+    },
+    {
+      "query_id": "241908",
+      "query": "how long can ethernet cable run",
+      "relevant_pids": [
+        4919034
+      ],
+      "relevant_document_ids": [
+        4919035
+      ]
+    },
+    {
+      "query_id": "17181",
+      "query": "amount of drugs coming from mexico",
+      "relevant_pids": [
+        5625628
+      ],
+      "relevant_document_ids": [
+        5625629
+      ]
+    },
+    {
+      "query_id": "502509",
+      "query": "standard temperature and pressure formula",
+      "relevant_pids": [
+        2075242
+      ],
+      "relevant_document_ids": [
+        2075243
+      ]
+    },
+    {
+      "query_id": "999094",
+      "query": "where is turin italy located",
+      "relevant_pids": [
+        5940776
+      ],
+      "relevant_document_ids": [
+        5940777
+      ]
+    },
+    {
+      "query_id": "18337",
+      "query": "animation types",
+      "relevant_pids": [
+        5182265
+      ],
+      "relevant_document_ids": [
+        5182266
+      ]
+    },
+    {
+      "query_id": "714338",
+      "query": "what is an example of metaphor means",
+      "relevant_pids": [
+        5264529
+      ],
+      "relevant_document_ids": [
+        5264530
+      ]
+    },
+    {
+      "query_id": "702497",
+      "query": "what is a syndrome",
+      "relevant_pids": [
+        1811585
+      ],
+      "relevant_document_ids": [
+        1811586
+      ]
+    },
+    {
+      "query_id": "1000583",
+      "query": "where is your circumflex artery located",
+      "relevant_pids": [
+        778449
+      ],
+      "relevant_document_ids": [
+        778450
+      ]
+    },
+    {
+      "query_id": "789410",
+      "query": "what is raiment",
+      "relevant_pids": [
+        4093989
+      ],
+      "relevant_document_ids": [
+        4093990
+      ]
+    },
+    {
+      "query_id": "437510",
+      "query": "largest truckstop in the world iowa",
+      "relevant_pids": [
+        6368131
+      ],
+      "relevant_document_ids": [
+        6368132
+      ]
+    },
+    {
+      "query_id": "647324",
+      "query": "what does running on a treadmill do",
+      "relevant_pids": [
+        1332047
+      ],
+      "relevant_document_ids": [
+        1332048
+      ]
+    },
+    {
+      "query_id": "102701",
+      "query": "cost of barbell",
+      "relevant_pids": [
+        1418058
+      ],
+      "relevant_document_ids": [
+        1418059
+      ]
+    },
+    {
+      "query_id": "1184513",
+      "query": "different types of cookies",
+      "relevant_pids": [
+        1820983,
+        1820989
+      ],
+      "relevant_document_ids": [
+        1820984,
+        1820990
+      ]
+    },
+    {
+      "query_id": "487337",
+      "query": "remove cholesterol from meat",
+      "relevant_pids": [
+        6869535
+      ],
+      "relevant_document_ids": [
+        6869536
+      ]
+    },
+    {
+      "query_id": "41724",
+      "query": "average salaries in ireland",
+      "relevant_pids": [
+        5759839
+      ],
+      "relevant_document_ids": [
+        5759840
+      ]
+    },
+    {
+      "query_id": "298434",
+      "query": "how many times does your heartbeat in a minute for a child",
+      "relevant_pids": [
+        6541528
+      ],
+      "relevant_document_ids": [
+        6541529
+      ]
+    },
+    {
+      "query_id": "1078879",
+      "query": "woman who david beador had an affair with",
+      "relevant_pids": [
+        4974815
+      ],
+      "relevant_document_ids": [
+        4974816
+      ]
+    },
+    {
+      "query_id": "300466",
+      "query": "how many yards of fill dirt do i need",
+      "relevant_pids": [
+        5613359
+      ],
+      "relevant_document_ids": [
+        5613360
+      ]
+    },
+    {
+      "query_id": "749728",
+      "query": "what is gaap depreciation",
+      "relevant_pids": [
+        1560918,
+        1560924
+      ],
+      "relevant_document_ids": [
+        1560919,
+        1560925
+      ]
+    },
+    {
+      "query_id": "1152366",
+      "query": "what is tendr",
+      "relevant_pids": [
+        1368477
+      ],
+      "relevant_document_ids": [
+        1368478
+      ]
+    },
+    {
+      "query_id": "1159158",
+      "query": "chief of staff title synonym",
+      "relevant_pids": [
+        697755
+      ],
+      "relevant_document_ids": [
+        697756
+      ]
+    },
+    {
+      "query_id": "966561",
+      "query": "where are the gullfoss falls?.",
+      "relevant_pids": [
+        4035049
+      ],
+      "relevant_document_ids": [
+        4035050
+      ]
+    },
+    {
+      "query_id": "644009",
+      "query": "what does nardo mean",
+      "relevant_pids": [
+        1413821
+      ],
+      "relevant_document_ids": [
+        1413822
+      ]
+    },
+    {
+      "query_id": "1141969",
+      "query": "where are incan mummies mostly found",
+      "relevant_pids": [
+        2350788
+      ],
+      "relevant_document_ids": [
+        2350789
+      ]
+    },
+    {
+      "query_id": "996945",
+      "query": "where is the oil filter located on a toyota camry",
+      "relevant_pids": [
+        2950926
+      ],
+      "relevant_document_ids": [
+        2950927
+      ]
+    },
+    {
+      "query_id": "705546",
+      "query": "what is a viral load test type",
+      "relevant_pids": [
+        5903895
+      ],
+      "relevant_document_ids": [
+        5903896
+      ]
+    },
+    {
+      "query_id": "135002",
+      "query": "definition of grammar oxford",
+      "relevant_pids": [
+        6581352
+      ],
+      "relevant_document_ids": [
+        6581353
+      ]
+    },
+    {
+      "query_id": "138330",
+      "query": "definition of spongy layer",
+      "relevant_pids": [
+        6145302
+      ],
+      "relevant_document_ids": [
+        6145303
+      ]
+    },
+    {
+      "query_id": "867834",
+      "query": "what kind of economy is south korea",
+      "relevant_pids": [
+        4167968
+      ],
+      "relevant_document_ids": [
+        4167969
+      ]
+    },
+    {
+      "query_id": "630563",
+      "query": "what does a tight it band cause",
+      "relevant_pids": [
+        7901646
+      ],
+      "relevant_document_ids": [
+        7901647
+      ]
+    },
+    {
+      "query_id": "727301",
+      "query": "what is campylobacter in dogs",
+      "relevant_pids": [
+        4311053
+      ],
+      "relevant_document_ids": [
+        4311054
+      ]
+    },
+    {
+      "query_id": "188405",
+      "query": "font size changes disable automatically in ie explorer 11",
+      "relevant_pids": [
+        1308115
+      ],
+      "relevant_document_ids": [
+        1308116
+      ]
+    },
+    {
+      "query_id": "337086",
+      "query": "how old should a puppy be before you use flea prevention",
+      "relevant_pids": [
+        3525792
+      ],
+      "relevant_document_ids": [
+        3525793
+      ]
+    },
+    {
+      "query_id": "698866",
+      "query": "what is a sap solution manager",
+      "relevant_pids": [
+        1408081
+      ],
+      "relevant_document_ids": [
+        1408082
+      ]
+    },
+    {
+      "query_id": "798880",
+      "query": "what is spontaneous ecchymosis",
+      "relevant_pids": [
+        4141102
+      ],
+      "relevant_document_ids": [
+        4141103
+      ]
+    },
+    {
+      "query_id": "56830",
+      "query": "buckmasters expo",
+      "relevant_pids": [
+        1058316
+      ],
+      "relevant_document_ids": [
+        1058317
+      ]
+    },
+    {
+      "query_id": "260702",
+      "query": "how long for a sprained ankle to heal",
+      "relevant_pids": [
+        2484379
+      ],
+      "relevant_document_ids": [
+        2484380
+      ]
+    },
+    {
+      "query_id": "714232",
+      "query": "what is an example of an amphipathic molecule",
+      "relevant_pids": [
+        4758520
+      ],
+      "relevant_document_ids": [
+        4758521
+      ]
+    },
+    {
+      "query_id": "991520",
+      "query": "where is rhodonite found",
+      "relevant_pids": [
+        6140134
+      ],
+      "relevant_document_ids": [
+        6140135
+      ]
+    },
+    {
+      "query_id": "964263",
+      "query": "when will the solar eclipse be over chicago, il?",
+      "relevant_pids": [
+        2630161
+      ],
+      "relevant_document_ids": [
+        2630162
+      ]
+    },
+    {
+      "query_id": "909781",
+      "query": "what two motor neurons are in the ans",
+      "relevant_pids": [
+        4813860
+      ],
+      "relevant_document_ids": [
+        4813861
+      ]
+    },
+    {
+      "query_id": "245041",
+      "query": "how long do female dogs stay in standing heat",
+      "relevant_pids": [
+        6966433,
+        6966436
+      ],
+      "relevant_document_ids": [
+        6966434,
+        6966437
+      ]
+    },
+    {
+      "query_id": "941425",
+      "query": "when did the draft start in vietnam",
+      "relevant_pids": [
+        5238659
+      ],
+      "relevant_document_ids": [
+        5238660
+      ]
+    },
+    {
+      "query_id": "422081",
+      "query": "is quetiapine recommended for elderly",
+      "relevant_pids": [
+        5079358
+      ],
+      "relevant_document_ids": [
+        5079359
+      ]
+    },
+    {
+      "query_id": "537315",
+      "query": "virginia is what pga section",
+      "relevant_pids": [
+        355440
+      ],
+      "relevant_document_ids": [
+        355441
+      ]
+    },
+    {
+      "query_id": "884609",
+      "query": "what part of an enzyme binds to the substrate",
+      "relevant_pids": [
+        4237362
+      ],
+      "relevant_document_ids": [
+        4237363
+      ]
+    },
+    {
+      "query_id": "855292",
+      "query": "what is the zip code of alexander city al",
+      "relevant_pids": [
+        2696235
+      ],
+      "relevant_document_ids": [
+        2696236
+      ]
+    },
+    {
+      "query_id": "501842",
+      "query": "sprinkling definition",
+      "relevant_pids": [
+        6899113
+      ],
+      "relevant_document_ids": [
+        6899114
+      ]
+    },
+    {
+      "query_id": "589336",
+      "query": "what causes leg pain in men",
+      "relevant_pids": [
+        181667,
+        181671
+      ],
+      "relevant_document_ids": [
+        181668,
+        181672
+      ]
+    },
+    {
+      "query_id": "685681",
+      "query": "what is a grackle bird",
+      "relevant_pids": [
+        5758073,
+        5758076
+      ],
+      "relevant_document_ids": [
+        5758074,
+        5758077
+      ]
+    },
+    {
+      "query_id": "605116",
+      "query": "what county is devine texas in",
+      "relevant_pids": [
+        7180221
+      ],
+      "relevant_document_ids": [
+        7180222
+      ]
+    },
+    {
+      "query_id": "129427",
+      "query": "define: cellar",
+      "relevant_pids": [
+        5681402
+      ],
+      "relevant_document_ids": [
+        5681403
+      ]
+    },
+    {
+      "query_id": "311062",
+      "query": "how much does a professional photographer cost for wedding",
+      "relevant_pids": [
+        1896383
+      ],
+      "relevant_document_ids": [
+        1896384
+      ]
+    },
+    {
+      "query_id": "278086",
+      "query": "how many calories should i burn in an hour water aerobics class",
+      "relevant_pids": [
+        673150
+      ],
+      "relevant_document_ids": [
+        673151
+      ]
+    },
+    {
+      "query_id": "113714",
+      "query": "currency strength",
+      "relevant_pids": [
+        706271
+      ],
+      "relevant_document_ids": [
+        706272
+      ]
+    },
+    {
+      "query_id": "454963",
+      "query": "mise-en-scene in film definition",
+      "relevant_pids": [
+        456213
+      ],
+      "relevant_document_ids": [
+        456214
+      ]
+    },
+    {
+      "query_id": "1029087",
+      "query": "who invented the fresnel lens",
+      "relevant_pids": [
+        2393749
+      ],
+      "relevant_document_ids": [
+        2393750
+      ]
+    },
+    {
+      "query_id": "776191",
+      "query": "what is net price",
+      "relevant_pids": [
+        3371497
+      ],
+      "relevant_document_ids": [
+        3371498
+      ]
+    },
+    {
+      "query_id": "732361",
+      "query": "what is combinational circuit",
+      "relevant_pids": [
+        6267165
+      ],
+      "relevant_document_ids": [
+        6267166
+      ]
+    },
+    {
+      "query_id": "285570",
+      "query": "how many hotel rooms are on the vegas strip",
+      "relevant_pids": [
+        4411615
+      ],
+      "relevant_document_ids": [
+        4411616
+      ]
+    },
+    {
+      "query_id": "776355",
+      "query": "what is neuroglia",
+      "relevant_pids": [
+        3978495
+      ],
+      "relevant_document_ids": [
+        3978496
+      ]
+    },
+    {
+      "query_id": "272489",
+      "query": "how long to wait before turning a fridge on",
+      "relevant_pids": [
+        6375542
+      ],
+      "relevant_document_ids": [
+        6375543
+      ]
+    },
+    {
+      "query_id": "1008789",
+      "query": "which dreamcast model will play burned games",
+      "relevant_pids": [
+        4815577
+      ],
+      "relevant_document_ids": [
+        4815578
+      ]
+    },
+    {
+      "query_id": "1143680",
+      "query": "define operating cash flow finance",
+      "relevant_pids": [
+        2179692
+      ],
+      "relevant_document_ids": [
+        2179693
+      ]
+    },
+    {
+      "query_id": "934491",
+      "query": "whats is hanford county",
+      "relevant_pids": [
+        6141887
+      ],
+      "relevant_document_ids": [
+        6141888
+      ]
+    },
+    {
+      "query_id": "830949",
+      "query": "what is the meaning of dhammacakka",
+      "relevant_pids": [
+        5966588,
+        5966589
+      ],
+      "relevant_document_ids": [
+        5966589,
+        5966590
+      ]
+    },
+    {
+      "query_id": "1080420",
+      "query": "wow synonym",
+      "relevant_pids": [
+        2835244
+      ],
+      "relevant_document_ids": [
+        2835245
+      ]
+    },
+    {
+      "query_id": "28398",
+      "query": "at what age does conduct disorder usually appear",
+      "relevant_pids": [
+        4186433
+      ],
+      "relevant_document_ids": [
+        4186434
+      ]
+    },
+    {
+      "query_id": "1140402",
+      "query": "where was charles whitman shot",
+      "relevant_pids": [
+        2502608
+      ],
+      "relevant_document_ids": [
+        2502609
+      ]
+    },
+    {
+      "query_id": "1040700",
+      "query": "who is the knicks box?",
+      "relevant_pids": [
+        4234873
+      ],
+      "relevant_document_ids": [
+        4234874
+      ]
+    },
+    {
+      "query_id": "446108",
+      "query": "matte finish definition",
+      "relevant_pids": [
+        6521237
+      ],
+      "relevant_document_ids": [
+        6521238
+      ]
+    },
+    {
+      "query_id": "1143504",
+      "query": "whats a straphanger slang in military",
+      "relevant_pids": [
+        2197300
+      ],
+      "relevant_document_ids": [
+        2197301
+      ]
+    },
+    {
+      "query_id": "681142",
+      "query": "what is a dial tone",
+      "relevant_pids": [
+        1911857
+      ],
+      "relevant_document_ids": [
+        1911858
+      ]
+    },
+    {
+      "query_id": "296455",
+      "query": "how many square miles is albany ny",
+      "relevant_pids": [
+        4476700
+      ],
+      "relevant_document_ids": [
+        4476701
+      ]
+    },
+    {
+      "query_id": "370633",
+      "query": "how to measure steering wheel",
+      "relevant_pids": [
+        2017947
+      ],
+      "relevant_document_ids": [
+        2017948
+      ]
+    },
+    {
+      "query_id": "880872",
+      "query": "what nationality is steven seagal",
+      "relevant_pids": [
+        4826417
+      ],
+      "relevant_document_ids": [
+        4826418
+      ]
+    },
+    {
+      "query_id": "643326",
+      "query": "what does mg ha mean??",
+      "relevant_pids": [
+        2235244
+      ],
+      "relevant_document_ids": [
+        2235245
+      ]
+    },
+    {
+      "query_id": "264157",
+      "query": "how long is my cycle days",
+      "relevant_pids": [
+        5855690
+      ],
+      "relevant_document_ids": [
+        5855691
+      ]
+    },
+    {
+      "query_id": "714130",
+      "query": "what is an example of a commensalism relationship?",
+      "relevant_pids": [
+        6912802
+      ],
+      "relevant_document_ids": [
+        6912803
+      ]
+    },
+    {
+      "query_id": "143501",
+      "query": "did bruce willis play in the show friends",
+      "relevant_pids": [
+        3485277
+      ],
+      "relevant_document_ids": [
+        3485278
+      ]
+    },
+    {
+      "query_id": "956474",
+      "query": "when was a congregational church established",
+      "relevant_pids": [
+        2490778
+      ],
+      "relevant_document_ids": [
+        2490779
+      ]
+    },
+    {
+      "query_id": "754384",
+      "query": "what is heir means",
+      "relevant_pids": [
+        1002324
+      ],
+      "relevant_document_ids": [
+        1002325
+      ]
+    },
+    {
+      "query_id": "761021",
+      "query": "what is isrc",
+      "relevant_pids": [
+        2312686
+      ],
+      "relevant_document_ids": [
+        2312687
+      ]
+    },
+    {
+      "query_id": "627063",
+      "query": "what do you use blaze powder for in minecraft",
+      "relevant_pids": [
+        8371588,
+        8371594
+      ],
+      "relevant_document_ids": [
+        8371589,
+        8371595
+      ]
+    },
+    {
+      "query_id": "303543",
+      "query": "how much car battery cost",
+      "relevant_pids": [
+        6540893
+      ],
+      "relevant_document_ids": [
+        6540894
+      ]
+    },
+    {
+      "query_id": "627593",
+      "query": "what does 100-240v mean",
+      "relevant_pids": [
+        428064
+      ],
+      "relevant_document_ids": [
+        428065
+      ]
+    },
+    {
+      "query_id": "547630",
+      "query": "weight of mri machines",
+      "relevant_pids": [
+        7079929
+      ],
+      "relevant_document_ids": [
+        7079930
+      ]
+    },
+    {
+      "query_id": "229272",
+      "query": "how effective is the plan b pill",
+      "relevant_pids": [
+        269471
+      ],
+      "relevant_document_ids": [
+        269472
+      ]
+    },
+    {
+      "query_id": "1167823",
+      "query": "weather in lakewood oh",
+      "relevant_pids": [
+        6081542
+      ],
+      "relevant_document_ids": [
+        6081543
+      ]
+    },
+    {
+      "query_id": "1170101",
+      "query": "synonym of grumpy",
+      "relevant_pids": [
+        3907484,
+        3907491
+      ],
+      "relevant_document_ids": [
+        3907485,
+        3907492
+      ]
+    },
+    {
+      "query_id": "86672",
+      "query": "causes of hand neuropathy",
+      "relevant_pids": [
+        1433743
+      ],
+      "relevant_document_ids": [
+        1433744
+      ]
+    },
+    {
+      "query_id": "578718",
+      "query": "what being plain means",
+      "relevant_pids": [
+        7934548
+      ],
+      "relevant_document_ids": [
+        7934549
+      ]
+    },
+    {
+      "query_id": "476593",
+      "query": "political system academic definition",
+      "relevant_pids": [
+        730355
+      ],
+      "relevant_document_ids": [
+        730356
+      ]
+    },
+    {
+      "query_id": "568889",
+      "query": "what are the different hyundai cars",
+      "relevant_pids": [
+        1535385
+      ],
+      "relevant_document_ids": [
+        1535386
+      ]
+    },
+    {
+      "query_id": "552827",
+      "query": "what airport serves niagara falls",
+      "relevant_pids": [
+        654469
+      ],
+      "relevant_document_ids": [
+        654470
+      ]
+    },
+    {
+      "query_id": "619210",
+      "query": "what did jesus christ get arrested for",
+      "relevant_pids": [
+        4935041
+      ],
+      "relevant_document_ids": [
+        4935042
+      ]
+    },
+    {
+      "query_id": "963063",
+      "query": "when was windows xp made",
+      "relevant_pids": [
+        3126633
+      ],
+      "relevant_document_ids": [
+        3126634
+      ]
+    },
+    {
+      "query_id": "1072962",
+      "query": "why is uranus tilted",
+      "relevant_pids": [
+        3020447
+      ],
+      "relevant_document_ids": [
+        3020448
+      ]
+    },
+    {
+      "query_id": "886863",
+      "query": "what phylum is the dogfish classified in",
+      "relevant_pids": [
+        5184943
+      ],
+      "relevant_document_ids": [
+        5184944
+      ]
+    },
+    {
+      "query_id": "859813",
+      "query": "what is used to dissolve peptides",
+      "relevant_pids": [
+        2419911,
+        2419917
+      ],
+      "relevant_document_ids": [
+        2419912,
+        2419918
+      ]
+    },
+    {
+      "query_id": "850447",
+      "query": "what is the temperature of venus",
+      "relevant_pids": [
+        4321313
+      ],
+      "relevant_document_ids": [
+        4321314
+      ]
+    },
+    {
+      "query_id": "1171371",
+      "query": "puppeteer definition",
+      "relevant_pids": [
+        2613693
+      ],
+      "relevant_document_ids": [
+        2613694
+      ]
+    },
+    {
+      "query_id": "108819",
+      "query": "cost to attend daemen college",
+      "relevant_pids": [
+        2029097
+      ],
+      "relevant_document_ids": [
+        2029098
+      ]
+    },
+    {
+      "query_id": "541956",
+      "query": "watford city nd population",
+      "relevant_pids": [
+        1476415
+      ],
+      "relevant_document_ids": [
+        1476416
+      ]
+    },
+    {
+      "query_id": "961995",
+      "query": "when was the ozone hole discovered",
+      "relevant_pids": [
+        5117755
+      ],
+      "relevant_document_ids": [
+        5117756
+      ]
+    },
+    {
+      "query_id": "456595",
+      "query": "most comfortable seats in cars",
+      "relevant_pids": [
+        2532169
+      ],
+      "relevant_document_ids": [
+        2532170
+      ]
+    },
+    {
+      "query_id": "1182174",
+      "query": "hormone that synthesizes milk",
+      "relevant_pids": [
+        1793292
+      ],
+      "relevant_document_ids": [
+        1793293
+      ]
+    },
+    {
+      "query_id": "312266",
+      "query": "how much does administrative assistants make",
+      "relevant_pids": [
+        5692320
+      ],
+      "relevant_document_ids": [
+        5692321
+      ]
+    },
+    {
+      "query_id": "230902",
+      "query": "how far is dothan fl",
+      "relevant_pids": [
+        5479317
+      ],
+      "relevant_document_ids": [
+        5479318
+      ]
+    },
+    {
+      "query_id": "228961",
+      "query": "how early can you plant geraniums outside",
+      "relevant_pids": [
+        6153118
+      ],
+      "relevant_document_ids": [
+        6153119
+      ]
+    },
+    {
+      "query_id": "710238",
+      "query": "what is american express acronym",
+      "relevant_pids": [
+        5896211
+      ],
+      "relevant_document_ids": [
+        5896212
+      ]
+    },
+    {
+      "query_id": "602844",
+      "query": "what county is barstow",
+      "relevant_pids": [
+        456052
+      ],
+      "relevant_document_ids": [
+        456053
+      ]
+    },
+    {
+      "query_id": "154230",
+      "query": "diverticular disease definition",
+      "relevant_pids": [
+        3866316
+      ],
+      "relevant_document_ids": [
+        3866317
+      ]
+    },
+    {
+      "query_id": "566697",
+      "query": "what are system error memory dump files",
+      "relevant_pids": [
+        467852
+      ],
+      "relevant_document_ids": [
+        467853
+      ]
+    },
+    {
+      "query_id": "214618",
+      "query": "how did sir edmund hillary die",
+      "relevant_pids": [
+        3424117
+      ],
+      "relevant_document_ids": [
+        3424118
+      ]
+    },
+    {
+      "query_id": "370833",
+      "query": "how to merge word documents that have track changes",
+      "relevant_pids": [
+        537463,
+        537465
+      ],
+      "relevant_document_ids": [
+        537464,
+        537466
+      ]
+    },
+    {
+      "query_id": "613991",
+      "query": "what county is utica new york in",
+      "relevant_pids": [
+        1173303
+      ],
+      "relevant_document_ids": [
+        1173304
+      ]
+    },
+    {
+      "query_id": "314067",
+      "query": "how much does hernia repair surgery cost",
+      "relevant_pids": [
+        3144304
+      ],
+      "relevant_document_ids": [
+        3144305
+      ]
+    },
+    {
+      "query_id": "1148660",
+      "query": "what is the weather in the czech republic in may",
+      "relevant_pids": [
+        1724859
+      ],
+      "relevant_document_ids": [
+        1724860
+      ]
+    },
+    {
+      "query_id": "596472",
+      "query": "what class of drug is levofloxacin",
+      "relevant_pids": [
+        342077
+      ],
+      "relevant_document_ids": [
+        342078
+      ]
+    },
+    {
+      "query_id": "727965",
+      "query": "what is cargo movement",
+      "relevant_pids": [
+        6183517
+      ],
+      "relevant_document_ids": [
+        6183518
+      ]
+    },
+    {
+      "query_id": "1170932",
+      "query": "santander bank telephone number",
+      "relevant_pids": [
+        3070464,
+        3070465,
+        3070467
+      ],
+      "relevant_document_ids": [
+        3070465,
+        3070466,
+        3070468
+      ]
+    },
+    {
+      "query_id": "1066932",
+      "query": "why does feet and ankles swell late evening",
+      "relevant_pids": [
+        4017181
+      ],
+      "relevant_document_ids": [
+        4017182
+      ]
+    },
+    {
+      "query_id": "858154",
+      "query": "what is tuition at harding university",
+      "relevant_pids": [
+        4178784
+      ],
+      "relevant_document_ids": [
+        4178785
+      ]
+    },
+    {
+      "query_id": "715955",
+      "query": "what is an itil service category",
+      "relevant_pids": [
+        8281955
+      ],
+      "relevant_document_ids": [
+        8281956
+      ]
+    },
+    {
+      "query_id": "1020713",
+      "query": "which syllable should be accented in the following word? chauvinism",
+      "relevant_pids": [
+        4003711
+      ],
+      "relevant_document_ids": [
+        4003712
+      ]
+    },
+    {
+      "query_id": "1166845",
+      "query": "what are competencies related to contract negotiation",
+      "relevant_pids": [
+        6985287
+      ],
+      "relevant_document_ids": [
+        6985288
+      ]
+    },
+    {
+      "query_id": "989930",
+      "query": "where is oxford mi",
+      "relevant_pids": [
+        3304257
+      ],
+      "relevant_document_ids": [
+        3304258
+      ]
+    },
+    {
+      "query_id": "294177",
+      "query": "how many quarters to make an ounce of silver",
+      "relevant_pids": [
+        217636
+      ],
+      "relevant_document_ids": [
+        217637
+      ]
+    },
+    {
+      "query_id": "190385",
+      "query": "foods to lower alkaline phosphatase levels",
+      "relevant_pids": [
+        5325657
+      ],
+      "relevant_document_ids": [
+        5325658
+      ]
+    },
+    {
+      "query_id": "546646",
+      "query": "weather on maui in september",
+      "relevant_pids": [
+        631694
+      ],
+      "relevant_document_ids": [
+        631695
+      ]
+    },
+    {
+      "query_id": "643626",
+      "query": "what does moose mean",
+      "relevant_pids": [
+        234103
+      ],
+      "relevant_document_ids": [
+        234104
+      ]
+    },
+    {
+      "query_id": "638175",
+      "query": "what does geographic tools mean",
+      "relevant_pids": [
+        1251385
+      ],
+      "relevant_document_ids": [
+        1251386
+      ]
+    },
+    {
+      "query_id": "263559",
+      "query": "how long is dental assistant school",
+      "relevant_pids": [
+        825857
+      ],
+      "relevant_document_ids": [
+        825858
+      ]
+    },
+    {
+      "query_id": "539984",
+      "query": "was fdr's new deal effective",
+      "relevant_pids": [
+        1715300
+      ],
+      "relevant_document_ids": [
+        1715301
+      ]
+    },
+    {
+      "query_id": "1080021",
+      "query": "worlds tallest single-family home",
+      "relevant_pids": [
+        3561667
+      ],
+      "relevant_document_ids": [
+        3561668
+      ]
+    },
+    {
+      "query_id": "187825",
+      "query": "flashlight what is the tactical ring for",
+      "relevant_pids": [
+        6472257
+      ],
+      "relevant_document_ids": [
+        6472258
+      ]
+    },
+    {
+      "query_id": "510185",
+      "query": "t.rowe price phone",
+      "relevant_pids": [
+        6078944
+      ],
+      "relevant_document_ids": [
+        6078945
+      ]
+    },
+    {
+      "query_id": "1002559",
+      "query": "where was howard florey born",
+      "relevant_pids": [
+        4454321
+      ],
+      "relevant_document_ids": [
+        4454322
+      ]
+    },
+    {
+      "query_id": "524831",
+      "query": "trisect marketing",
+      "relevant_pids": [
+        1058632
+      ],
+      "relevant_document_ids": [
+        1058633
+      ]
+    },
+    {
+      "query_id": "337274",
+      "query": "how old to work at publix",
+      "relevant_pids": [
+        992589
+      ],
+      "relevant_document_ids": [
+        992590
+      ]
+    },
+    {
+      "query_id": "607887",
+      "query": "what county is kapaa, hi, in?",
+      "relevant_pids": [
+        2136620
+      ],
+      "relevant_document_ids": [
+        2136621
+      ]
+    },
+    {
+      "query_id": "389073",
+      "query": "hr-xml consortium",
+      "relevant_pids": [
+        717344
+      ],
+      "relevant_document_ids": [
+        717345
+      ]
+    },
+    {
+      "query_id": "568116",
+      "query": "what are the characteristics of cnidaria",
+      "relevant_pids": [
+        2125350
+      ],
+      "relevant_document_ids": [
+        2125351
+      ]
+    },
+    {
+      "query_id": "918624",
+      "query": "what was john glenn's first mission called",
+      "relevant_pids": [
+        2688468
+      ],
+      "relevant_document_ids": [
+        2688469
+      ]
+    },
+    {
+      "query_id": "965060",
+      "query": "where are brown recluse spiders found map",
+      "relevant_pids": [
+        5329621
+      ],
+      "relevant_document_ids": [
+        5329622
+      ]
+    },
+    {
+      "query_id": "734886",
+      "query": "what is corian",
+      "relevant_pids": [
+        6193963
+      ],
+      "relevant_document_ids": [
+        6193964
+      ]
+    },
+    {
+      "query_id": "870685",
+      "query": "what kind of sounds should you hear on a patient with copd",
+      "relevant_pids": [
+        3431734
+      ],
+      "relevant_document_ids": [
+        3431735
+      ]
+    },
+    {
+      "query_id": "9495",
+      "query": "a tumor composed of star-shaped neuroglial cells is called",
+      "relevant_pids": [
+        238350
+      ],
+      "relevant_document_ids": [
+        238351
+      ]
+    },
+    {
+      "query_id": "644875",
+      "query": "what does original Irish stew consist of",
+      "relevant_pids": [
+        571975
+      ],
+      "relevant_document_ids": [
+        571976
+      ]
+    },
+    {
+      "query_id": "174533",
+      "query": "dog stroller for medium sized dogs",
+      "relevant_pids": [
+        6518528
+      ],
+      "relevant_document_ids": [
+        6518529
+      ]
+    },
+    {
+      "query_id": "228452",
+      "query": "how does topiramate cause weight loss",
+      "relevant_pids": [
+        5169196
+      ],
+      "relevant_document_ids": [
+        5169197
+      ]
+    },
+    {
+      "query_id": "404283",
+      "query": "is billy still the biggest bar in the world?",
+      "relevant_pids": [
+        837629
+      ],
+      "relevant_document_ids": [
+        837630
+      ]
+    },
+    {
+      "query_id": "268933",
+      "query": "how long to close an fha loan",
+      "relevant_pids": [
+        3697951
+      ],
+      "relevant_document_ids": [
+        3697952
+      ]
+    },
+    {
+      "query_id": "1079857",
+      "query": "world's first interoperable qr code",
+      "relevant_pids": [
+        4921358
+      ],
+      "relevant_document_ids": [
+        4921359
+      ]
+    },
+    {
+      "query_id": "764848",
+      "query": "what is leadership style",
+      "relevant_pids": [
+        4187726
+      ],
+      "relevant_document_ids": [
+        4187727
+      ]
+    },
+    {
+      "query_id": "971610",
+      "query": "where do store bought eggs come from",
+      "relevant_pids": [
+        4797424
+      ],
+      "relevant_document_ids": [
+        4797425
+      ]
+    },
+    {
+      "query_id": "718011",
+      "query": "what is animal is king kong",
+      "relevant_pids": [
+        4692727
+      ],
+      "relevant_document_ids": [
+        4692728
+      ]
+    },
+    {
+      "query_id": "109350",
+      "query": "cost to expedite a passport  application",
+      "relevant_pids": [
+        2980423
+      ],
+      "relevant_document_ids": [
+        2980424
+      ]
+    },
+    {
+      "query_id": "984471",
+      "query": "where is hilmar, ca what county, what great hsy",
+      "relevant_pids": [
+        4539612
+      ],
+      "relevant_document_ids": [
+        4539613
+      ]
+    },
+    {
+      "query_id": "424281",
+      "query": "is soybean oil good for you",
+      "relevant_pids": [
+        5980850
+      ],
+      "relevant_document_ids": [
+        5980851
+      ]
+    },
+    {
+      "query_id": "1077748",
+      "query": "will pinworms make you lose weight",
+      "relevant_pids": [
+        4667180
+      ],
+      "relevant_document_ids": [
+        4667181
+      ]
+    },
+    {
+      "query_id": "1066147",
+      "query": "why do you chill beer after boil?",
+      "relevant_pids": [
+        4248030
+      ],
+      "relevant_document_ids": [
+        4248031
+      ]
+    },
+    {
+      "query_id": "771184",
+      "query": "what is meristem tissue?",
+      "relevant_pids": [
+        4123623
+      ],
+      "relevant_document_ids": [
+        4123624
+      ]
+    },
+    {
+      "query_id": "632380",
+      "query": "what does archive footage mean",
+      "relevant_pids": [
+        6855469
+      ],
+      "relevant_document_ids": [
+        6855470
+      ]
+    },
+    {
+      "query_id": "66610",
+      "query": "can dogs eat beans",
+      "relevant_pids": [
+        1435861
+      ],
+      "relevant_document_ids": [
+        1435862
+      ]
+    },
+    {
+      "query_id": "703553",
+      "query": "what is a tiguan",
+      "relevant_pids": [
+        7532681
+      ],
+      "relevant_document_ids": [
+        7532682
+      ]
+    },
+    {
+      "query_id": "177886",
+      "query": "economist amazon wages",
+      "relevant_pids": [
+        5606861
+      ],
+      "relevant_document_ids": [
+        5606862
+      ]
+    },
+    {
+      "query_id": "1077388",
+      "query": "will credit drop if credit card company closes your account",
+      "relevant_pids": [
+        6309153
+      ],
+      "relevant_document_ids": [
+        6309154
+      ]
+    },
+    {
+      "query_id": "673245",
+      "query": "what is a 527 organization",
+      "relevant_pids": [
+        524712
+      ],
+      "relevant_document_ids": [
+        524713
+      ]
+    },
+    {
+      "query_id": "115368",
+      "query": "danny williams bill clinton paternity test",
+      "relevant_pids": [
+        449216,
+        449218
+      ],
+      "relevant_document_ids": [
+        449217,
+        449219
+      ]
+    },
+    {
+      "query_id": "220027",
+      "query": "how do plant cells differ from animal cells",
+      "relevant_pids": [
+        5548128,
+        5548129
+      ],
+      "relevant_document_ids": [
+        5548129,
+        5548130
+      ]
+    },
+    {
+      "query_id": "1141294",
+      "query": "where is chapel hill located in north carolina",
+      "relevant_pids": [
+        144573
+      ],
+      "relevant_document_ids": [
+        144574
+      ]
+    },
+    {
+      "query_id": "784571",
+      "query": "what is plex gastrointestinal",
+      "relevant_pids": [
+        3464360
+      ],
+      "relevant_document_ids": [
+        3464361
+      ]
+    },
+    {
+      "query_id": "1140871",
+      "query": "where is phil mickelson's house",
+      "relevant_pids": [
+        2456395
+      ],
+      "relevant_document_ids": [
+        2456396
+      ]
+    },
+    {
+      "query_id": "889407",
+      "query": "what protein to take for bedtime",
+      "relevant_pids": [
+        5345554
+      ],
+      "relevant_document_ids": [
+        5345555
+      ]
+    },
+    {
+      "query_id": "292483",
+      "query": "how many people have died in iraq war so far",
+      "relevant_pids": [
+        5878833
+      ],
+      "relevant_document_ids": [
+        5878834
+      ]
+    },
+    {
+      "query_id": "54359",
+      "query": "blanket bond insurance definition",
+      "relevant_pids": [
+        6383732
+      ],
+      "relevant_document_ids": [
+        6383733
+      ]
+    },
+    {
+      "query_id": "127932",
+      "query": "define tekhne",
+      "relevant_pids": [
+        3783714
+      ],
+      "relevant_document_ids": [
+        3783715
+      ]
+    },
+    {
+      "query_id": "752695",
+      "query": "what is green mold",
+      "relevant_pids": [
+        7014882
+      ],
+      "relevant_document_ids": [
+        7014883
+      ]
+    },
+    {
+      "query_id": "308537",
+      "query": "how much does a baker make a day",
+      "relevant_pids": [
+        5579842
+      ],
+      "relevant_document_ids": [
+        5579843
+      ]
+    },
+    {
+      "query_id": "764535",
+      "query": "what is late afternoon",
+      "relevant_pids": [
+        1970970
+      ],
+      "relevant_document_ids": [
+        1970971
+      ]
+    },
+    {
+      "query_id": "783946",
+      "query": "what is pin placement",
+      "relevant_pids": [
+        5938965
+      ],
+      "relevant_document_ids": [
+        5938966
+      ]
+    },
+    {
+      "query_id": "1051360",
+      "query": "who sings love is in the air",
+      "relevant_pids": [
+        4808917
+      ],
+      "relevant_document_ids": [
+        4808918
+      ]
+    },
+    {
+      "query_id": "815325",
+      "query": "what is the definition of philanthropist",
+      "relevant_pids": [
+        5957718
+      ],
+      "relevant_document_ids": [
+        5957719
+      ]
+    },
+    {
+      "query_id": "1155623",
+      "query": "what is detroit's airport code",
+      "relevant_pids": [
+        1054677
+      ],
+      "relevant_document_ids": [
+        1054678
+      ]
+    },
+    {
+      "query_id": "563239",
+      "query": "what are physical properties of dna",
+      "relevant_pids": [
+        515386
+      ],
+      "relevant_document_ids": [
+        515387
+      ]
+    },
+    {
+      "query_id": "864692",
+      "query": "what is yttria",
+      "relevant_pids": [
+        2899084
+      ],
+      "relevant_document_ids": [
+        2899085
+      ]
+    },
+    {
+      "query_id": "770496",
+      "query": "what is medical service apprentice",
+      "relevant_pids": [
+        4211455
+      ],
+      "relevant_document_ids": [
+        4211456
+      ]
+    },
+    {
+      "query_id": "747045",
+      "query": "what is fiber in a muscle",
+      "relevant_pids": [
+        478522
+      ],
+      "relevant_document_ids": [
+        478523
+      ]
+    },
+    {
+      "query_id": "692298",
+      "query": "what is a nested if statement",
+      "relevant_pids": [
+        1829035
+      ],
+      "relevant_document_ids": [
+        1829036
+      ]
+    },
+    {
+      "query_id": "427649",
+      "query": "is the unicorn in the bible",
+      "relevant_pids": [
+        1694641
+      ],
+      "relevant_document_ids": [
+        1694642
+      ]
+    },
+    {
+      "query_id": "330323",
+      "query": "how much water to drink to lose weight fast",
+      "relevant_pids": [
+        6441194
+      ],
+      "relevant_document_ids": [
+        6441195
+      ]
+    },
+    {
+      "query_id": "249562",
+      "query": "how long does a hockey game last in real time",
+      "relevant_pids": [
+        4648320
+      ],
+      "relevant_document_ids": [
+        4648321
+      ]
+    },
+    {
+      "query_id": "881908",
+      "query": "what nfl conference are the titans",
+      "relevant_pids": [
+        3812889
+      ],
+      "relevant_document_ids": [
+        3812890
+      ]
+    },
+    {
+      "query_id": "946013",
+      "query": "when does bay beach amusement park open and close",
+      "relevant_pids": [
+        5388754
+      ],
+      "relevant_document_ids": [
+        5388755
+      ]
+    },
+    {
+      "query_id": "42498",
+      "query": "average salary for orthopedic surgeon",
+      "relevant_pids": [
+        5737286
+      ],
+      "relevant_document_ids": [
+        5737287
+      ]
+    },
+    {
+      "query_id": "297344",
+      "query": "how many students enrolled at carnegie mellon university",
+      "relevant_pids": [
+        2792568
+      ],
+      "relevant_document_ids": [
+        2792569
+      ]
+    },
+    {
+      "query_id": "337870",
+      "query": "how pa systems work",
+      "relevant_pids": [
+        6881793,
+        6881797
+      ],
+      "relevant_document_ids": [
+        6881794,
+        6881798
+      ]
+    },
+    {
+      "query_id": "532773",
+      "query": "unmc faculty",
+      "relevant_pids": [
+        5387448
+      ],
+      "relevant_document_ids": [
+        5387449
+      ]
+    },
+    {
+      "query_id": "141477",
+      "query": "des moines average temperatures",
+      "relevant_pids": [
+        5660234
+      ],
+      "relevant_document_ids": [
+        5660235
+      ]
+    },
+    {
+      "query_id": "884611",
+      "query": "what part of animal does corned beef come from",
+      "relevant_pids": [
+        191805
+      ],
+      "relevant_document_ids": [
+        191806
+      ]
+    },
+    {
+      "query_id": "8496",
+      "query": "Why is a protozoan considered animal-like?",
+      "relevant_pids": [
+        3630356
+      ],
+      "relevant_document_ids": [
+        3630357
+      ]
+    },
+    {
+      "query_id": "408016",
+      "query": "is dental zinc harmful to the body",
+      "relevant_pids": [
+        1865042
+      ],
+      "relevant_document_ids": [
+        1865043
+      ]
+    },
+    {
+      "query_id": "609663",
+      "query": "what county is monmouth junction",
+      "relevant_pids": [
+        6803802
+      ],
+      "relevant_document_ids": [
+        6803803
+      ]
+    },
+    {
+      "query_id": "427382",
+      "query": "is the skin cell specialized",
+      "relevant_pids": [
+        1537269
+      ],
+      "relevant_document_ids": [
+        1537270
+      ]
+    },
+    {
+      "query_id": "988150",
+      "query": "where is monroe wi?",
+      "relevant_pids": [
+        5022690
+      ],
+      "relevant_document_ids": [
+        5022691
+      ]
+    },
+    {
+      "query_id": "1145466",
+      "query": "define direct effect",
+      "relevant_pids": [
+        2013891
+      ],
+      "relevant_document_ids": [
+        2013892
+      ]
+    },
+    {
+      "query_id": "1012070",
+      "query": "which is the fundamental unit of life",
+      "relevant_pids": [
+        2457616
+      ],
+      "relevant_document_ids": [
+        2457617
+      ]
+    },
+    {
+      "query_id": "610583",
+      "query": "what county is oakley il",
+      "relevant_pids": [
+        1938212
+      ],
+      "relevant_document_ids": [
+        1938213
+      ]
+    },
+    {
+      "query_id": "817712",
+      "query": "what is the difference between iceland and greenland",
+      "relevant_pids": [
+        4866983
+      ],
+      "relevant_document_ids": [
+        4866984
+      ]
+    },
+    {
+      "query_id": "744144",
+      "query": "what is entrenched",
+      "relevant_pids": [
+        6054786
+      ],
+      "relevant_document_ids": [
+        6054787
+      ]
+    },
+    {
+      "query_id": "117272",
+      "query": "define adenomyomatosis of gallbladder",
+      "relevant_pids": [
+        5809761
+      ],
+      "relevant_document_ids": [
+        5809762
+      ]
+    },
+    {
+      "query_id": "1146256",
+      "query": "what sign should a taurus be with",
+      "relevant_pids": [
+        1941690
+      ],
+      "relevant_document_ids": [
+        1941691
+      ]
+    },
+    {
+      "query_id": "711997",
+      "query": "what is an apmc",
+      "relevant_pids": [
+        6458927
+      ],
+      "relevant_document_ids": [
+        6458928
+      ]
+    },
+    {
+      "query_id": "262661",
+      "query": "how long is a necklace",
+      "relevant_pids": [
+        4293296
+      ],
+      "relevant_document_ids": [
+        4293297
+      ]
+    },
+    {
+      "query_id": "670744",
+      "query": "what indians lived in baltimore",
+      "relevant_pids": [
+        6029365
+      ],
+      "relevant_document_ids": [
+        6029366
+      ]
+    },
+    {
+      "query_id": "337272",
+      "query": "how old to work at petland",
+      "relevant_pids": [
+        5829067
+      ],
+      "relevant_document_ids": [
+        5829068
+      ]
+    },
+    {
+      "query_id": "143713",
+      "query": "did deion sanders play baseball",
+      "relevant_pids": [
+        8378044
+      ],
+      "relevant_document_ids": [
+        8378045
+      ]
+    },
+    {
+      "query_id": "46989",
+      "query": "average weather in chile in november",
+      "relevant_pids": [
+        6351589
+      ],
+      "relevant_document_ids": [
+        6351590
+      ]
+    },
+    {
+      "query_id": "1141532",
+      "query": "where does muscari grow?",
+      "relevant_pids": [
+        2390321
+      ],
+      "relevant_document_ids": [
+        2390322
+      ]
+    },
+    {
+      "query_id": "3055",
+      "query": "For DNA to be the hereditary material, which of the following must it be capable of?",
+      "relevant_pids": [
+        7051393
+      ],
+      "relevant_document_ids": [
+        7051394
+      ]
+    },
+    {
+      "query_id": "496490",
+      "query": "should i help my mourning dove hatch",
+      "relevant_pids": [
+        5860924
+      ],
+      "relevant_document_ids": [
+        5860925
+      ]
+    },
+    {
+      "query_id": "388618",
+      "query": "how would late-seventeenth-century virginia best be described?",
+      "relevant_pids": [
+        1549271
+      ],
+      "relevant_document_ids": [
+        1549272
+      ]
+    },
+    {
+      "query_id": "178361",
+      "query": "effect of thalamus on production",
+      "relevant_pids": [
+        3161021
+      ],
+      "relevant_document_ids": [
+        3161022
+      ]
+    },
+    {
+      "query_id": "589461",
+      "query": "what causes liver cancer",
+      "relevant_pids": [
+        1745120
+      ],
+      "relevant_document_ids": [
+        1745121
+      ]
+    },
+    {
+      "query_id": "719379",
+      "query": "what is aqueous vasopressin",
+      "relevant_pids": [
+        2239023
+      ],
+      "relevant_document_ids": [
+        2239024
+      ]
+    },
+    {
+      "query_id": "927924",
+      "query": "what year was korn ferry founded",
+      "relevant_pids": [
+        2317682
+      ],
+      "relevant_document_ids": [
+        2317683
+      ]
+    },
+    {
+      "query_id": "411017",
+      "query": "is geography science",
+      "relevant_pids": [
+        2211057
+      ],
+      "relevant_document_ids": [
+        2211058
+      ]
+    },
+    {
+      "query_id": "805281",
+      "query": "what is the area code in new jersey",
+      "relevant_pids": [
+        3204486
+      ],
+      "relevant_document_ids": [
+        3204487
+      ]
+    },
+    {
+      "query_id": "860409",
+      "query": "what is vata pitta kapha",
+      "relevant_pids": [
+        6305865
+      ],
+      "relevant_document_ids": [
+        6305866
+      ]
+    },
+    {
+      "query_id": "700543",
+      "query": "what is a snorkel for",
+      "relevant_pids": [
+        1611240
+      ],
+      "relevant_document_ids": [
+        1611241
+      ]
+    },
+    {
+      "query_id": "1009837",
+      "query": "which fork is for salad",
+      "relevant_pids": [
+        5023622
+      ],
+      "relevant_document_ids": [
+        5023623
+      ]
+    },
+    {
+      "query_id": "879428",
+      "query": "what movie was the original sabrina",
+      "relevant_pids": [
+        2343230
+      ],
+      "relevant_document_ids": [
+        2343231
+      ]
+    },
+    {
+      "query_id": "733278",
+      "query": "what is considered a dependent irs",
+      "relevant_pids": [
+        333479
+      ],
+      "relevant_document_ids": [
+        333480
+      ]
+    },
+    {
+      "query_id": "407297",
+      "query": "is costochondritis permanent",
+      "relevant_pids": [
+        1980132
+      ],
+      "relevant_document_ids": [
+        1980133
+      ]
+    },
+    {
+      "query_id": "872852",
+      "query": "what law governs harassment in the workplace",
+      "relevant_pids": [
+        3081173
+      ],
+      "relevant_document_ids": [
+        3081174
+      ]
+    },
+    {
+      "query_id": "1176067",
+      "query": "how tall is sierra mccormick",
+      "relevant_pids": [
+        6946254
+      ],
+      "relevant_document_ids": [
+        6946255
+      ]
+    },
+    {
+      "query_id": "146383",
+      "query": "difference between ambient and room temp",
+      "relevant_pids": [
+        1171277
+      ],
+      "relevant_document_ids": [
+        1171278
+      ]
+    },
+    {
+      "query_id": "336220",
+      "query": "how old is porsha",
+      "relevant_pids": [
+        3232083
+      ],
+      "relevant_document_ids": [
+        3232084
+      ]
+    },
+    {
+      "query_id": "121709",
+      "query": "define freight collect",
+      "relevant_pids": [
+        6437485
+      ],
+      "relevant_document_ids": [
+        6437486
+      ]
+    },
+    {
+      "query_id": "1179802",
+      "query": "how long should you wait to take an antacid with levothyroxine",
+      "relevant_pids": [
+        4236142
+      ],
+      "relevant_document_ids": [
+        4236143
+      ]
+    },
+    {
+      "query_id": "979012",
+      "query": "where is burt's bees made",
+      "relevant_pids": [
+        2844647
+      ],
+      "relevant_document_ids": [
+        2844648
+      ]
+    },
+    {
+      "query_id": "731520",
+      "query": "what is clove of garlic",
+      "relevant_pids": [
+        2093213
+      ],
+      "relevant_document_ids": [
+        2093214
+      ]
+    },
+    {
+      "query_id": "175354",
+      "query": "doyen retractor definition",
+      "relevant_pids": [
+        2201800
+      ],
+      "relevant_document_ids": [
+        2201801
+      ]
+    },
+    {
+      "query_id": "352745",
+      "query": "how to cook salmon on a plank on weber grill",
+      "relevant_pids": [
+        1646742
+      ],
+      "relevant_document_ids": [
+        1646743
+      ]
+    },
+    {
+      "query_id": "38025",
+      "query": "average jail time in florida for felony charge of theft",
+      "relevant_pids": [
+        6419883
+      ],
+      "relevant_document_ids": [
+        6419884
+      ]
+    },
+    {
+      "query_id": "796691",
+      "query": "what is skin rash thrush",
+      "relevant_pids": [
+        686691
+      ],
+      "relevant_document_ids": [
+        686692
+      ]
+    },
+    {
+      "query_id": "259089",
+      "query": "how long does opened coconut water last in the fridge",
+      "relevant_pids": [
+        5686478
+      ],
+      "relevant_document_ids": [
+        5686479
+      ]
+    },
+    {
+      "query_id": "948264",
+      "query": "when does the next season of supernatural air?",
+      "relevant_pids": [
+        5056519
+      ],
+      "relevant_document_ids": [
+        5056520
+      ]
+    },
+    {
+      "query_id": "461372",
+      "query": "name meaning flame",
+      "relevant_pids": [
+        163279
+      ],
+      "relevant_document_ids": [
+        163280
+      ]
+    },
+    {
+      "query_id": "248573",
+      "query": "how long do you oven cook chicken tenders, and what temp, how long?",
+      "relevant_pids": [
+        1624679,
+        5153725
+      ],
+      "relevant_document_ids": [
+        1624680,
+        5153726
+      ]
+    },
+    {
+      "query_id": "906172",
+      "query": "what to do about changing a deed",
+      "relevant_pids": [
+        3603045
+      ],
+      "relevant_document_ids": [
+        3603046
+      ]
+    },
+    {
+      "query_id": "834907",
+      "query": "what is the name of the blood panel test for thyroid function",
+      "relevant_pids": [
+        2570046
+      ],
+      "relevant_document_ids": [
+        2570047
+      ]
+    },
+    {
+      "query_id": "335454",
+      "query": "how old is julianna margulies",
+      "relevant_pids": [
+        4003060
+      ],
+      "relevant_document_ids": [
+        4003061
+      ]
+    },
+    {
+      "query_id": "670011",
+      "query": "what idea that was made up by geologist james hutton argued that the geologic processes occuring today have occurred since the formation of earth?",
+      "relevant_pids": [
+        6122159
+      ],
+      "relevant_document_ids": [
+        6122160
+      ]
+    },
+    {
+      "query_id": "647231",
+      "query": "what does rose quartz known for",
+      "relevant_pids": [
+        7055970
+      ],
+      "relevant_document_ids": [
+        7055971
+      ]
+    },
+    {
+      "query_id": "315959",
+      "query": "how much does it cost to install drywall",
+      "relevant_pids": [
+        474659
+      ],
+      "relevant_document_ids": [
+        474660
+      ]
+    },
+    {
+      "query_id": "1067436",
+      "query": "why does my e cig taste burnt",
+      "relevant_pids": [
+        3116575
+      ],
+      "relevant_document_ids": [
+        3116576
+      ]
+    },
+    {
+      "query_id": "1165822",
+      "query": "what are the most common minerals found in granite",
+      "relevant_pids": [
+        3900994
+      ],
+      "relevant_document_ids": [
+        3900995
+      ]
+    },
+    {
+      "query_id": "834962",
+      "query": "what is the name of the chef that did the cajun cooking",
+      "relevant_pids": [
+        4505991
+      ],
+      "relevant_document_ids": [
+        4505992
+      ]
+    },
+    {
+      "query_id": "568886",
+      "query": "what are the different giant covalent structures",
+      "relevant_pids": [
+        232608
+      ],
+      "relevant_document_ids": [
+        232609
+      ]
+    },
+    {
+      "query_id": "36506",
+      "query": "average fixed cost formula business",
+      "relevant_pids": [
+        5728967
+      ],
+      "relevant_document_ids": [
+        5728968
+      ]
+    },
+    {
+      "query_id": "1056733",
+      "query": "who was the president during the alaska purchase",
+      "relevant_pids": [
+        4836984
+      ],
+      "relevant_document_ids": [
+        4836985
+      ]
+    },
+    {
+      "query_id": "1004022",
+      "query": "where was the series the young pope filmed",
+      "relevant_pids": [
+        5121783,
+        5121785
+      ],
+      "relevant_document_ids": [
+        5121784,
+        5121786
+      ]
+    },
+    {
+      "query_id": "449253",
+      "query": "meaning of south sudan flag",
+      "relevant_pids": [
+        729152
+      ],
+      "relevant_document_ids": [
+        729153
+      ]
+    },
+    {
+      "query_id": "141395",
+      "query": "derek holland net worth",
+      "relevant_pids": [
+        4957705
+      ],
+      "relevant_document_ids": [
+        4957706
+      ]
+    },
+    {
+      "query_id": "838471",
+      "query": "what is the parkland formula used for",
+      "relevant_pids": [
+        4841865
+      ],
+      "relevant_document_ids": [
+        4841866
+      ]
+    },
+    {
+      "query_id": "332310",
+      "query": "how often should i mow bermuda grass",
+      "relevant_pids": [
+        5074397
+      ],
+      "relevant_document_ids": [
+        5074398
+      ]
+    },
+    {
+      "query_id": "183403",
+      "query": "expd target price",
+      "relevant_pids": [
+        2352982
+      ],
+      "relevant_document_ids": [
+        2352983
+      ]
+    },
+    {
+      "query_id": "977843",
+      "query": "where is beauly",
+      "relevant_pids": [
+        2504993
+      ],
+      "relevant_document_ids": [
+        2504994
+      ]
+    },
+    {
+      "query_id": "595002",
+      "query": "what characteristics do mammals and birds have in common",
+      "relevant_pids": [
+        6061395
+      ],
+      "relevant_document_ids": [
+        6061396
+      ]
+    },
+    {
+      "query_id": "729639",
+      "query": "what is charles bonnet syndrome",
+      "relevant_pids": [
+        1242877
+      ],
+      "relevant_document_ids": [
+        1242878
+      ]
+    },
+    {
+      "query_id": "930541",
+      "query": "what's in spark plug ceramic",
+      "relevant_pids": [
+        398382,
+        3174943
+      ],
+      "relevant_document_ids": [
+        398383,
+        3174944
+      ]
+    },
+    {
+      "query_id": "574318",
+      "query": "what are the symptoms of rabies in humans",
+      "relevant_pids": [
+        2141714
+      ],
+      "relevant_document_ids": [
+        2141715
+      ]
+    },
+    {
+      "query_id": "741493",
+      "query": "what is dry needling good for",
+      "relevant_pids": [
+        4059629
+      ],
+      "relevant_document_ids": [
+        4059630
+      ]
+    },
+    {
+      "query_id": "1012583",
+      "query": "which kind of materials were used to make dwellings in the neolithic period",
+      "relevant_pids": [
+        3117925
+      ],
+      "relevant_document_ids": [
+        3117926
+      ]
+    },
+    {
+      "query_id": "1184518",
+      "query": "ancient egypt canning definition",
+      "relevant_pids": [
+        1763928
+      ],
+      "relevant_document_ids": [
+        1763929
+      ]
+    },
+    {
+      "query_id": "1148506",
+      "query": "what is theme of amigo brothers",
+      "relevant_pids": [
+        1738508
+      ],
+      "relevant_document_ids": [
+        1738509
+      ]
+    },
+    {
+      "query_id": "911311",
+      "query": "what type of cream for a burn",
+      "relevant_pids": [
+        3286242
+      ],
+      "relevant_document_ids": [
+        3286243
+      ]
+    },
+    {
+      "query_id": "166561",
+      "query": "does gabapentin cause itching",
+      "relevant_pids": [
+        4619838
+      ],
+      "relevant_document_ids": [
+        4619839
+      ]
+    },
+    {
+      "query_id": "722248",
+      "query": "what is bank 1 and bank 2 mean",
+      "relevant_pids": [
+        6806954
+      ],
+      "relevant_document_ids": [
+        6806955
+      ]
+    },
+    {
+      "query_id": "1046492",
+      "query": "who played chase on arrow",
+      "relevant_pids": [
+        4981849
+      ],
+      "relevant_document_ids": [
+        4981850
+      ]
+    },
+    {
+      "query_id": "496002",
+      "query": "short term therapy is how many sessions",
+      "relevant_pids": [
+        2175609
+      ],
+      "relevant_document_ids": [
+        2175610
+      ]
+    },
+    {
+      "query_id": "769023",
+      "query": "what is matrix coding",
+      "relevant_pids": [
+        6121704
+      ],
+      "relevant_document_ids": [
+        6121705
+      ]
+    },
+    {
+      "query_id": "730665",
+      "query": "what is cilantro in uk",
+      "relevant_pids": [
+        1956329
+      ],
+      "relevant_document_ids": [
+        1956330
+      ]
+    },
+    {
+      "query_id": "165279",
+      "query": "does debonne winery have a place for a reception",
+      "relevant_pids": [
+        1132727
+      ],
+      "relevant_document_ids": [
+        1132728
+      ]
+    },
+    {
+      "query_id": "577096",
+      "query": "what are works of art",
+      "relevant_pids": [
+        3302487
+      ],
+      "relevant_document_ids": [
+        3302488
+      ]
+    },
+    {
+      "query_id": "137122",
+      "query": "definition of pii breach",
+      "relevant_pids": [
+        1167737
+      ],
+      "relevant_document_ids": [
+        1167738
+      ]
+    },
+    {
+      "query_id": "1054107",
+      "query": "who was given the right to vote by the 23rd amendment",
+      "relevant_pids": [
+        5187960
+      ],
+      "relevant_document_ids": [
+        5187961
+      ]
+    },
+    {
+      "query_id": "41809",
+      "query": "average salary by job title",
+      "relevant_pids": [
+        5629825
+      ],
+      "relevant_document_ids": [
+        5629826
+      ]
+    },
+    {
+      "query_id": "489727",
+      "query": "role model definition of role",
+      "relevant_pids": [
+        6040264
+      ],
+      "relevant_document_ids": [
+        6040265
+      ]
+    },
+    {
+      "query_id": "1051679",
+      "query": "who sings somebody's watching me",
+      "relevant_pids": [
+        3724725
+      ],
+      "relevant_document_ids": [
+        3724726
+      ]
+    },
+    {
+      "query_id": "480118",
+      "query": "price difference between a 1 bath and 1/2 bath",
+      "relevant_pids": [
+        6676861
+      ],
+      "relevant_document_ids": [
+        6676862
+      ]
+    },
+    {
+      "query_id": "25830",
+      "query": "are three types of rna work together during what",
+      "relevant_pids": [
+        2340216
+      ],
+      "relevant_document_ids": [
+        2340217
+      ]
+    },
+    {
+      "query_id": "898644",
+      "query": "what station is the daily show on?",
+      "relevant_pids": [
+        5096074
+      ],
+      "relevant_document_ids": [
+        5096075
+      ]
+    },
+    {
+      "query_id": "31359",
+      "query": "average birth length and weight united states",
+      "relevant_pids": [
+        960847
+      ],
+      "relevant_document_ids": [
+        960848
+      ]
+    },
+    {
+      "query_id": "878151",
+      "query": "what military base in by orlando fl",
+      "relevant_pids": [
+        2870237
+      ],
+      "relevant_document_ids": [
+        2870238
+      ]
+    },
+    {
+      "query_id": "1175245",
+      "query": "institutional company definition",
+      "relevant_pids": [
+        7021832
+      ],
+      "relevant_document_ids": [
+        7021833
+      ]
+    },
+    {
+      "query_id": "475712",
+      "query": "places where skydiving is done",
+      "relevant_pids": [
+        6896581
+      ],
+      "relevant_document_ids": [
+        6896582
+      ]
+    },
+    {
+      "query_id": "740116",
+      "query": "what is discrete and finite math",
+      "relevant_pids": [
+        2519205,
+        2519210
+      ],
+      "relevant_document_ids": [
+        2519206,
+        2519211
+      ]
+    },
+    {
+      "query_id": "546593",
+      "query": "weather newcastle australia",
+      "relevant_pids": [
+        1130772
+      ],
+      "relevant_document_ids": [
+        1130773
+      ]
+    },
+    {
+      "query_id": "817033",
+      "query": "what is the difference between bearer and holder",
+      "relevant_pids": [
+        3721777
+      ],
+      "relevant_document_ids": [
+        3721778
+      ]
+    },
+    {
+      "query_id": "985910",
+      "query": "where is knockturn alley in universal",
+      "relevant_pids": [
+        3116165
+      ],
+      "relevant_document_ids": [
+        3116166
+      ]
+    },
+    {
+      "query_id": "174207",
+      "query": "does workers comp count as income",
+      "relevant_pids": [
+        6660525
+      ],
+      "relevant_document_ids": [
+        6660526
+      ]
+    },
+    {
+      "query_id": "294670",
+      "query": "how many rooms are in the four seasons maui",
+      "relevant_pids": [
+        6145163
+      ],
+      "relevant_document_ids": [
+        6145164
+      ]
+    },
+    {
+      "query_id": "184756",
+      "query": "falconer professions definition",
+      "relevant_pids": [
+        6101851
+      ],
+      "relevant_document_ids": [
+        6101852
+      ]
+    },
+    {
+      "query_id": "204325",
+      "query": "home depot credit center number",
+      "relevant_pids": [
+        827709
+      ],
+      "relevant_document_ids": [
+        827710
+      ]
+    },
+    {
+      "query_id": "554431",
+      "query": "what are a group of badgers called",
+      "relevant_pids": [
+        510670
+      ],
+      "relevant_document_ids": [
+        510671
+      ]
+    },
+    {
+      "query_id": "1033256",
+      "query": "who is goldman",
+      "relevant_pids": [
+        5425438
+      ],
+      "relevant_document_ids": [
+        5425439
+      ]
+    },
+    {
+      "query_id": "20752",
+      "query": "are all convertible seats rear facing",
+      "relevant_pids": [
+        6434335
+      ],
+      "relevant_document_ids": [
+        6434336
+      ]
+    }
+  ]
+}

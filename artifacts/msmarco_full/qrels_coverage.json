@@ -1,0 +1,21 @@
+{
+  "dataset": "sentence-transformers/msmarco",
+  "config": "labeled-list",
+  "split": "train",
+  "corpus": "sentence-transformers/msmarco-corpus passage train",
+  "corpus_table": "msmarco_full_documents",
+  "corpus_size": 8841823,
+  "mapping": "document_id = pid + 1",
+  "labeled_list_rows": 400282,
+  "queries_with_positive_qrels": 400282,
+  "unique_positive_judgments": 417462,
+  "unique_positive_passages": 408158,
+  "covered_unique_positive_passages": 408158,
+  "unique_positive_passage_coverage": 1.0,
+  "total_positive_judgments": 417462,
+  "covered_positive_judgments": 417462,
+  "positive_judgment_coverage": 1.0,
+  "eligible_queries_with_corpus_positive": 400282,
+  "eligible_queries_with_text": 400282,
+  "missing_query_text": 0
+}

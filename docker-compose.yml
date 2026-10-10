@@ -2,7 +2,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg17
     container_name: hybrid-retrieval-db
-    shm_size: '2gb'
+    shm_size: '8gb'
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB}

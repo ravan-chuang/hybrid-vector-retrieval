@@ -1,0 +1,205 @@
+{
+  "protocol": {
+    "name": "msmarco-full-multistage-10k-v1",
+    "corpus_documents": 8841823,
+    "queries": 10000,
+    "query_sample_seed": 43,
+    "top_k": 10,
+    "candidate_k": 50,
+    "ef_search": 160,
+    "dense_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "qrels_source": "sentence-transformers/msmarco labeled-list training split",
+    "positive_qrel_corpus_coverage": 1.0,
+    "rrf": {
+      "k": 60,
+      "lexical_weight": 0.1,
+      "dense_weight": 0.9,
+      "weight_selection": "Frozen from prior 500K development experiment"
+    }
+  },
+  "first_stage": {
+    "lexical": {
+      "mrr_at_10": 0.16328642857142855,
+      "ndcg_at_10": 0.19395030427047383,
+      "recall_at_10": 0.29815
+    },
+    "dense": {
+      "mrr_at_10": 0.3101313095238095,
+      "ndcg_at_10": 0.374113858381882,
+      "recall_at_10": 0.58786
+    },
+    "weighted_rrf": {
+      "mrr_at_10": 0.32194460317460316,
+      "ndcg_at_10": 0.38630336117476055,
+      "recall_at_10": 0.6009933333333334
+    },
+    "latency": {
+      "lexical": {
+        "mean_ms": 40.531306915401366,
+        "p50_ms": 11.65243799914606,
+        "p95_ms": 81.96817464777253,
+        "qps": 24.67228609448103
+      },
+      "dense": {
+        "mean_ms": 181.317453313421,
+        "p50_ms": 172.33364551793784,
+        "p95_ms": 311.3575208029942,
+        "qps": 5.515188867513069
+      }
+    },
+    "weighted_rrf_vs_dense_paired": {
+      "comparison": "weighted_rrf_minus_dense",
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 42,
+      "metrics": {
+        "mrr_at_10": {
+          "dense": 0.3101313095238095,
+          "weighted_rrf": 0.32194460317460316,
+          "delta": 0.01181329365079365,
+          "ci_95": [
+            0.008515465277777778,
+            0.01503794742063492
+          ],
+          "wins": 1224,
+          "ties": 7772,
+          "losses": 1004
+        },
+        "ndcg_at_10": {
+          "dense": 0.374113858381882,
+          "weighted_rrf": 0.38630336117476055,
+          "delta": 0.012189502792878556,
+          "ci_95": [
+            0.009543960779909823,
+            0.014804002258671399
+          ],
+          "wins": 1243,
+          "ties": 7744,
+          "losses": 1013
+        },
+        "recall_at_10": {
+          "dense": 0.58786,
+          "weighted_rrf": 0.6009933333333333,
+          "delta": 0.013133333333333332,
+          "ci_95": [
+            0.0098,
+            0.01645
+          ],
+          "wins": 224,
+          "ties": 9692,
+          "losses": 84
+        }
+      }
+    }
+  },
+  "multi_stage": {
+    "dense_ce": {
+      "mrr_at_10": 0.402175,
+      "ndcg_at_10": 0.47030785600168895,
+      "recall_at_10": 0.69505
+    },
+    "union_ce": {
+      "mrr_at_10": 0.41664349206349205,
+      "ndcg_at_10": 0.48757835166935154,
+      "recall_at_10": 0.7211333333333333
+    },
+    "union_ce_vs_dense_ce_paired": {
+      "mrr_at_10": {
+        "dense_mean": 0.402175,
+        "union_mean": 0.41664349206349205,
+        "delta": 0.014468492063492062,
+        "ci95": [
+          0.012098797619047618,
+          0.017017434523809518
+        ],
+        "wins": 326,
+        "ties": 9326,
+        "losses": 348
+      },
+      "ndcg_at_10": {
+        "dense_mean": 0.47030785600168895,
+        "union_mean": 0.4875783516693515,
+        "delta": 0.017270495667662582,
+        "ci95": [
+          0.014711428385821965,
+          0.019911430928798258
+        ],
+        "wins": 336,
+        "ties": 9304,
+        "losses": 360
+      },
+      "recall_at_10": {
+        "dense_mean": 0.69505,
+        "union_mean": 0.7211333333333334,
+        "delta": 0.02608333333333333,
+        "ci95": [
+          0.02235,
+          0.02992520833333333
+        ],
+        "wins": 336,
+        "ties": 9595,
+        "losses": 69
+      }
+    },
+    "lexical_rescue": {
+      "queries_with_lexical_only_relevant": 480,
+      "lexical_only_relevant_documents": 485,
+      "queries_with_promoted_lexical_only_relevant": 336,
+      "promoted_lexical_only_relevant_documents": 339
+    },
+    "ce_latency": {
+      "dense_ce": {
+        "mean_ms": 74.23710783895804,
+        "p50_ms": 68.44458350678906,
+        "p95_ms": 105.65856040338983
+      },
+      "union_ce": {
+        "mean_ms": 98.15764240837598,
+        "p50_ms": 85.87447949685156,
+        "p95_ms": 161.82657565514083
+      }
+    }
+  },
+  "dense_protocol_integrity": {
+    "protocol": "msmarco-full-10k-dense-integrity-v2",
+    "queries": 10000,
+    "ef_search": 160,
+    "candidate_k": 50,
+    "top_k": 10,
+    "exact_ordered_top10": 9804,
+    "exact_ordered_top10_rate": 0.9804,
+    "same_membership_order_only": 179,
+    "same_membership_order_only_rate": 0.0179,
+    "membership_differences": 17,
+    "membership_difference_rate": 0.0017,
+    "mean_top10_overlap": 9.9983
+  },
+  "notes": [
+    "Positive relevance judgments are binary judgments from the MS MARCO labeled-list training split; these are not official MS MARCO dev or leaderboard qrels.",
+    "The full local corpus contains 100% of the positive judgments from this relevance source; this does not imply complete human relevance judgments.",
+    "Cross-Encoder latency measures reranker inference only, not end-to-end retrieval latency.",
+    "Repeated HNSW executions used the same ef_search=160 protocol. Ordered Top-10 agreement was 98.04%; Top-10 membership differed for only 0.17% of queries, with mean Top-10 overlap of 9.9983/10."
+  ],
+  "derived_improvements": {
+    "weighted_rrf_vs_dense": {
+      "mrr_at_10": 0.011813293650793644,
+      "ndcg_at_10": 0.01218950279287856,
+      "recall_at_10": 0.01313333333333333
+    },
+    "dense_ce_vs_dense": {
+      "mrr_at_10": 0.09204369047619049,
+      "ndcg_at_10": 0.09619399761980696,
+      "recall_at_10": 0.1071899999999999
+    },
+    "union_ce_vs_dense_ce": {
+      "mrr_at_10": 0.014468492063492044,
+      "ndcg_at_10": 0.01727049566766259,
+      "recall_at_10": 0.026083333333333347
+    },
+    "union_ce_vs_dense": {
+      "mrr_at_10": 0.10651218253968253,
+      "ndcg_at_10": 0.11346449328746955,
+      "recall_at_10": 0.13327333333333324
+    }
+  }
+}
