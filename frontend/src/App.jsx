@@ -6,6 +6,7 @@ import './App.css'
 
 const METHODS = [
   { id: 'hybrid', label: 'Hybrid' },
+  { id: 'rerank', label: 'Rerank' },
   { id: 'vector', label: 'Vector' },
   { id: 'lexical', label: 'Lexical' },
 ]
@@ -36,6 +37,7 @@ function App() {
   const [history, setHistory] = useState([])
   const [method, setMethod] = useState('hybrid')
   const [corpus, setCorpus] = useState('benchmark')
+  const [fusionStrategy, setFusionStrategy] = useState('dense')
   const [query, setQuery] = useState('Manhattan Project')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -85,11 +87,23 @@ function App() {
 
       if (method === 'vector') {
         data = await api.vectorSearch(cleanQuery, 10, 40, corpus)
+      } else if (method === 'rerank') {
+        data = await api.rerankSearch(cleanQuery, 10, 50, 160, corpus)
       } else if (method === 'lexical') {
         data = await api.lexicalSearch(cleanQuery, 10, corpus)
       } else {
+        const lexicalWeight = fusionStrategy === 'dense' ? 0.1 : 0.5
+        const denseWeight = fusionStrategy === 'dense' ? 0.9 : 0.5
+
         data = await api.hybridSearch(
-          cleanQuery, 10, 50, 40, 60, corpus,
+          cleanQuery,
+          10,
+          50,
+          160,
+          60,
+          corpus,
+          lexicalWeight,
+          denseWeight,
         )
       }
 
@@ -235,6 +249,29 @@ function App() {
             </select>
           </div>
 
+          {method === 'hybrid' && (
+            <div className="fusion-selector">
+              <label htmlFor="fusion-strategy">Fusion Strategy</label>
+              <select
+                id="fusion-strategy"
+                value={fusionStrategy}
+                disabled={loading}
+                onChange={(event) => {
+                  setFusionStrategy(event.target.value)
+                  setResult(null)
+                  setError('')
+                }}
+              >
+                <option value="dense">
+                  Dense-weighted RRF · 10% Lexical / 90% Dense
+                </option>
+                <option value="balanced">
+                  Balanced RRF · 50% Lexical / 50% Dense
+                </option>
+              </select>
+            </div>
+          )}
+
           <form className="search-form" onSubmit={handleSearch}>
             <input
               value={query}
@@ -254,6 +291,8 @@ function App() {
           <div className="search-caption">
             {method === 'hybrid' &&
               'PostgreSQL FTS + HNSW candidates fused with RRF'}
+            {method === 'rerank' &&
+              'Lexical Top-50 + Dense Top-50 → Candidate Union → Cross-Encoder'}
             {method === 'vector' &&
               'MiniLM query embedding + pgvector HNSW cosine search'}
             {method === 'lexical' &&
@@ -299,6 +338,14 @@ function App() {
                   detail="RRF"
                 />
               )}
+
+              {result.rerank_ms !== undefined && (
+                <StatCard
+                  label="RERANK"
+                  value={formatMs(result.rerank_ms)}
+                  detail={`${result.candidate_count} candidates · Cross-Encoder`}
+                />
+              )}
               <StatCard
                 label="TOTAL"
                 value={formatMs(result.total_ms)}
@@ -341,6 +388,12 @@ function App() {
 
                         {item.rrf_score !== undefined && (
                           <span>RRF {item.rrf_score.toFixed(5)}</span>
+                        )}
+
+                        {item.cross_encoder_score !== undefined && (
+                          <span>
+                            CE {item.cross_encoder_score.toFixed(4)}
+                          </span>
                         )}
 
                         {item.lexical_rank != null && (

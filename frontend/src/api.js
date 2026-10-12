@@ -44,7 +44,6 @@ export const api = {
       body: JSON.stringify({
         corpus,
         query,
-        corpus,
         top_k: topK,
         ef_search: efSearch,
       }),
@@ -60,7 +59,6 @@ export const api = {
       body: JSON.stringify({
         corpus,
         query,
-        corpus,
         top_k: topK,
       }),
     }),
@@ -72,17 +70,38 @@ export const api = {
     efSearch = 40,
     rrfK = 60,
     corpus = 'benchmark',
+    lexicalWeight = 0.5,
+    denseWeight = 0.5,
   ) =>
     request('/search/hybrid', {
       method: 'POST',
       body: JSON.stringify({
         corpus,
         query,
-        corpus,
         top_k: topK,
         candidate_k: candidateK,
         ef_search: efSearch,
         rrf_k: rrfK,
+        lexical_weight: lexicalWeight,
+        dense_weight: denseWeight,
+      }),
+    }),
+
+  rerankSearch: (
+    query,
+    topK = 10,
+    candidateK = 50,
+    efSearch = 160,
+    corpus = 'benchmark',
+  ) =>
+    request('/search/rerank', {
+      method: 'POST',
+      body: JSON.stringify({
+        corpus,
+        query,
+        top_k: topK,
+        candidate_k: candidateK,
+        ef_search: efSearch,
       }),
     }),
 

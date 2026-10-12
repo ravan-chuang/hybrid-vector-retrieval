@@ -918,3 +918,37 @@ footer {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Weighted RRF selector */
+.fusion-selector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+  flex-wrap: wrap;
+}
+
+.fusion-selector label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.fusion-selector select {
+  min-width: 310px;
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  background: #172337;
+  color: #f8fafc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fusion-selector select:focus-visible {
+  outline: 2px solid #79d2ff;
+  outline-offset: 2px;
+}

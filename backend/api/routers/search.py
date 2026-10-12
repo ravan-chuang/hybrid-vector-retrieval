@@ -266,12 +266,11 @@ def lexical_search(request: LexicalSearchRequest):
         results=results,
     )
 
-@router.post(
-    "/search/hybrid",
-    response_model=HybridSearchResponse,
-    tags=["Search"],
-)
-def hybrid_search(request: HybridSearchRequest):
+from backend.api.services.weighted_rrf import weighted_rrf_score
+
+def retrieve_hybrid_candidates(request):
+    """Retrieve lexical and dense candidates from the selected corpus."""
+
     model = runtime.get_model()
     db_pool = runtime.get_db_pool()
 
@@ -423,6 +422,49 @@ def hybrid_search(request: HybridSearchRequest):
             detail=f"Hybrid retrieval failed: {exc}",
         )
 
+
+    return {
+        "lexical_rows": lexical_rows,
+        "vector_rows": vector_rows,
+        "embedding_ms": embedding_ms,
+        "lexical_ms": lexical_ms,
+        "vector_ms": vector_ms,
+        "effective_ef_search": effective_ef_search,
+    }
+
+
+@router.post(
+    "/search/hybrid",
+    response_model=HybridSearchResponse,
+    tags=["Search"],
+)
+def hybrid_search(request: HybridSearchRequest):
+    model = runtime.get_model()
+    db_pool = runtime.get_db_pool()
+
+    if model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Embedding model is not loaded.",
+        )
+
+    if db_pool is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection pool is not ready.",
+        )
+
+    total_start = time.perf_counter()
+
+    candidates = retrieve_hybrid_candidates(request)
+
+    lexical_rows = candidates["lexical_rows"]
+    vector_rows = candidates["vector_rows"]
+    embedding_ms = candidates["embedding_ms"]
+    lexical_ms = candidates["lexical_ms"]
+    vector_ms = candidates["vector_ms"]
+    effective_ef_search = candidates["effective_ef_search"]
+
     # -----------------------------------
     # Reciprocal Rank Fusion
     # -----------------------------------
@@ -440,8 +482,12 @@ def hybrid_search(request: HybridSearchRequest):
             "document_id": document_id,
             "external_id": external_id,
             "content": content,
-            "rrf_score": (
-                1.0 / (request.rrf_k + rank)
+            "rrf_score": weighted_rrf_score(
+                lexical_rank=rank,
+                vector_rank=None,
+                lexical_weight=request.lexical_weight,
+                dense_weight=request.dense_weight,
+                rrf_k=request.rrf_k,
             ),
             "lexical_rank": rank,
             "vector_rank": None,
@@ -453,8 +499,12 @@ def hybrid_search(request: HybridSearchRequest):
     ):
         document_id, external_id, content = row
 
-        contribution = (
-            1.0 / (request.rrf_k + rank)
+        contribution = weighted_rrf_score(
+            lexical_rank=None,
+            vector_rank=rank,
+            lexical_weight=request.lexical_weight,
+            dense_weight=request.dense_weight,
+            rrf_k=request.rrf_k,
         )
 
         if document_id in fused:
@@ -513,6 +563,8 @@ def hybrid_search(request: HybridSearchRequest):
         ef_search=request.ef_search,
         effective_ef_search=effective_ef_search,
         rrf_k=request.rrf_k,
+        lexical_weight=request.lexical_weight,
+        dense_weight=request.dense_weight,
         embedding_ms=round(embedding_ms, 3),
         lexical_ms=round(lexical_ms, 3),
         vector_ms=round(vector_ms, 3),
