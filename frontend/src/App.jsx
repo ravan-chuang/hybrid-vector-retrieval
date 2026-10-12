@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
 import DocumentManager from './components/DocumentManager'
+import FullCorpusEvaluation from './components/FullCorpusEvaluation'
 import './App.css'
 
 const METHODS = [
@@ -361,6 +362,8 @@ function App() {
         )}
 
         <DocumentManager />
+
+        <FullCorpusEvaluation />
 
         <section className="lower-grid">
           <div className="panel">
