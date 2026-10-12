@@ -34,6 +34,7 @@ function App() {
   const [stats, setStats] = useState(null)
   const [history, setHistory] = useState([])
   const [method, setMethod] = useState('hybrid')
+  const [corpus, setCorpus] = useState('benchmark')
   const [query, setQuery] = useState('Manhattan Project')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -82,11 +83,13 @@ function App() {
       let data
 
       if (method === 'vector') {
-        data = await api.vectorSearch(cleanQuery)
+        data = await api.vectorSearch(cleanQuery, 10, 40, corpus)
       } else if (method === 'lexical') {
-        data = await api.lexicalSearch(cleanQuery)
+        data = await api.lexicalSearch(cleanQuery, 10, corpus)
       } else {
-        data = await api.hybridSearch(cleanQuery)
+        data = await api.hybridSearch(
+          cleanQuery, 10, 50, 40, 60, corpus,
+        )
       }
 
       setResult(data)
@@ -210,11 +213,36 @@ function App() {
             </div>
           </div>
 
+          <div className="corpus-selector">
+            <label htmlFor="search-corpus">Search Corpus</label>
+            <select
+              id="search-corpus"
+              value={corpus}
+              disabled={loading}
+              onChange={(event) => {
+                setCorpus(event.target.value)
+                setResult(null)
+                setError('')
+              }}
+            >
+              <option value="benchmark">
+                Benchmark · 500K MS MARCO
+              </option>
+              <option value="application">
+                Application · Managed Documents
+              </option>
+            </select>
+          </div>
+
           <form className="search-form" onSubmit={handleSearch}>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search 500,000 documents..."
+              placeholder={
+                corpus === 'application'
+                  ? 'Search application documents...'
+                  : 'Search 500,000 MS MARCO passages...'
+              }
               aria-label="Search query"
             />
             <button type="submit" disabled={loading}>

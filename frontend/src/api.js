@@ -11,12 +11,17 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     let message = `HTTP ${response.status}`
+
     try {
       const body = await response.json()
-      message = body.detail || message
+      message =
+        typeof body.detail === 'string'
+          ? body.detail
+          : JSON.stringify(body.detail ?? body)
     } catch {
       // Keep the HTTP status message.
     }
+
     throw new Error(message)
   }
 
@@ -25,23 +30,37 @@ async function request(path, options = {}) {
 
 export const api = {
   health: () => request('/health'),
+
   stats: () => request('/stats'),
 
-  vectorSearch: (query, topK = 10, efSearch = 40) =>
+  vectorSearch: (
+    query,
+    topK = 10,
+    efSearch = 40,
+    corpus = 'benchmark',
+  ) =>
     request('/search/vector', {
       method: 'POST',
       body: JSON.stringify({
+        corpus,
         query,
+        corpus,
         top_k: topK,
         ef_search: efSearch,
       }),
     }),
 
-  lexicalSearch: (query, topK = 10) =>
+  lexicalSearch: (
+    query,
+    topK = 10,
+    corpus = 'benchmark',
+  ) =>
     request('/search/lexical', {
       method: 'POST',
       body: JSON.stringify({
+        corpus,
         query,
+        corpus,
         top_k: topK,
       }),
     }),
@@ -52,11 +71,14 @@ export const api = {
     candidateK = 50,
     efSearch = 40,
     rrfK = 60,
+    corpus = 'benchmark',
   ) =>
     request('/search/hybrid', {
       method: 'POST',
       body: JSON.stringify({
+        corpus,
         query,
+        corpus,
         top_k: topK,
         candidate_k: candidateK,
         ef_search: efSearch,
@@ -64,7 +86,8 @@ export const api = {
       }),
     }),
 
-  history: (limit = 8) => request(`/search/history?limit=${limit}`),
+  history: (limit = 8) =>
+    request(`/search/history?limit=${limit}`),
 }
 
 export const documentApi = {
