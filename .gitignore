@@ -36,3 +36,10 @@ benchmarks/results/
 *.log
 tmp/
 temp/
+
+# Local backup files
+*.bak
+*.pre_rerank
+
+# Benchmark generated results
+benchmarks/performance/results/
