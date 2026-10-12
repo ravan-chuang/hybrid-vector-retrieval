@@ -68,10 +68,15 @@ def system_stats():
         with db_pool.connection() as conn:
             with conn.cursor() as cur:
 
-                cur.execute(
-                    f"SELECT COUNT(*) FROM {SEARCH_TABLE}"
-                )
-                documents = cur.fetchone()[0]
+                # Full MS MARCO corpus was validated after ingestion.
+                # Avoid an expensive COUNT(*) on every dashboard load.
+                if SEARCH_TABLE == "msmarco_full_documents":
+                    documents = 8_841_823
+                else:
+                    cur.execute(
+                        f"SELECT COUNT(*) FROM {SEARCH_TABLE}"
+                    )
+                    documents = cur.fetchone()[0]
 
                 cur.execute(
                     f"""

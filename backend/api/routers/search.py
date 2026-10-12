@@ -189,6 +189,13 @@ def lexical_search(request: LexicalSearchRequest):
                         limit=request.top_k,
                     )
                 else:
+                    # Full-corpus lexical retrieval can match
+                    # hundreds of thousands of passages.
+                    # Use transaction-local settings to avoid
+                    # lossy bitmap scans and JIT overhead.
+                    cur.execute("SET LOCAL work_mem = '128MB'")
+                    cur.execute("SET LOCAL jit = off")
+
                     cur.execute(
                         f"""
                         WITH query AS (
@@ -319,6 +326,13 @@ def hybrid_search(request: HybridSearchRequest):
                         for row in lexical_scored_rows
                     ]
                 else:
+                    # Full-corpus lexical retrieval can match
+                    # hundreds of thousands of passages.
+                    # Use transaction-local settings to avoid
+                    # lossy bitmap scans and JIT overhead.
+                    cur.execute("SET LOCAL work_mem = '128MB'")
+                    cur.execute("SET LOCAL jit = off")
+
                     cur.execute(
                         f"""
                         WITH query AS (
