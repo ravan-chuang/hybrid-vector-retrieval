@@ -202,12 +202,12 @@ def lexical_search(request: LexicalSearchRequest):
                             d.external_id,
                             d.content,
                             ts_rank_cd(
-                                d.search_vector,
+                                to_tsvector('english', d.content),
                                 query.q
                             ) AS score
                         FROM {SEARCH_TABLE} AS d
                         CROSS JOIN query
-                        WHERE d.search_vector @@ query.q
+                        WHERE to_tsvector('english', d.content) @@ query.q
                         ORDER BY score DESC, d.document_id
                         LIMIT %s
                         """,
@@ -333,10 +333,10 @@ def hybrid_search(request: HybridSearchRequest):
                             d.content
                         FROM {SEARCH_TABLE} AS d
                         CROSS JOIN query
-                        WHERE d.search_vector @@ query.q
+                        WHERE to_tsvector('english', d.content) @@ query.q
                         ORDER BY
                             ts_rank_cd(
-                                d.search_vector,
+                                to_tsvector('english', d.content),
                                 query.q
                             ) DESC,
                             d.document_id

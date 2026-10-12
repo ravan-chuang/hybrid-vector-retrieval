@@ -53,8 +53,9 @@ export default function FullCorpusEvaluation() {
           <span className="eyebrow">LARGE-SCALE EVALUATION</span>
           <h3 id="fc-title">Full MS MARCO · 8.84M Passages</h3>
           <p>
-            Frozen offline experiments. These results are separate
-            from the live 500K search API.
+            Frozen offline experiments on the 8.84M corpus.
+            These benchmark measurements are separate from
+            live API request timings.
           </p>
         </div>
         <span className="fc-badge">OFFLINE · FROZEN</span>

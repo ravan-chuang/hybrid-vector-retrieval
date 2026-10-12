@@ -146,7 +146,7 @@ function App() {
               unified in PostgreSQL.
             </h2>
             <p>
-              Explore a 500K-document retrieval system backed by PostgreSQL
+              Explore 8.84 million MS MARCO passages using PostgreSQL
               full-text search, pgvector HNSW, and Reciprocal Rank Fusion.
             </p>
           </div>
@@ -227,7 +227,7 @@ function App() {
               }}
             >
               <option value="benchmark">
-                Benchmark · 500K MS MARCO
+                Full MS MARCO · 8.84M
               </option>
               <option value="application">
                 Application · Managed Documents
@@ -242,7 +242,7 @@ function App() {
               placeholder={
                 corpus === 'application'
                   ? 'Search application documents...'
-                  : 'Search 500,000 MS MARCO passages...'
+                  : 'Search 8.84M MS MARCO passages...'
               }
               aria-label="Search query"
             />

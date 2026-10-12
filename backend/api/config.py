@@ -10,7 +10,7 @@ if not DB_URL:
 
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-SEARCH_TABLE = "scalability_large_documents"
+SEARCH_TABLE = "msmarco_full_documents"
 
 EMBEDDING_DIMENSION = 384
 
