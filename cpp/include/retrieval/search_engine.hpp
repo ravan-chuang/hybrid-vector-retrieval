@@ -9,9 +9,8 @@
 namespace retrieval {
 
 struct Posting {
-    uint32_t doc_id;
-    uint32_t term_frequency;
     uint32_t internal_id;
+    uint32_t term_frequency;
 };
 
 struct SearchResult {

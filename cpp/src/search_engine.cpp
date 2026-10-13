@@ -63,9 +63,8 @@ void SearchEngine::add_document(
 
     for (const auto& [term, frequency] : frequencies) {
         inverted_index_[term].push_back({
-            doc_id,
-            frequency,
-            internal_id
+            internal_id,
+            frequency
         });
     }
 
@@ -118,7 +117,7 @@ std::vector<SearchResult> SearchEngine::search(
 
             const double dl =
                 static_cast<double>(
-                    document_lengths_.at(posting.doc_id)
+                    internal_document_lengths_[posting.internal_id]
                 );
 
             const double denominator =
@@ -129,7 +128,7 @@ std::vector<SearchResult> SearchEngine::search(
             const double score =
                 idf * (tf * (k1_ + 1.0)) / denominator;
 
-            scores[posting.doc_id] += score;
+            scores[posting.internal_id] += score;
         }
     }
 
@@ -146,8 +145,11 @@ std::vector<SearchResult> SearchEngine::search(
         decltype(better)
     > heap(better);
 
-    for (const auto& [doc_id, score] : scores) {
-        SearchResult result{doc_id, score};
+    for (const auto& [internal_id, score] : scores) {
+        SearchResult result{
+            internal_to_external_[internal_id],
+            score
+        };
 
         if (heap.size() < top_k) {
             heap.push(result);
