@@ -1,0 +1,61 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(
+    HybridRetrievalCore
+    VERSION 0.2.0
+    LANGUAGES CXX
+)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_library(
+    retrieval_core
+    STATIC
+    src/search_engine.cpp
+    src/corpus_loader.cpp
+)
+
+target_include_directories(
+    retrieval_core
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_options(
+    retrieval_core
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+)
+
+add_executable(
+    test_search_engine
+    tests/test_search_engine.cpp
+)
+
+target_link_libraries(
+    test_search_engine
+    PRIVATE
+    retrieval_core
+)
+
+add_executable(
+    benchmark_index
+    benchmarks/benchmark_index.cpp
+)
+
+target_link_libraries(
+    benchmark_index
+    PRIVATE
+    retrieval_core
+)
+
+enable_testing()
+
+add_test(
+    NAME SearchEngineTests
+    COMMAND test_search_engine
+)

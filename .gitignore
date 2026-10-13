@@ -43,3 +43,16 @@ temp/
 
 # Benchmark generated results
 benchmarks/performance/results/
+
+# C++ / CMake build artifacts
+cpp/build/
+build/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# C++ debug build
+cpp/build-debug/
+
+# C++ retrieval datasets
+cpp/data/
