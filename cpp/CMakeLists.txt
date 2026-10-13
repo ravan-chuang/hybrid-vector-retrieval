@@ -59,3 +59,19 @@ add_test(
     NAME SearchEngineTests
     COMMAND test_search_engine
 )
+
+add_executable(
+    test_bm25_reference
+    tests/test_bm25_reference.cpp
+)
+
+target_link_libraries(
+    test_bm25_reference
+    PRIVATE
+    retrieval_core
+)
+
+add_test(
+    NAME BM25ReferenceTests
+    COMMAND test_bm25_reference
+)

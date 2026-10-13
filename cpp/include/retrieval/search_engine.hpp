@@ -28,6 +28,9 @@ public:
     ) const;
 
     std::size_t document_count() const;
+    std::size_t vocabulary_size() const;
+    std::size_t posting_count() const;
+    std::size_t document_frequency(const std::string& term) const;
 
 private:
     static std::vector<std::string> tokenize(

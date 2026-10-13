@@ -165,4 +165,36 @@ std::size_t SearchEngine::document_count() const {
     return document_lengths_.size();
 }
 
+std::size_t SearchEngine::vocabulary_size() const {
+    return inverted_index_.size();
+}
+
+std::size_t SearchEngine::posting_count() const {
+    std::size_t total = 0;
+
+    for (const auto& [term, postings] : inverted_index_) {
+        total += postings.size();
+    }
+
+    return total;
+}
+
+std::size_t SearchEngine::document_frequency(
+    const std::string& term
+) const {
+    const auto tokens = tokenize(term);
+
+    if (tokens.size() != 1) {
+        return 0;
+    }
+
+    const auto it = inverted_index_.find(tokens[0]);
+
+    if (it == inverted_index_.end()) {
+        return 0;
+    }
+
+    return it->second.size();
+}
+
 }  // namespace retrieval
