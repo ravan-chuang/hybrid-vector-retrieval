@@ -17,10 +17,24 @@ std::vector<std::string> SearchEngine::tokenize(
     std::string current;
 
     for (unsigned char ch : text) {
-        if (std::isalnum(ch)) {
-            current.push_back(
-                static_cast<char>(std::tolower(ch))
-            );
+        const bool is_digit =
+            ch >= '0' && ch <= '9';
+
+        const bool is_upper =
+            ch >= 'A' && ch <= 'Z';
+
+        const bool is_lower =
+            ch >= 'a' && ch <= 'z';
+
+        if (is_digit || is_upper || is_lower) {
+            if (is_upper) {
+                ch = static_cast<unsigned char>(
+                    ch - 'A' + 'a'
+                );
+            }
+
+            current.push_back(static_cast<char>(ch));
+
         } else if (!current.empty()) {
             tokens.push_back(current);
             current.clear();

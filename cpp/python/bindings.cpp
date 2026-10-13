@@ -10,6 +10,7 @@
 #include <pybind11/stl.h>
 
 #include "retrieval/search_engine.hpp"
+#include "retrieval/corpus_loader.hpp"
 
 namespace py = pybind11;
 
@@ -17,6 +18,24 @@ namespace {
 
 class PythonSearchEngine {
 public:
+    std::size_t load_corpus(const std::string& path) {
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        if (sealed_) {
+            throw std::runtime_error(
+                "Cannot load corpus after search initialization."
+            );
+        }
+
+        if (engine_.document_count() != 0) {
+            throw std::runtime_error(
+                "Corpus loading requires an empty engine."
+            );
+        }
+
+        return retrieval::load_corpus(path, engine_);
+    }
+
     void add_document(
         uint32_t doc_id,
         const std::string& text
@@ -51,12 +70,10 @@ public:
 
         // Workspace is local to this search.
         // This avoids sharing mutable accumulator state.
-        retrieval::SearchWorkspace workspace;
-
         return engine_.search_dense(
             query,
             top_k,
-            workspace
+            workspace_
         );
     }
 
@@ -77,6 +94,7 @@ public:
 
 private:
     retrieval::SearchEngine engine_;
+    retrieval::SearchWorkspace workspace_;
     mutable std::mutex mutex_;
     bool sealed_ = false;
 };
@@ -104,6 +122,12 @@ PYBIND11_MODULE(retrieval_cpp, m) {
         "SearchEngine"
     )
         .def(py::init<>())
+
+        .def(
+            "load_corpus",
+            &PythonSearchEngine::load_corpus,
+            py::arg("path")
+        )
 
         .def(
             "add_document",

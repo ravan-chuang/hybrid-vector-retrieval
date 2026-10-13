@@ -56,3 +56,6 @@ cpp/build-debug/
 
 # C++ retrieval datasets
 cpp/data/
+
+# Native Python extensions
+backend/retrieval_cpp*.so
