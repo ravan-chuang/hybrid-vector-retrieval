@@ -64,7 +64,8 @@ void SearchEngine::add_document(
     for (const auto& [term, frequency] : frequencies) {
         inverted_index_[term].push_back({
             doc_id,
-            frequency
+            frequency,
+            internal_id
         });
     }
 
@@ -231,8 +232,7 @@ std::vector<SearchResult> SearchEngine::search_dense(
         );
 
         for (const auto& posting : postings) {
-            const uint32_t internal_id =
-                external_to_internal_.at(posting.doc_id);
+            const uint32_t internal_id = posting.internal_id;
 
             if (workspace.generations[internal_id] !=
                 workspace.current_generation) {
