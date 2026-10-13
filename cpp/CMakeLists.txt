@@ -102,3 +102,47 @@ target_link_libraries(
     PRIVATE
     retrieval_core
 )
+
+# --------------------------------------------------
+# Python bindings (pybind11)
+# --------------------------------------------------
+
+option(
+    BUILD_PYTHON_BINDINGS
+    "Build Python bindings"
+    OFF
+)
+
+if(BUILD_PYTHON_BINDINGS)
+    find_package(
+        Python
+        COMPONENTS Interpreter Development.Module
+        REQUIRED
+    )
+
+    find_package(pybind11 CONFIG REQUIRED)
+
+    set_target_properties(
+        retrieval_core
+        PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+
+    pybind11_add_module(
+        retrieval_cpp
+        python/bindings.cpp
+    )
+
+    target_link_libraries(
+        retrieval_cpp
+        PRIVATE
+        retrieval_core
+    )
+
+    set_target_properties(
+        retrieval_cpp
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY
+        "${CMAKE_CURRENT_SOURCE_DIR}/../backend"
+    )
+endif()
