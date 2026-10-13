@@ -75,3 +75,30 @@ add_test(
     NAME BM25ReferenceTests
     COMMAND test_bm25_reference
 )
+
+add_executable(
+    test_dense_accumulator
+    tests/test_dense_accumulator.cpp
+)
+
+target_link_libraries(
+    test_dense_accumulator
+    PRIVATE
+    retrieval_core
+)
+
+add_test(
+    NAME DenseAccumulatorTests
+    COMMAND test_dense_accumulator
+)
+
+add_executable(
+    benchmark_dense
+    benchmarks/benchmark_dense.cpp
+)
+
+target_link_libraries(
+    benchmark_dense
+    PRIVATE
+    retrieval_core
+)
