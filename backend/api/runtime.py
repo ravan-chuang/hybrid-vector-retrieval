@@ -22,3 +22,17 @@ def set_db_pool(value: ConnectionPool | None) -> None:
 
 def get_db_pool() -> ConnectionPool | None:
     return db_pool
+
+
+
+# C++ BM25 retrieval engine
+cpp_engine = None
+
+
+def set_cpp_engine(value) -> None:
+    global cpp_engine
+    cpp_engine = value
+
+
+def get_cpp_engine():
+    return cpp_engine

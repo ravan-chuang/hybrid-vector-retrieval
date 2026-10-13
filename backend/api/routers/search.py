@@ -5,6 +5,9 @@ from fastapi import APIRouter, HTTPException
 from backend.api import runtime
 from backend.api.config import SEARCH_TABLE
 from backend.api.services.embedding import vector_to_pg
+from backend.api.services.cpp_candidates import (
+    retrieve_cpp_candidates,
+)
 from backend.api.services.application_retrieval import (
     lexical_search as application_lexical_search,
     vector_search as application_vector_search,
@@ -314,7 +317,14 @@ def retrieve_hybrid_candidates(request):
                 # -------------------------
                 lexical_start = time.perf_counter()
 
-                if request.corpus == "application":
+                if request.lexical_backend == "cpp_bm25":
+                    lexical_rows = retrieve_cpp_candidates(
+                        cur,
+                        query=request.query,
+                        limit=request.candidate_k,
+                    )
+
+                elif request.corpus == "application":
                     lexical_scored_rows = application_lexical_search(
                         cur,
                         query=request.query,
@@ -557,7 +567,11 @@ def hybrid_search(request: HybridSearchRequest):
 
     return HybridSearchResponse(
         query=request.query,
-        method="rrf_lexical_hnsw",
+        method=(
+            "rrf_cpp_bm25_hnsw"
+            if request.lexical_backend == "cpp_bm25"
+            else "rrf_lexical_hnsw"
+        ),
         top_k=request.top_k,
         candidate_k=request.candidate_k,
         ef_search=request.ef_search,

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 SearchCorpus = Literal["benchmark", "application"]
+LexicalBackend = Literal["postgresql_fts", "cpp_bm25"]
 
 
 class VectorSearchRequest(BaseModel):
@@ -93,6 +94,10 @@ class HybridSearchRequest(BaseModel):
         max_length=1000,
         description="Natural-language hybrid search query",
     )
+    lexical_backend: LexicalBackend = Field(
+        default="postgresql_fts",
+        description="Lexical retrieval backend",
+    )
     corpus: SearchCorpus = Field(
         default="benchmark",
         description="Search corpus: benchmark or application",
@@ -145,6 +150,14 @@ class HybridSearchRequest(BaseModel):
         if abs(self.lexical_weight + self.dense_weight - 1.0) > 1e-9:
             raise ValueError(
                 "lexical_weight + dense_weight must equal 1.0"
+            )
+
+        if (
+            self.lexical_backend == "cpp_bm25"
+            and self.corpus != "benchmark"
+        ):
+            raise ValueError(
+                "cpp_bm25 is only supported for benchmark corpus"
             )
 
         return self
