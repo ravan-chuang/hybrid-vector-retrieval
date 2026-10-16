@@ -272,6 +272,15 @@ def lexical_search(request: LexicalSearchRequest):
 from backend.api.services.weighted_rrf import weighted_rrf_score
 
 def retrieve_hybrid_candidates(request):
+    if (
+        request.corpus == "application"
+        and request.lexical_backend == "cpp_bm25"
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="C++ BM25 is only supported for benchmark corpus.",
+        )
+
     """Retrieve lexical and dense candidates from the selected corpus."""
 
     model = runtime.get_model()
@@ -308,8 +317,20 @@ def retrieve_hybrid_candidates(request):
         time.perf_counter() - embedding_start
     ) * 1000.0
 
+    profile = {
+        "pool_wait_ms": 0.0,
+        "bm25_search_ms": 0.0,
+        "metadata_fetch_ms": 0.0,
+    }
+
     try:
+        pool_start = time.perf_counter()
+
         with db_pool.connection() as conn:
+            profile["pool_wait_ms"] = (
+                time.perf_counter() - pool_start
+            ) * 1000.0
+
             with conn.cursor() as cur:
 
                 # -------------------------
@@ -322,6 +343,12 @@ def retrieve_hybrid_candidates(request):
                         cur,
                         query=request.query,
                         limit=request.candidate_k,
+                        stopword_filter=getattr(
+                            request,
+                            "stopword_filter",
+                            False,
+                        ),
+                        profile=profile,
                     )
 
                 elif request.corpus == "application":
@@ -440,6 +467,9 @@ def retrieve_hybrid_candidates(request):
         "lexical_ms": lexical_ms,
         "vector_ms": vector_ms,
         "effective_ef_search": effective_ef_search,
+        "pool_wait_ms": profile["pool_wait_ms"],
+        "bm25_search_ms": profile["bm25_search_ms"],
+        "metadata_fetch_ms": profile["metadata_fetch_ms"],
     }
 
 
@@ -474,6 +504,9 @@ def hybrid_search(request: HybridSearchRequest):
     lexical_ms = candidates["lexical_ms"]
     vector_ms = candidates["vector_ms"]
     effective_ef_search = candidates["effective_ef_search"]
+    pool_wait_ms = candidates["pool_wait_ms"]
+    bm25_search_ms = candidates["bm25_search_ms"]
+    metadata_fetch_ms = candidates["metadata_fetch_ms"]
 
     # -----------------------------------
     # Reciprocal Rank Fusion
@@ -584,6 +617,9 @@ def hybrid_search(request: HybridSearchRequest):
         vector_ms=round(vector_ms, 3),
         fusion_ms=round(fusion_ms, 3),
         total_ms=round(total_ms, 3),
+        pool_wait_ms=round(pool_wait_ms, 3),
+        bm25_search_ms=round(bm25_search_ms, 3),
+        metadata_fetch_ms=round(metadata_fetch_ms, 3),
         results=results,
     )
 

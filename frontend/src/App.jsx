@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { api } from './api'
 import DocumentManager from './components/DocumentManager'
 import FullCorpusEvaluation from './components/FullCorpusEvaluation'
+import ParallelRetrievalPerformance from './components/ParallelRetrievalPerformance'
 import './App.css'
+import './light-theme.css'
 
 const METHODS = [
   { id: 'hybrid', label: 'Hybrid' },
@@ -154,14 +156,16 @@ function App() {
         <section className="hero">
           <div>
             <span className="eyebrow">RETRIEVAL ENGINEERING DASHBOARD</span>
-            <h2>
-              Lexical and semantic search,
-              <br />
-              unified in PostgreSQL.
+            <h2 className="editorial-hero-title">
+              <span>High-Performance</span>
+              <span>Hybrid Retrieval</span>
+              <em>at Scale.</em>
             </h2>
             <p>
-              Explore 8.84 million MS MARCO passages using PostgreSQL
-              full-text search, pgvector HNSW, and Reciprocal Rank Fusion.
+              Search 8.84 million MS MARCO passages using parallel C++ BM25,
+              pgvector HNSW, weighted Reciprocal Rank Fusion, and
+              Cross-Encoder reranking. Managed documents use PostgreSQL
+              full-text search with pgvector HNSW.
             </p>
           </div>
 
@@ -196,9 +200,9 @@ function App() {
             detail="cosine ANN"
           />
           <StatCard
-            label="GIN INDEX"
+            label="FTS GIN INDEX"
             value={gin?.size ?? '—'}
-            detail="full-text search"
+            detail="PostgreSQL FTS index (not C++ BM25)"
           />
           <StatCard
             label="TOTAL STORAGE"
@@ -290,13 +294,19 @@ function App() {
 
           <div className="search-caption">
             {method === 'hybrid' &&
-              'PostgreSQL FTS + HNSW candidates fused with RRF'}
+              (corpus === 'benchmark'
+                ? 'C++ BM25 + HNSW candidates fused with RRF'
+                : 'PostgreSQL FTS + HNSW candidates fused with RRF')}
             {method === 'rerank' &&
-              'Lexical Top-50 + Dense Top-50 → Candidate Union → Cross-Encoder'}
+              (corpus === 'benchmark'
+                ? 'C++ BM25 Top-50 + Dense Top-50 → Cross-Encoder'
+                : 'PostgreSQL FTS Top-50 + Dense Top-50 → Cross-Encoder')}
             {method === 'vector' &&
               'MiniLM query embedding + pgvector HNSW cosine search'}
             {method === 'lexical' &&
-              'PostgreSQL websearch_to_tsquery + GIN full-text index'}
+              (corpus === 'benchmark'
+                ? 'C++ BM25 retrieval + PostgreSQL document metadata'
+                : 'PostgreSQL websearch_to_tsquery + GIN full-text index')}
           </div>
         </section>
 
@@ -314,7 +324,11 @@ function App() {
                 <StatCard
                   label="LEXICAL"
                   value={formatMs(result.lexical_ms)}
-                  detail="GIN retrieval"
+                  detail={
+                    corpus === 'benchmark'
+                      ? 'C++ BM25 retrieval'
+                      : 'PostgreSQL GIN retrieval'
+                  }
                 />
               )}
               {result.vector_ms !== undefined && (
@@ -328,7 +342,11 @@ function App() {
                 <StatCard
                   label="RETRIEVAL"
                   value={formatMs(result.retrieval_ms)}
-                  detail="database search"
+                  detail={
+                    method === 'lexical' && corpus === 'benchmark'
+                      ? 'C++ BM25 + metadata'
+                      : 'database search'
+                  }
                 />
               )}
               {result.fusion_ms !== undefined && (
@@ -382,8 +400,11 @@ function App() {
                           </span>
                         )}
 
-                        {item.score !== undefined && (
-                          <span>FTS {item.score.toFixed(4)}</span>
+                        {item.score != null && (
+                          <span>
+                            {result.method === 'cpp_bm25' ? 'BM25' : 'FTS'}{' '}
+                            {item.score.toFixed(4)}
+                          </span>
                         )}
 
                         {item.rrf_score !== undefined && (
@@ -417,6 +438,8 @@ function App() {
         <DocumentManager />
 
         <FullCorpusEvaluation />
+
+        <ParallelRetrievalPerformance />
 
         <section className="lower-grid">
           <div className="panel">
@@ -477,7 +500,7 @@ function App() {
       </main>
 
       <footer>
-        Hybrid Vector Retrieval System · PostgreSQL 17 · pgvector · FastAPI
+        Hybrid Vector Retrieval System · C++ BM25 · PostgreSQL 17 · pgvector · FastAPI
       </footer>
     </div>
   )

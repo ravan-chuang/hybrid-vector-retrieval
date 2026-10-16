@@ -1,13 +1,13 @@
 :root {
-  --bg: #0b0e14;
-  --surface: #111620;
-  --surface-2: #171d29;
-  --border: #252d3a;
-  --text: #f3f5f7;
-  --muted: #8994a5;
-  --accent: #7dd3fc;
-  --accent-2: #a7f3d0;
-  --danger: #fca5a5;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+  --accent-2: #0d9488;
+  --danger: #dc2626;
 }
 
 * {
@@ -201,9 +201,9 @@ main {
 .stat-card strong {
   font-size: 22px;
   letter-spacing: -0.03em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }
 
 .stat-detail {

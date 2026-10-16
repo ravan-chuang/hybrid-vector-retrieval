@@ -165,6 +165,10 @@ export default function FullCorpusEvaluation() {
         MS MARCO labeled-list training split, not official dev
         leaderboard qrels. ANN Recall@10 measures agreement with
         exact dense neighbors, not human relevance.
+        These are historical offline evaluation results.
+        The lexical backend and candidate-generation settings
+        have not yet been verified against the current
+        C++ BM25 v0.8.1 serving pipeline.
         Cross-Encoder results are from offline evaluation,
         not live API reranking.
       </p>

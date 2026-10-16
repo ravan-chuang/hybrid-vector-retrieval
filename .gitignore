@@ -59,3 +59,26 @@ cpp/data/
 
 # Native Python extensions
 backend/retrieval_cpp*.so
+
+# Local experiment backups
+artifacts/backups/
+
+# Experiment datasets
+artifacts/experiments/**/data/
+
+# Experiment build outputs
+artifacts/experiments/**/build/
+artifacts/experiments/**/*.dSYM/
+artifacts/experiments/**/tests/test_parallel_search_tsan
+
+# Native build artifacts
+*.o
+*.a
+*.d
+*.so
+
+# Local machine environment metadata
+artifacts/evaluations/**/environment/environment.json
+
+# Parallel BM25 test executable
+artifacts/experiments/v081_parallel_search/tests/test_parallel_search

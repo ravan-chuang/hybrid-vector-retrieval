@@ -8,6 +8,9 @@ from backend.api import runtime
 from backend.api.config import MODEL_NAME
 from backend.api.database import create_connection_pool
 from backend.api.services.cpp_retrieval import load_cpp_engine
+from backend.api.services.dynamic_batch import (
+    shutdown_dynamic_batch_reranker,
+)
 from backend.api.routers.documents import router as documents_router
 from backend.api.routers.search import router as search_router
 from backend.api.routers.cpp_search import router as cpp_search_router
@@ -20,7 +23,7 @@ from backend.api.routers.tags import router as tags_router
 async def lifespan(app: FastAPI):
     print(f"Loading embedding model: {MODEL_NAME}")
 
-    model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(MODEL_NAME, device="cpu")
     model.encode(
         "warmup",
         normalize_embeddings=True,
@@ -41,6 +44,8 @@ async def lifespan(app: FastAPI):
     print("C++ BM25 engine ready.")
 
     yield
+
+    shutdown_dynamic_batch_reranker()
 
     runtime.set_cpp_engine(None)
 

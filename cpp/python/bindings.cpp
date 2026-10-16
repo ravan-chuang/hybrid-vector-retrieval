@@ -147,7 +147,8 @@ PYBIND11_MODULE(retrieval_cpp, m) {
             "search_dense",
             &PythonSearchEngine::search_dense,
             py::arg("query"),
-            py::arg("top_k") = 10
+            py::arg("top_k") = 10,
+            py::call_guard<py::gil_scoped_release>()
         )
 
         .def(

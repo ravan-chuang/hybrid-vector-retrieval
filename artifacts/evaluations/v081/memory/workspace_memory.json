@@ -1,0 +1,22 @@
+{
+  "experiment": "v081_workspace_memory",
+  "corpus_documents": 8841823,
+  "workspace_count": 4,
+  "capacity_per_workspace": {
+    "scores": 8841823,
+    "generations": 8841823,
+    "touched_docs": 524288
+  },
+  "allocated_bytes_per_workspace": 108199028,
+  "allocated_mib_per_workspace": 103.1866340637207,
+  "allocated_bytes_four_workspaces": 432796112,
+  "allocated_mib_four_workspaces": 412.7465362548828,
+  "extra_allocated_bytes_vs_one_workspace": 324597084,
+  "extra_allocated_mib_vs_one_workspace": 309.5599021911621,
+  "measurement_type": "C++ vector capacity-based allocation estimate",
+  "limitations": [
+    "These values describe workspace vector capacities, not process RSS.",
+    "The memory profiler and HTTP benchmark used separate processes.",
+    "Observed RSS differences cannot be attributed solely to workspaces."
+  ]
+}

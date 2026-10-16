@@ -1,4 +1,7 @@
+import time
+
 from backend.api import runtime
+from backend.api.services.query_processing import filter_stopwords
 from backend.api.config import SEARCH_TABLE
 
 
@@ -6,6 +9,8 @@ def retrieve_cpp_candidates(
     cur,
     query: str,
     limit: int,
+    stopword_filter: bool = False,
+    profile: dict | None = None,
 ):
     """
     Retrieve BM25-ranked candidates using C++ and
@@ -20,7 +25,25 @@ def retrieve_cpp_candidates(
     if engine is None:
         raise RuntimeError("C++ BM25 engine is not loaded.")
 
-    matches = engine.search_dense(query, limit)
+    lexical_query = query
+
+    if stopword_filter:
+        filtered_query = filter_stopwords(query)
+
+        if filtered_query:
+            lexical_query = filtered_query
+
+    bm25_start = time.perf_counter()
+
+    matches = engine.search_dense(lexical_query, limit)
+
+    bm25_search_ms = (
+        time.perf_counter() - bm25_start
+    ) * 1000.0
+
+    if profile is not None:
+        profile["bm25_search_ms"] = bm25_search_ms
+        profile["metadata_fetch_ms"] = 0.0
 
     if not matches:
         return []
@@ -29,6 +52,8 @@ def retrieve_cpp_candidates(
         int(match.doc_id)
         for match in matches
     ]
+
+    metadata_start = time.perf_counter()
 
     cur.execute(
         f"""
@@ -43,6 +68,13 @@ def retrieve_cpp_candidates(
     )
 
     rows = cur.fetchall()
+
+    metadata_fetch_ms = (
+        time.perf_counter() - metadata_start
+    ) * 1000.0
+
+    if profile is not None:
+        profile["metadata_fetch_ms"] = metadata_fetch_ms
 
     rows_by_id = {
         int(row[0]): row

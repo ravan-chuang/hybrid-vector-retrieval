@@ -11,7 +11,37 @@ DEFAULT_CORPUS_PATH = (
 
 
 def load_cpp_engine():
-    from backend import retrieval_cpp
+    extension_path = os.getenv("RETRIEVAL_CPP_EXTENSION")
+
+    if extension_path:
+        import importlib.util
+
+        extension_path = Path(extension_path).expanduser().resolve()
+
+        if not extension_path.is_file():
+            raise FileNotFoundError(
+                f"C++ extension not found: {extension_path}"
+            )
+
+        spec = importlib.util.spec_from_file_location(
+            "retrieval_cpp",
+            str(extension_path),
+        )
+
+        if spec is None or spec.loader is None:
+            raise RuntimeError(
+                f"Cannot load C++ extension: {extension_path}"
+            )
+
+        retrieval_cpp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(retrieval_cpp)
+
+        print(
+            f"C++ extension override: {extension_path}",
+            flush=True,
+        )
+    else:
+        from backend import retrieval_cpp
 
     corpus_path = Path(
         os.getenv(
