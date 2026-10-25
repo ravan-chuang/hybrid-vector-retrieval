@@ -4,26 +4,27 @@
 
 A multi-stage search system combining relational data management, lexical and dense retrieval, approximate nearest-neighbor (ANN) indexing, hybrid candidate generation, Cross-Encoder reranking, and bounded **cross-request dynamic batching**. The project emphasizes measurable retrieval quality, database systems engineering, and reproducible performance analysis.
 
-> **Project status — v0.7.7 (October 2026):** The database, full MS MARCO corpus, retrieval pipelines, relevance evaluation, FastAPI backend, relational CRUD, and React/Vite dashboard are implemented. C++ BM25 serving, batched Cross-Encoder inference, concurrency/parity tests, and real-document profiling have also been evaluated. This is an **engineering/research prototype**, not a production-ready hosted search service.
+> **Project status — October 24, 2026 (v0.8.1 experimental BM25 branch):** The database, full MS MARCO corpus, retrieval pipelines, relevance evaluation, FastAPI backend, relational CRUD, and React/Vite dashboard are implemented. C++ BM25 serving, batched Cross-Encoder inference, concurrency/parity tests, real-document profiling, and a 6,980-query dev-set ANN study have also been evaluated. The v0.8.1 BM25 implementation is an isolated experimental build; the deployed extension remains v0.7.9. This is an **engineering/research prototype**, not a production-ready hosted search service.
 
-![Project overview](docs/system-overview.jpeg)
+![Project overview: dev-small ANN and retrieval results](docs/system-overview.jpg)
 
 ## At a glance
 
 | Dimension | Measured result / implementation |
 | --- | --- |
 | Indexed corpus | **8,841,823 MS MARCO passages** |
-| Dense representation | **384-dimensional**, normalized `all-MiniLM-L6-v2` embeddings |
-| Vector index | PostgreSQL 17 + pgvector **HNSW**; IVFFlat evaluated separately |
-| Lexical retrieval | PostgreSQL FTS/GIN; **C++ BM25** available as a serving backend |
-| Best evaluated relevance pipeline | Lexical Top-50 ∪ Dense Top-50 → Cross-Encoder → Top-10 |
-| Full-corpus relevance, 10K queries | **MRR@10 0.4166 · nDCG@10 0.4876 · Recall@10 0.7211** |
-| Full-corpus ANN, `ef_search=40` | **0.858 ANN Recall@10 · 31.9 ms P50** (exact-search P50: 5751.5 ms) |
-| Dynamic batching, C16 | **10.895 vs 8.360 QPS** (batched vs baseline; one formal 1000-request run, configuration B) |
-| Batched ranking parity | **10/10** queries: identical Top-1, Top-10 membership, and Top-10 order |
-| Real reranker input profile | **914 query–passage pairs**; mean 78.60 tokens; P95 138; 0% truncated |
+| Dense representation | Normalized **384-dimensional** `all-MiniLM-L6-v2` embeddings |
+| Vector index | PostgreSQL 17 + pgvector **HNSW** (`m=16`, `ef_construction=64`) |
+| Lexical retrieval | PostgreSQL FTS/GIN and **C++ BM25** serving backend |
+| Dev-small query set | All **6,980 MS MARCO passage dev-small queries** with positive qrels |
+| Best measured dev pipeline | **Hybrid union + Cross-Encoder** · MRR@10 **0.4012** · nDCG@10 **0.4635** · relevance Recall@10 **0.6740** |
+| 6,980-query ANN, `ef_search=40` | **73.36 ms SQL P50 · ANN Recall@10 0.8924 · MRR@10 0.2673** (exact SQL P50: 12,441.19 ms) |
+| ANN relevance, `ef_search=40` versus exact | **ΔMRR@10 −0.038264**, paired bootstrap 95% CI **[−0.042486, −0.034186]** |
+| Experimental C++ BM25 v0.8.1 | **~2.59× C16 HTTP QPS** vs isolated v0.8.0; 6,980-query Top-100 rankings identical |
+| Dynamic batching, C16 | **10.895 vs 8.360 QPS** (batched vs baseline, one historical 1,000-request test) |
+| Batch ranking parity | **10/10** tested queries: identical Top-1, Top-10 membership and order |
 
-**Important:** The relevance numbers above use an independent **10,000-query sample from the MS MARCO `labeled-list` training split**, *not* the official MS MARCO dev leaderboard. ANN Recall measures agreement with exact nearest neighbors, not human relevance. Concurrent HTTP QPS and database-only sequential reciprocal-latency estimates are different metrics and must not be compared directly.
+**Interpretation:** ANN Recall is **exact-neighbor overlap**, not judged relevance. SQL timings exclude embedding, reranking and HTTP overhead; concurrency QPS is measured separately. The retrieval-pipeline methods were evaluated under partly different historical configurations and **are not a fully matched ablation**. MS MARCO dev-small labels are sparse. No result presented here is claimed as an official leaderboard submission.
 
 ## Contents
 
@@ -34,6 +35,8 @@ A multi-stage search system combining relational data management, lexical and de
 - [Evaluation protocol](#evaluation-protocol)
 - [Retrieval quality](#retrieval-quality)
 - [ANN and scalability](#ann-and-scalability)
+- [MS MARCO dev-small ANN and relevance study](#ms-marco-dev-small-ann-and-relevance-study)
+- [Experimental C++ BM25 v0.8.1](#experimental-c-bm25-v081)
 - [Dynamic batching and serving](#dynamic-batching-and-serving)
 - [Cross-Encoder profiling](#cross-encoder-profiling)
 - [Getting started](#getting-started)
@@ -44,7 +47,7 @@ A multi-stage search system combining relational data management, lexical and de
 
 ## Architecture
 
-![System architecture](docs/system-architecture.jpeg)
+![System architecture: frontend, backend, models, PostgreSQL, retrieval pipeline](docs/system-architecture.jpg)
 
 ```text
                          React / Vite dashboard
@@ -108,7 +111,7 @@ The normalized application schema and the large benchmark/serving corpus are log
 
 ## Database design
 
-![Entity-relationship diagram](docs/database-erd.jpg)
+![Database entity-relationship diagram: six application tables](docs/database-erd.jpg)
 
 | Table | Role |
 | --- | --- |
@@ -125,7 +128,7 @@ The normalized application schema enforces primary/foreign keys, uniqueness, che
 
 ```sql
 SELECT document_id, content, embedding <=> %s::vector AS distance
-FROM benchmark_documents
+FROM msmarco_full_documents
 ORDER BY embedding <=> %s::vector
 LIMIT 10;
 ```
@@ -133,8 +136,8 @@ LIMIT 10;
 **Representative HNSW index:**
 
 ```sql
-CREATE INDEX idx_benchmark_embedding_hnsw
-ON benchmark_documents
+CREATE INDEX idx_msmarco_full_embedding_hnsw
+ON msmarco_full_documents
 USING hnsw (embedding vector_cosine_ops)
 WITH (m = 16, ef_construction = 64);
 ```
@@ -151,9 +154,9 @@ WITH (m = 16, ef_construction = 64);
 
 For two ranked lists, RRF is:
 
-\[
+$$
 \mathrm{RRF}(d)=\sum_{r\in\mathcal R}\frac{1}{k+\operatorname{rank}_r(d)}
-\]
+$$
 
 The evaluated weighted-RRF baseline uses `k=60`, lexical weight `0.1`, and dense weight `0.9`.
 
@@ -164,62 +167,126 @@ Query → lexical Top-50 + dense Top-50 → deduplicated union
       → Cross-Encoder(query, passage) → final Top-10
 ```
 
-The **primary 10K-query relevance study** used **PostgreSQL FTS** as its lexical source. More recent live serving and concurrency tests use **C++ BM25**. These are different retrieval configurations; do not attribute the 10K relevance results to the C++ BM25 serving backend without a corresponding evaluation.
+The **6,980-query dev-small retrieval-quality table** below includes the C++ BM25 lexical baseline. Its pipelines were measured across different historical configurations; query-set alignment alone does not make the methods a controlled ablation. Do not attribute a gain exclusively to fusion or reranking without matching candidate depth, component version and search settings.
 
 ## Evaluation protocol
 
-- **ANN Recall@K:** overlap between approximate and exact vector nearest neighbors; not a relevance metric.
-- **MRR@10, nDCG@10, relevance Recall@10:** computed using binary positive judgments from the MS MARCO `labeled-list` training split.
-- **Corpus:** 8,841,823 passages; all 408,158 unique positively judged passages in this judgment source are represented locally. This is corpus coverage, **not exhaustive human judgment coverage**.
-- **Primary relevance sample:** independent 10,000-query full-corpus sample, seed `43`, disjoint from an earlier frozen 500-query sample.
-- **ANN setting for relevance study:** HNSW `ef_search=160` to reduce approximation effects.
-- **Uncertainty:** paired bootstrap, 10,000 resamples for reported pipeline deltas.
-- **Serving:** HTTP closed-loop concurrency tests; client latency, server latency, queue wait, batch execution, and errors recorded separately.
+- **Corpus:** 8,841,823 MS MARCO passages in PostgreSQL/pgvector, queried using normalized 384D MiniLM embeddings.
+- **Queries and judgments:** **6,980 MS MARCO passage dev-small** queries with positive qrels. The local document-ID mapping is official `pid + 1`.
+- **ANN Recall@10:** percentage overlap of approximate vector Top-10 with exact cosine vector Top-10; not human relevance.
+- **Qrel MRR@10 / Hit@10:** judged passage positions and judged hit rate for dense exact versus HNSW; sparse qrels are not exhaustive.
+- **Qrel MRR@10 / nDCG@10 / relevance Recall@10:** separate pipeline comparison on 6,980 dev-small queries; not a strict single-version ablation.
+- **SQL latency:** database query execution only, excluding embedding, network, API and Cross-Encoder; HNSW `ef_search` varied while the corpus/index remained fixed.
+- **Uncertainty:** 10,000 paired query bootstrap resamples, seed 42, percentile 95% intervals for ANN-versus-exact MRR loss. A separate paired nDCG interval is reported for hybrid-CE versus dense-CE under its own experiment configuration.
+- **Serving metrics:** closed-loop HTTP concurrency QPS/P95 are kept separate from database-only sequential SQL latency.
 
 ## Retrieval quality
 
-### Primary full-corpus evaluation — 10,000 queries
+### MS MARCO passage dev-small — 6,980 queries
 
-| Pipeline | MRR@10 | nDCG@10 | Relevance Recall@10 |
+| Retrieval pipeline | MRR@10 | nDCG@10 | Relevance Recall@10 |
 | --- | ---: | ---: | ---: |
-| Lexical (PostgreSQL FTS) | 0.1633 | 0.1940 | 0.2982 |
-| Dense HNSW (`ef=160`) | 0.3101 | 0.3741 | 0.5879 |
-| Weighted RRF (0.1 lexical / 0.9 dense) | 0.3219 | 0.3863 | 0.6010 |
-| Dense Top-50 → Cross-Encoder | 0.4022 | 0.4703 | 0.6950 |
-| **Lexical ∪ Dense Top-50 → Cross-Encoder** | **0.4166** | **0.4876** | **0.7211** |
+| C++ BM25 (sparse) | 0.178503 | 0.222467 | 0.371466 |
+| Dense HNSW | 0.288959 | 0.345345 | 0.536151 |
+| Weighted hybrid RRF | 0.290823 | 0.349124 | 0.545463 |
+| Dense + Cross-Encoder | 0.372126 | 0.428756 | 0.620690 |
+| **Hybrid candidate union + Cross-Encoder** | **0.401195** | **0.463473** | **0.674009** |
 
-**Union CE versus Dense CE:** ΔMRR@10 **+0.0145** (95% CI `[+0.0121, +0.0170]`); ΔnDCG@10 **+0.0173** (95% CI `[+0.0147, +0.0199]`); ΔRecall@10 **+0.0261** (95% CI `[+0.0223, +0.0299]`).
+**Paired reranking comparison:** Union+CE minus Dense+CE yielded **ΔnDCG@10 +0.034717**, with a 95% paired-bootstrap interval **[+0.030622, +0.038986]** (10,000 resamples) in the recorded comparison. This interval is not from the exact-vs-HNSW ANN experiment and must not be mixed with those intervals.
 
-Lexical retrieval contributed **485 relevant passages absent from Dense Top-50**; the Cross-Encoder promoted **339/485 (69.9%)** into the final union Top-10. This is evidence for complementary candidate generation, **not a claim of a novel retrieval algorithm**.
-
-Earlier 500-query results are supporting evidence and should not be mixed with the independent 10K protocol.
+**Caveat:** These reported pipeline results span historical retrieval configurations, component versions, and candidate settings. They demonstrate observed quality levels but do not isolate the causal effect of each individual stage.
 
 ## ANN and scalability
 
-### Full 8.84M-passage corpus
+The full corpus is stored separately from the normalized application tables. The HNSW vector index uses cosine distance with `m=16` and `ef_construction=64`; PostgreSQL FTS uses GIN. In local storage observations, the database occupied roughly **39 GB**, the HNSW index roughly **17 GB**, and the full-corpus GIN index roughly **904 MB**. Docker shared memory was increased to 8 GB during index construction; the exact full-corpus HNSW build duration was not recorded.
 
-| Method | ANN Recall@10 | Mean (ms) | P50 (ms) | P95 (ms) | Approx. sequential QPS* |
+The main ANN comparison is the **complete 6,980-query dev-small benchmark** in the following section. It includes SQL P50/P95, exact-neighbor overlap and qrel relevance, and should replace earlier small-query timing snapshots when presenting the current benchmark. The raw corpus, model caches, index assets and query checkpoints are **not distributed through Git**.
+
+## MS MARCO dev-small ANN and relevance study
+
+**Protocol (October 2026).** The full **8,841,823-passage** corpus was searched using **all 6,980 queries** in the MS MARCO passage **dev-small** set, with positive qrels from `artifacts/msmarco_full/dev_small_manifest.json`. The local document-ID mapping is **official MS MARCO passage ID + 1**. Query embeddings use normalized `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions); pgvector cosine distance (`<=>`) and HNSW `m=16`, `ef_construction=64` were used. Each query retrieves **Top-10**. The database was PostgreSQL 17 / pgvector 0.8.6 in the measured environment.
+
+**Latency scope:** SQL retrieval latency only; excludes query encoding, HTTP, and reranking. Exact nearest-neighbor search was forced without index scans; HNSW runs used `ef_search` values 10, 20, 40, 80, 160. Cache state, query order, client configuration and execution environment can affect timings; the P50 ratios are descriptive, not controlled end-to-end speedup estimates.
+
+| Method | SQL P50 (ms) | SQL P95 (ms) | ANN Recall@10 vs exact | Qrel MRR@10 | Qrel Hit@10 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Exact | 1.000 | 5781.9 | 5751.5 | 6949.7 | 0.17 |
-| HNSW `ef=10` | 0.692 | 49.5 | 45.7 | 79.8 | 20.19 |
-| HNSW `ef=20` | 0.780 | 22.0 | 17.5 | 52.9 | 45.52 |
-| HNSW `ef=40` | 0.858 | 38.4 | 31.9 | 92.5 | 26.04 |
-| HNSW `ef=80` | 0.905 | 61.6 | 57.8 | 118.3 | 16.23 |
-| HNSW `ef=160` | 0.939 | 102.6 | 95.6 | 169.6 | 9.74 |
+| Exact dense | 12,441.19 | 14,343.13 | 1.0000 | 0.3056 | 0.5781 |
+| HNSW `ef=10` | 30.49 | 62.22 | 0.7596 | 0.2252 | 0.4307 |
+| HNSW `ef=20` | 41.87 | 83.50 | 0.8406 | 0.2508 | 0.4778 |
+| HNSW `ef=40` | 73.36 | 140.10 | 0.8924 | 0.2673 | 0.5089 |
+| HNSW `ef=80` | 105.58 | 193.52 | 0.9287 | 0.2809 | 0.5311 |
+| HNSW `ef=160` | 180.54 | 332.48 | 0.9517 | 0.2890 | 0.5464 |
 
-\* `1000 / mean_latency_ms` for sequential database-only measurements; **not** concurrent API throughput. The non-monotonic `ef=10`/`ef=20` latency is a measured anomaly, not an expected property of HNSW.
+The approximate **169.6× P50 ratio** for `ef=40` compares measured exact-scan P50 with HNSW P50; it is **not** an end-to-end service speedup. Increasing `ef_search` improves exact-neighbor overlap and qrel MRR in this evaluation, but even `ef=160` does not reproduce exact dense relevance.
 
-**Storage observations:** full database approximately **39 GB**; HNSW index approximately **17 GB**; full-corpus GIN index approximately **904 MB**. HNSW build used `m=16`, `ef_construction=64`; Docker shared memory was increased to 8 GB. The exact full-corpus HNSW build duration was not recorded.
+### Paired statistical analysis: HNSW versus exact dense
 
-### Smaller-scale experiments
+Paired query-level bootstrap on **reciprocal rank at 10**, **10,000 resamples**, random seed **42**, percentile **95% confidence intervals**. Each delta is **HNSW MRR@10 − exact-dense MRR@10**; a negative number indicates a measured relevance loss relative to exact dense retrieval.
 
-| Corpus | Exact P50 | HNSW `ef=40` P50 | HNSW ANN Recall@10 |
+| HNSW setting | ΔMRR@10 | 95% CI lower | 95% CI upper |
 | --- | ---: | ---: | ---: |
-| 10K | 3.219 ms | 0.785 ms | 0.980 |
-| 100K | 65.117 ms | 1.405 ms | 0.992 |
-| 500K | 102.918 ms | 2.215 ms | 0.981 |
+| `ef=10` | −0.080323 | −0.086050 | −0.074643 |
+| `ef=20` | −0.054763 | −0.059688 | −0.050013 |
+| `ef=40` | −0.038264 | −0.042486 | −0.034186 |
+| `ef=80` | −0.024649 | −0.028105 | −0.021338 |
+| `ef=160` | −0.016602 | −0.019482 | −0.013816 |
 
-The corpus/query conditions differ across scale experiments; these are engineering observations, **not** a strictly controlled scaling-law experiment. At 100K, increasing `maintenance_work_mem` from 64 MB to 1 GB reduced HNSW build time from **37.848 s** to **12.038 s** (approximately **3.14×** faster), with unchanged index size.
+All intervals exclude zero for this sample and protocol. This is **not** proof that every individual query gets worse: at `ef=160`, **107** queries improved in reciprocal rank, **240** degraded, and **6,633** were unchanged. MS MARCO dev-small qrels are sparse; neighbor-overlap Recall and qrel-based relevance answer different questions.
+
+### HNSW failure diagnostics (exploratory)
+
+Four selected dev queries were examined with `ef_search` **160, 320, 640, 1000**. Two of the four remained at **0.30** and **0.50** ANN Recall@10, respectively, even at `ef=1000`; another reached **1.00** at `ef=640`. These are **selected cases**, not a representative population estimate. In one low-overlap example, exact and approximate search both ranked the judged relevant passage first; low ANN overlap alone does not establish relevance loss.
+
+### Local artifacts and reproducibility
+
+The following scripts are part of the **current development checkout**; they may not yet be committed to the public branch. Full-corpus data, checkpoint JSONs, database indexes, and model caches are **not** distributed through Git.
+
+| Script | Role |
+| --- | --- |
+| `backend/scripts/benchmark_msmarco_dev_ann.py` | Full 6,980-query exact/HNSW benchmark with resumable per-query checkpoints |
+| `backend/scripts/analyze_ann_relevance.py` | Compute qrel MRR@10, Hit@10, and per-query relevance deltas from checkpoints |
+| `backend/scripts/diagnose_hnsw_failures.py` | Inspect four selected low-overlap cases at higher `ef_search` |
+
+Expected local inputs and outputs:
+
+```text
+artifacts/msmarco_full/dev_small_manifest.json
+results/msmarco_full/ann_dev_6980/
+  experiment_config.json
+  exact_ground_truth.json
+  hnsw_checkpoint.json
+  ann_benchmark_6980q.json
+  ann_relevance_analysis_6980q.json
+  hnsw_failure_diagnostics.json
+```
+
+**Prerequisites:** an already-populated full-corpus PostgreSQL/pgvector database, the HNSW index, Python dependencies, and an explicit `DATABASE_URL` environment variable. The two database-connected scripts **require** `DATABASE_URL`; credentials are intentionally not embedded in source code. Example environment setup (replace the placeholders privately):
+
+```bash
+# Load DATABASE_URL privately from the local, Git-ignored environment file.
+set -a
+source .env
+set +a
+
+# Check the benchmark interface without launching a full-corpus evaluation.
+python backend/scripts/benchmark_msmarco_dev_ann.py --help
+```
+
+**Do not rerun the 6,980-query exact benchmark merely to inspect results.** Read the saved JSON summaries/checkpoints instead. If rerunning, verify the manifest, corpus/index identity, exact-vs-ANN query plans, configuration validation, and checkpoint reuse. The bootstrap confidence intervals above were calculated in a separate NumPy analysis and are displayed as recorded values in the dashboard; a dedicated persisted bootstrap-results JSON has **not** been verified.
+
+## Experimental C++ BM25 v0.8.1
+
+The production C++ extension remains **v0.7.9**. The v0.8.0 and v0.8.1 extensions were built and tested **in isolated experiment locations**, without replacing the production `.so`. The v0.8.1 experimental implementation uses **four workspaces** and releases the Python GIL during the BM25 search path.
+
+In the measured HTTP **C16** comparison against isolated v0.8.0, v0.8.1 achieved approximately **2.59× successful QPS** and **58.5% lower P95 client latency**. These are configuration-specific observations, not generalized throughput guarantees. On all **6,980 MS MARCO dev-small queries**, v0.8.1 and v0.8.0 returned identical **BM25 Top-100** rankings in the parity evaluation. A prior development backend suite reported **52 passing tests**; this is not a claim that every script has been rerun after the latest edits.
+
+| Script | Role |
+| --- | --- |
+| `backend/scripts/verify_bm25_version_parity_v081.py` | v0.8.0 vs v0.8.1 full-dev-query Top-100 ranking parity |
+| `backend/scripts/evaluate_dense_ce_dev.py` | Dense + Cross-Encoder dev-set quality evaluation |
+| `backend/scripts/evaluate_paired_bootstrap_dev.py` | Paired relevance comparisons for reranking pipelines |
+
+The complete five-pipeline **dev-small retrieval-quality table** is in [Retrieval quality](#retrieval-quality). The experimental C++ extension comparisons assess ranking parity and HTTP throughput; they do not establish a production deployment or a matched pipeline-quality causal effect.
 
 ## Dynamic batching and serving
 
@@ -259,7 +326,7 @@ A separate 10-query HTTP comparison observed **10/10 Top-1, 10/10 Top-10 set, an
 
 ## Cross-Encoder profiling
 
-The v0.7.7 studies used the same Cross-Encoder on Apple Silicon MPS with internal `batch_size=128`.
+The v0.7.7 profiling studies used the same Cross-Encoder on Apple Silicon MPS with internal `batch_size=128`.
 
 ### Synthetic versus real input
 
@@ -317,7 +384,7 @@ POSTGRES_DB=retrieval_db
 POSTGRES_USER=retrieval
 POSTGRES_PASSWORD=change_me
 POSTGRES_PORT=5433
-DATABASE_URL=postgresql://retrieval:change_me@127.0.0.1:5433/retrieval_db
+DATABASE_URL=postgresql://retrieval:<YOUR_PASSWORD>@127.0.0.1:5433/retrieval_db
 CROSS_ENCODER_DEVICE=mps
 CROSS_ENCODER_BATCH_SIZE=128
 ```
@@ -451,9 +518,12 @@ pytest.ini
 | `backend/scripts/profile_real_cross_encoder_v077.py` | Real-pair `predict()` throughput |
 | `backend/scripts/profile_real_breakdown_v077.py` | Manual tokenization/transfer/forward breakdown |
 | `backend/scripts/benchmark_length_aware_v077.py` | Exploratory external length-ordering comparison |
-| `backend/scripts/benchmark_msmarco_full_ann.py` | Full-corpus ANN benchmark |
-| `backend/scripts/evaluate_msmarco_full_retrieval_10k.py` | Primary full-corpus retrieval evaluation |
-| `backend/scripts/rerank_msmarco_full_ce_10k.py` | Primary Cross-Encoder relevance evaluation |
+| `backend/scripts/benchmark_msmarco_dev_ann.py` | Full 6,980 dev-query ANN benchmark (current local checkout) |
+| `backend/scripts/analyze_ann_relevance.py` | Dev-query ANN qrel relevance analysis (current local checkout) |
+| `backend/scripts/diagnose_hnsw_failures.py` | Exploratory HNSW failure analysis (current local checkout) |
+| `backend/scripts/verify_bm25_version_parity_v081.py` | v0.8.0/v0.8.1 C++ BM25 parity (current local checkout) |
+| `backend/scripts/evaluate_dense_ce_dev.py` | Dense + Cross-Encoder dev-small relevance evaluation (current local checkout) |
+| `backend/scripts/evaluate_paired_bootstrap_dev.py` | Dev-small paired pipeline bootstrap (current local checkout) |
 
 Some experimental scripts and `results/` files may exist only in the local development checkout. Check `git status` and the tracked repository before assuming every listed artifact is available after cloning.
 
@@ -496,19 +566,20 @@ For meaningful performance comparisons, record the exact commit, hardware, Pytho
 
 ## Key engineering findings
 
-1. **Candidate complementarity matters.** Lexical-only relevant passages recovered by candidate union improved the primary 10K-query Cross-Encoder result over dense-only reranking.
-2. **Index search effort has a measurable cost.** Full-corpus HNSW `ef_search` trades ANN recall against latency; exact retrieval is much more expensive at this scale.
-3. **Serving optimizations depend on concurrency.** Dynamic batching helped under higher tested concurrency but was neutral or worse at low concurrency.
-4. **Synthetic inference inputs can mislead.** Short synthetic pairs substantially overstated throughput relative to sampled real MS MARCO candidates.
-5. **Padding statistics are not a speedup guarantee.** External length sorting reduced *estimated* padding but did not consistently reduce `CrossEncoder.predict()` time; internal sorting must be checked before drawing causal conclusions.
-6. **Database engineering is part of retrieval engineering.** Schema integrity, HNSW build memory, index footprint, connection management, and physical query plans affect operational behavior.
+1. **ANN speed and human relevance are distinct dimensions.** In the 6,980-query dev-small benchmark, HNSW reduced SQL retrieval time while sacrificing qrel MRR relative to exact dense retrieval; the measured ef=40 ΔMRR@10 was **−0.038264**.
+2. **Increasing `ef_search` improves retrieval fidelity in this benchmark.** Exact-neighbor ANN Recall@10 increased from **0.7596** (ef=10) to **0.9517** (ef=160), while SQL P50 rose from **30.49 ms** to **180.54 ms**.
+3. **Candidate union + Cross-Encoder achieved the best recorded dev-small pipeline metrics**, but comparisons across historical setups are not controlled component ablations.
+4. **C++ BM25 concurrency requires explicit GIL management.** Isolated v0.8.1 delivered ~2.59× the C16 HTTP QPS of v0.8.0 in the tested setup while preserving Top-100 ranks for all 6,980 dev queries.
+5. **Serving optimizations are workload-dependent.** Cross-request batching helped at high tested concurrency but not at C1–C2.
+6. **Real input lengths matter.** Synthetic reranking pairs understated latency relative to sampled real passages; external length sorting did not consistently accelerate `CrossEncoder.predict()`.
+7. **Database engineering affects the cost–quality frontier.** HNSW build memory, physical plans, query caching, indexes and connection management all contribute to observed behavior.
 
 ## Limitations and roadmap
 
 ### Current limitations
 
-- The primary relevance labels come from MS MARCO **training** judgments and are incomplete; they are not official dev/leaderboard results.
-- The primary 10K relevance evaluation used PostgreSQL lexical retrieval, whereas newer live serving tests use C++ BM25; quality transfer between those configurations has not been established.
+- MS MARCO **dev-small** relevance judgments are incomplete. This local 6,980-query study is not presented as an official leaderboard submission.
+- The 6,980-query retrieval-pipeline comparison is not a strictly matched candidate-depth/version ablation; historical changes to lexical backend, ANN settings and candidate depth can confound stage-by-stage comparisons.
 - The online concurrency results are a single fixed-order closed-loop benchmark; statistical repeatability and open-loop load behavior remain to be established.
 - Batched parity has been tested on 10 queries, not the full relevance set; request timeout/cancellation, queue saturation, and shutdown paths require deeper stress testing.
 - The length-aware comparison may be confounded by internal `CrossEncoder.predict()` sorting.
@@ -521,7 +592,8 @@ For meaningful performance comparisons, record the exact commit, hardware, Pytho
 | --- | --- | --- |
 | P0 | Inspect `CrossEncoder.predict()` sorting and sweep internal batch size | Reproducible throughput/latency comparison on identical real pairs |
 | P0 | Repeat and randomize HTTP A/B benchmarks | Stable QPS/P95/error estimates across multiple runs |
-| P0 | Evaluate **C++ BM25** retrieval quality | Matched-query comparison with PostgreSQL FTS and dense retrieval |
+| P0 | Perform matched-configuration **C++ BM25** retrieval quality ablations | Hold query set, candidate depth, corpus, and model constant against PostgreSQL FTS and dense retrieval |
+| P1 | Repeat full-dev ANN SQL latency with randomized/alternating method order | Control cache/order effects and report per-run variability |
 | P1 | Profile SQL/pgvector and C++ BM25 separately | Per-stage latency, physical plans, and resource utilization |
 | P1 | Candidate-depth and fusion ablations | nDCG/MRR/Recall versus inference cost |
 | P1 | Queue saturation, cancellation, and lifecycle tests | Correctness under failure and overload |
@@ -532,8 +604,8 @@ For meaningful performance comparisons, record the exact commit, hardware, Pytho
 
 1. Show the ERD, PK/FK constraints, many-to-many tags, and CRUD cascade behavior.
 2. Compare PostgreSQL FTS, C++ BM25, HNSW dense retrieval, and hybrid results.
-3. Explain the full-corpus exact-vs-HNSW recall–latency trade-off.
-4. Present the independent 10K-query relevance table and lexical-rescue analysis.
+3. Show the 6,980-query dev-small exact-vs-HNSW latency, ANN overlap, qrel MRR, and paired-bootstrap confidence intervals.
+4. Present the five 6,980-query dev-small retrieval pipelines and discuss the controlled-comparison limitations.
 5. Compare standard and batched reranking under controlled concurrency, including low-concurrency regressions.
 6. Explain the real-document profiling findings and what they do **not** prove.
 
