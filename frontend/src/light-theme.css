@@ -1,0 +1,524 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: var(--border);
+}
+
+.brand-mark {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--accent);
+}
+
+.status-pill {
+  background: #ffffff;
+}
+
+.status-pill.online .status-dot {
+  background: #059669;
+  box-shadow: none;
+}
+
+.status-pill.offline .status-dot {
+  background: #dc2626;
+}
+
+.error-banner,
+.manager-alert.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.manager-alert.success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.hero {
+  color: var(--text);
+}
+
+.hero p,
+.hero-meta {
+  color: var(--muted);
+}
+
+.stats-grid,
+.performance-grid,
+.panel {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
+.stat-card strong {
+  color: var(--text);
+}
+
+.method-tabs {
+  background: #f1f5f9;
+}
+
+.method-tabs button.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.search-form input,
+.document-form input,
+.document-form textarea,
+.tag-form input {
+  background: #ffffff;
+  color: var(--text);
+  border-color: #cbd5e1;
+}
+
+.search-form input:focus,
+.document-form input:focus,
+.document-form textarea:focus,
+.tag-form input:focus {
+  border-color: #2563eb;
+}
+
+.search-form button,
+.primary-button {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.search-form button:hover:not(:disabled),
+.primary-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.secondary-button {
+  background: #ffffff;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.danger-button {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #be123c;
+}
+
+.result-rank,
+.document-nav > span,
+.relation-strip i {
+  color: #64748b;
+}
+
+.result-body p,
+.document-content {
+  color: #334155;
+}
+
+footer {
+  color: #64748b;
+}
+
+.document-sidebar,
+.relation-strip,
+.document-content {
+  background: #f8fafc;
+}
+
+.document-nav:hover,
+.document-nav.active {
+  background: #eff6ff;
+}
+
+.document-layout {
+  border-color: var(--border);
+}
+
+.fc-section {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.fc-header p,
+.fc-panel-heading span,
+.fc-method-note {
+  color: #64748b;
+}
+
+.fc-badge {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.fc-metric,
+.fc-panel,
+.fc-footer-metrics > div {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.fc-metric > span,
+.fc-footer-metrics span,
+.fc-metric small,
+.fc-footer-metrics small {
+  color: #64748b;
+}
+
+.fc-table th,
+.fc-table td {
+  border-bottom-color: #e2e8f0;
+}
+
+.fc-table th {
+  color: #64748b;
+}
+
+.fc-highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.fc-highlight strong {
+  color: #1d4ed8;
+}
+
+.fc-highlight span {
+  color: #334155;
+}
+
+.fc-bar-track {
+  background: #e2e8f0;
+}
+
+.fc-bar-fill {
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+.pb-chart-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.pb-chart-heading h5 {
+  color: #0f172a;
+}
+
+.pb-chart-heading > span,
+.pb-chart-legend,
+.pb-chart-tooltip {
+  color: #64748b;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .hero {
+    padding-top: 44px;
+  }
+
+  .fc-section {
+    padding: 20px;
+  }
+}
+
+
+/* Light theme: native select controls */
+select {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+select:hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+
+select:focus-visible {
+  border-color: #2563eb;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+
+/* Specific light-theme overrides for search selectors */
+
+.corpus-selector select,
+.fusion-selector select {
+  appearance: auto;
+  color-scheme: light;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.corpus-selector select:hover:not(:disabled),
+.fusion-selector select:hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+
+.corpus-selector select:focus-visible,
+.fusion-selector select:focus-visible {
+  border-color: #2563eb;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.corpus-selector select:disabled,
+.fusion-selector select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.corpus-selector select option,
+.fusion-selector select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* Editorial Dashboard v1 */
+
+:root {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface-2: #f3f3ef;
+  --border: #e3e4df;
+  --text: #171717;
+  --muted: #70756e;
+  --accent: #53634b;
+  --accent-2: #75677f;
+
+  font-family:
+    "Helvetica Neue",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  background: rgba(250, 250, 248, 0.94);
+}
+
+.brand-mark {
+  background: #edf0e9;
+  border-color: #d3dbce;
+  color: #53634b;
+}
+
+.eyebrow {
+  color: #53634b;
+}
+
+.editorial-hero-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family:
+    "Helvetica Neue",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-weight: 750;
+  letter-spacing: -0.055em;
+  line-height: 1.06;
+}
+
+.editorial-hero-title span {
+  display: block;
+}
+
+.editorial-hero-title em {
+  display: block;
+  margin-top: 0.08em;
+  color: #53634b;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.045em;
+  line-height: 1.14;
+}
+
+.search-form button,
+.primary-button {
+  background: #252825;
+  border-color: #252825;
+  color: #ffffff;
+}
+
+.search-form button:hover:not(:disabled),
+.primary-button:hover:not(:disabled) {
+  background: #424a3e;
+  border-color: #424a3e;
+}
+
+.search-form input:focus,
+.document-form input:focus,
+.document-form textarea:focus,
+.tag-form input:focus {
+  border-color: #53634b;
+}
+
+.method-tabs {
+  background: #f1f2ee;
+}
+
+.method-tabs button.active {
+  background: #ffffff;
+  color: #252825;
+}
+
+.result-meta span:first-child,
+.index-row b {
+  color: #53634b;
+}
+
+.fc-badge {
+  border-color: #cbd6c5;
+  background: #f0f4ed;
+  color: #53634b;
+}
+
+.fc-highlight {
+  background: #f1f4ef;
+  border-color: #cbd6c5;
+}
+
+.fc-highlight strong {
+  color: #53634b;
+}
+
+.fc-highlight span {
+  color: #465342;
+}
+
+.fc-bar-track {
+  background: #e6e8e3;
+}
+
+.fc-bar-fill {
+  background: linear-gradient(
+    90deg,
+    #929b87,
+    #53634b
+  );
+}
+
+.pb-chart-legend i {
+  border-radius: 50%;
+}
+
+.corpus-selector select,
+.fusion-selector select {
+  background: #ffffff;
+  color: #171717;
+  border-color: #d5d9d1;
+  color-scheme: light;
+}
+
+.corpus-selector select:focus-visible,
+.fusion-selector select:focus-visible {
+  outline: 2px solid #a4b59b;
+  border-color: #53634b;
+}
+
+@media (max-width: 680px) {
+  .editorial-hero-title {
+    letter-spacing: -0.045em;
+  }
+}
+
+/* Editorial Dashboard v1.1: Data Accent */
+
+/* Retrieval Quality: blue bars */
+.fc-bar-fill {
+  background: linear-gradient(
+    90deg,
+    #2563eb,
+    #60a5fa
+  );
+}
+
+/* Retrieval Quality: best result */
+.fc-highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.fc-highlight strong {
+  color: #1d4ed8;
+}
+
+.fc-highlight span {
+  color: #334155;
+}
+
+/* Search input: blue focus state */
+.search-form input:focus {
+  border-color: #2563eb;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Consistent keyboard focus */
+.search-form input:focus-visible {
+  border-color: #2563eb;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Editorial Dashboard: Selection and Label Refinement */
+
+/* Match Fusion Strategy label to Search Corpus */
+.fusion-selector label {
+  color: #737a73;
+}
+
+/* Standard blue text selection */
+.search-form input::selection {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Consistent selection throughout search controls */
+.search-panel ::selection {
+  background-color: #2563eb;
+  color: #ffffff;
+}

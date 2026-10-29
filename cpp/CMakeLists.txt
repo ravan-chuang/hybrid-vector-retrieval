@@ -59,3 +59,90 @@ add_test(
     NAME SearchEngineTests
     COMMAND test_search_engine
 )
+
+add_executable(
+    test_bm25_reference
+    tests/test_bm25_reference.cpp
+)
+
+target_link_libraries(
+    test_bm25_reference
+    PRIVATE
+    retrieval_core
+)
+
+add_test(
+    NAME BM25ReferenceTests
+    COMMAND test_bm25_reference
+)
+
+add_executable(
+    test_dense_accumulator
+    tests/test_dense_accumulator.cpp
+)
+
+target_link_libraries(
+    test_dense_accumulator
+    PRIVATE
+    retrieval_core
+)
+
+add_test(
+    NAME DenseAccumulatorTests
+    COMMAND test_dense_accumulator
+)
+
+add_executable(
+    benchmark_dense
+    benchmarks/benchmark_dense.cpp
+)
+
+target_link_libraries(
+    benchmark_dense
+    PRIVATE
+    retrieval_core
+)
+
+# --------------------------------------------------
+# Python bindings (pybind11)
+# --------------------------------------------------
+
+option(
+    BUILD_PYTHON_BINDINGS
+    "Build Python bindings"
+    OFF
+)
+
+if(BUILD_PYTHON_BINDINGS)
+    find_package(
+        Python
+        COMPONENTS Interpreter Development.Module
+        REQUIRED
+    )
+
+    find_package(pybind11 CONFIG REQUIRED)
+
+    set_target_properties(
+        retrieval_core
+        PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+
+    pybind11_add_module(
+        retrieval_cpp
+        python/bindings.cpp
+    )
+
+    target_link_libraries(
+        retrieval_cpp
+        PRIVATE
+        retrieval_core
+    )
+
+    set_target_properties(
+        retrieval_cpp
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY
+        "${CMAKE_CURRENT_SOURCE_DIR}/../backend"
+    )
+endif()

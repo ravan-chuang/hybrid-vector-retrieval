@@ -54,14 +54,19 @@ export const api = {
     topK = 10,
     corpus = 'benchmark',
   ) =>
-    request('/search/lexical', {
-      method: 'POST',
-      body: JSON.stringify({
-        corpus,
-        query,
-        top_k: topK,
-      }),
-    }),
+    request(
+      corpus === 'benchmark'
+        ? '/search/cpp/lexical'
+        : '/search/lexical',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          corpus,
+          query,
+          top_k: topK,
+        }),
+      },
+    ),
 
   hybridSearch: (
     query,
@@ -84,6 +89,7 @@ export const api = {
         rrf_k: rrfK,
         lexical_weight: lexicalWeight,
         dense_weight: denseWeight,
+        lexical_backend: corpus === 'benchmark' ? 'cpp_bm25' : 'postgresql_fts',
       }),
     }),
 
@@ -102,6 +108,7 @@ export const api = {
         top_k: topK,
         candidate_k: candidateK,
         ef_search: efSearch,
+        lexical_backend: corpus === 'benchmark' ? 'cpp_bm25' : 'postgres_fts',
       }),
     }),
 

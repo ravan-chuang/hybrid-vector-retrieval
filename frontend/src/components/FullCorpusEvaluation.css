@@ -250,3 +250,463 @@
     text-align: left;
   }
 }
+
+
+
+
+/* Parallel retrieval performance table */
+
+/* Parallel benchmark table — aligned 8-column layout */
+
+.parallel-performance-table {
+
+  width: 100%;
+
+  min-width: 900px;
+
+  table-layout: fixed;
+
+  border-collapse: collapse;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.parallel-performance-table th,
+
+.parallel-performance-table td {
+
+  padding: 17px 12px;
+
+  font-size: 13px;
+
+  line-height: 1.45;
+
+  white-space: nowrap;
+
+  text-align: right;
+
+  vertical-align: middle;
+
+}
+
+.parallel-performance-table thead th {
+
+  font-weight: 650;
+
+  color: #64748b;
+
+  text-align: center;
+
+}
+
+.parallel-performance-table thead tr:first-child th {
+
+  padding-top: 12px;
+
+  padding-bottom: 15px;
+
+  font-size: 13px;
+
+  letter-spacing: 0.015em;
+
+}
+
+.parallel-performance-table thead tr:nth-child(2) th {
+
+  padding-top: 12px;
+
+  padding-bottom: 15px;
+
+  font-size: 12px;
+
+  color: #64748b;
+
+}
+
+.parallel-performance-table tbody td {
+
+  color: #0f172a;
+
+}
+
+.parallel-performance-table tbody tr:hover {
+
+  background: #f8fafc;
+
+}
+
+/* Concurrency column */
+
+.parallel-performance-table th:first-child,
+
+.parallel-performance-table td:first-child {
+
+  width: 116px;
+
+  text-align: center;
+
+}
+
+/* Speedup column */
+
+.parallel-performance-table th:last-child,
+
+.parallel-performance-table td:last-child {
+
+  width: 110px;
+
+  text-align: center;
+
+}
+
+.parallel-performance-table tbody td:last-child {
+
+  color: #2563eb;
+
+  font-weight: 700;
+
+}
+
+/* Separation between throughput and latency groups */
+
+.parallel-performance-table thead tr:first-child th:nth-child(3),
+
+.parallel-performance-table thead tr:nth-child(2) th:nth-child(4),
+
+.parallel-performance-table tbody td:nth-child(5) {
+
+  border-left: 1px solid #dbe5f1;
+
+}
+
+/* Separation before speedup */
+
+.parallel-performance-table thead tr:first-child th:last-child,
+
+.parallel-performance-table tbody td:last-child {
+
+  border-left: 1px solid #dbe5f1;
+
+}
+
+/* Subtle header grouping */
+
+.parallel-performance-table thead tr:first-child th:nth-child(2),
+
+.parallel-performance-table thead tr:first-child th:nth-child(3) {
+
+  color: #334155;
+
+}
+
+@media (max-width: 1100px) {
+
+  .parallel-performance-table {
+
+    min-width: 900px;
+
+  }
+
+}
+
+
+/* Explicit benchmark table column alignment */
+.parallel-performance-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.parallel-performance-table thead tr:first-child th:first-child,
+.parallel-performance-table thead tr:first-child th:last-child {
+  width: auto;
+}
+
+.parallel-performance-table thead tr:nth-child(2) th:first-child,
+.parallel-performance-table thead tr:nth-child(2) th:last-child {
+  width: auto;
+}
+
+.parallel-performance-table tbody td:first-child,
+.parallel-performance-table tbody td:last-child {
+  width: auto;
+}
+
+.parallel-performance-table thead tr:first-child th,
+.parallel-performance-table thead tr:nth-child(2) th {
+  text-align: center;
+}
+
+.parallel-performance-table tbody td {
+  text-align: right;
+}
+
+.parallel-performance-table tbody td:first-child,
+.parallel-performance-table tbody td:last-child {
+  text-align: center;
+}
+
+.parallel-performance-table tbody td:last-child {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+@media (max-width: 850px) {
+  .parallel-performance-table {
+    min-width: 850px;
+  }
+}
+
+/* Parallel benchmark final column alignment */
+
+/* Center all eight data columns beneath their headers */
+.parallel-performance-table tbody td {
+  text-align: center;
+}
+
+/* Center all header groups and subheaders */
+.parallel-performance-table thead th {
+  text-align: center;
+}
+
+/* Concurrency: separate it from the throughput group */
+.parallel-performance-table thead tr:first-child th:first-child,
+.parallel-performance-table tbody td:first-child {
+  border-right: 1px solid #dbe5f1;
+}
+
+/* Throughput / Client P95 boundary */
+.parallel-performance-table thead tr:first-child th:nth-child(2) {
+  border-right: 1px solid #dbe5f1;
+}
+
+/* Speedup: keep its separate column */
+.parallel-performance-table thead tr:first-child th:last-child,
+.parallel-performance-table tbody td:last-child {
+  border-left: 1px solid #dbe5f1;
+}
+
+/* Maintain visual emphasis on speedup */
+.parallel-performance-table tbody td:last-child {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+/* Parallel benchmark exact header-data alignment */
+
+/* Align version labels with their corresponding data cells */
+.parallel-performance-table thead tr:nth-child(2) th,
+.parallel-performance-table tbody td:nth-child(n+2):nth-child(-n+7) {
+  text-align: center !important;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Keep the first and last columns centered */
+.parallel-performance-table thead tr:first-child th:first-child,
+.parallel-performance-table thead tr:first-child th:last-child,
+.parallel-performance-table tbody td:first-child,
+.parallel-performance-table tbody td:last-child {
+  text-align: center !important;
+}
+
+/* Compact six-row ANN benchmark table */
+.fc-ann-table-wrap .fc-table th,
+.fc-ann-table-wrap .fc-table td {
+  padding: 10px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 680px) {
+  .fc-ann-table-wrap .fc-table {
+    font-size: 12px;
+  }
+}
+
+
+/* ANN relevance loss: paired bootstrap analysis */
+.fc-bootstrap-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 24px;
+  background: #151e2b;
+  border: 1px solid #293548;
+  border-radius: 15px;
+}
+
+.fc-bootstrap-panel .fc-table {
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-bootstrap-panel .fc-table td:nth-child(2) {
+  color: #f0adad;
+  font-weight: 600;
+}
+
+.fc-bootstrap-note {
+  margin: 0;
+  color: #91a0b6;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 680px) {
+  .fc-bootstrap-panel {
+    padding: 16px;
+  }
+
+  .fc-bootstrap-panel .fc-table {
+    min-width: 480px;
+    font-size: 12px;
+  }
+}
+
+/* Bootstrap panel: match the light dashboard theme */
+.fc-bootstrap-panel {
+  background: #ffffff;
+  border-color: #dbe5f1;
+  color: #0f172a;
+}
+
+.fc-bootstrap-panel .fc-panel-heading h4 {
+  color: #0f172a;
+}
+
+.fc-bootstrap-panel .fc-panel-heading span {
+  color: #64748b;
+}
+
+.fc-bootstrap-panel .fc-table th {
+  color: #64748b;
+  border-bottom-color: #dbe5f1;
+}
+
+.fc-bootstrap-panel .fc-table td {
+  color: #0f172a;
+  border-bottom-color: #e2e8f0;
+}
+
+.fc-bootstrap-panel .fc-table td:nth-child(2) {
+  color: #dc2626;
+  font-weight: 650;
+}
+
+.fc-bootstrap-panel .fc-bootstrap-note {
+  color: #64748b;
+}
+
+
+
+/* Latency–MRR trade-off chart */
+.fc-tradeoff-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #dbe5f1;
+  border-radius: 15px;
+  color: #0f172a;
+}
+
+.fc-tradeoff-panel .fc-panel-heading h4 {
+  color: #0f172a;
+}
+
+.fc-tradeoff-panel .fc-panel-heading span {
+  color: #64748b;
+}
+
+.fc-tradeoff-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.fc-tradeoff-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fc-legend-dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.fc-legend-hnsw {
+  background: #2563eb;
+}
+
+.fc-legend-exact {
+  background: #7c3aed;
+}
+
+.fc-tradeoff-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.fc-chart-grid {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.fc-chart-tick {
+  fill: #64748b;
+  font-size: 13px;
+}
+
+.fc-chart-axis-label {
+  fill: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fc-chart-label {
+  fill: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fc-chart-hnsw-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fc-chart-hnsw-point {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.fc-chart-exact-point {
+  fill: #7c3aed;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+@media (max-width: 680px) {
+  .fc-tradeoff-panel {
+    padding: 16px;
+  }
+
+  .fc-chart-label {
+    font-size: 12px;
+  }
+}

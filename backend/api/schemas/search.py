@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 SearchCorpus = Literal["benchmark", "application"]
+LexicalBackend = Literal["postgresql_fts", "cpp_bm25"]
 
 
 class VectorSearchRequest(BaseModel):
@@ -93,6 +94,11 @@ class HybridSearchRequest(BaseModel):
         max_length=1000,
         description="Natural-language hybrid search query",
     )
+    lexical_backend: LexicalBackend = Field(
+        default="postgresql_fts",
+        description="Lexical retrieval backend",
+    )
+    stopword_filter: bool = False
     corpus: SearchCorpus = Field(
         default="benchmark",
         description="Search corpus: benchmark or application",
@@ -147,6 +153,14 @@ class HybridSearchRequest(BaseModel):
                 "lexical_weight + dense_weight must equal 1.0"
             )
 
+        if (
+            self.lexical_backend == "cpp_bm25"
+            and self.corpus != "benchmark"
+        ):
+            raise ValueError(
+                "cpp_bm25 is only supported for benchmark corpus"
+            )
+
         return self
 
 
@@ -174,6 +188,9 @@ class HybridSearchResponse(BaseModel):
     vector_ms: float
     fusion_ms: float
     total_ms: float
+    pool_wait_ms: float | None = None
+    bm25_search_ms: float | None = None
+    metadata_fetch_ms: float | None = None
     results: list[HybridSearchResult]
 
 
@@ -187,6 +204,8 @@ class SearchHistoryItem(BaseModel):
 
 
 class RerankSearchRequest(BaseModel):
+    lexical_backend: Literal["postgres_fts", "cpp_bm25"] = "postgres_fts"
+    stopword_filter: bool = False
     query: str = Field(
         ...,
         min_length=1,
@@ -227,5 +246,17 @@ class RerankSearchResponse(BaseModel):
     lexical_ms: float
     vector_ms: float
     rerank_ms: float
+    rerank_lock_wait_ms: float = 0.0
+    rerank_inference_ms: float = 0.0
+    rerank_other_ms: float = 0.0
     total_ms: float
     results: list[RerankSearchResult]
+
+
+class BatchedRerankSearchResponse(RerankSearchResponse):
+    """Cross-request batching response with queue profiling."""
+
+    batch_queue_wait_ms: float
+    batch_inference_ms: float
+    batch_request_count: int
+    batch_pair_count: int

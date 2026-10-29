@@ -1,0 +1,90 @@
+{
+  "experiments": {
+    "v080_gil_release": {
+      "source": "results/msmarco_full/latency/api_v081/http_gil_release_v080_repeat_500/summary.json",
+      "timestamp_utc": "2026-10-16T02:54:22.122306+00:00",
+      "json_version": "v0.7.9",
+      "endpoint": "/search/hybrid",
+      "configuration": {
+        "corpus": "benchmark",
+        "lexical_backend": "cpp_bm25",
+        "stopword_filter": true,
+        "top_k": 10,
+        "candidate_k": 50,
+        "ef_search": 160,
+        "requests_per_level": 500,
+        "warmup_per_level": 20,
+        "concurrency": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ]
+      },
+      "requests": 2500,
+      "successes": 2500,
+      "failures": 0
+    },
+    "v081_parallel_repeat": {
+      "source": "results/msmarco_full/latency/api_v081/http_parallel_v081_repeat_500/summary.json",
+      "timestamp_utc": "2026-10-16T02:46:46.666354+00:00",
+      "json_version": "v0.7.9",
+      "endpoint": "/search/hybrid",
+      "configuration": {
+        "corpus": "benchmark",
+        "lexical_backend": "cpp_bm25",
+        "stopword_filter": true,
+        "top_k": 10,
+        "candidate_k": 50,
+        "ef_search": 160,
+        "requests_per_level": 500,
+        "warmup_per_level": 20,
+        "concurrency": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ]
+      },
+      "requests": 2500,
+      "successes": 2500,
+      "failures": 0
+    },
+    "v081_parallel_memory_check": {
+      "source": "results/msmarco_full/latency/api_v081/http_parallel_v081_memory_check_500/summary.json",
+      "timestamp_utc": "2026-10-16T03:05:29.662217+00:00",
+      "json_version": "v0.7.9",
+      "endpoint": "/search/hybrid",
+      "configuration": {
+        "corpus": "benchmark",
+        "lexical_backend": "cpp_bm25",
+        "stopword_filter": true,
+        "top_k": 10,
+        "candidate_k": 50,
+        "ef_search": 160,
+        "requests_per_level": 500,
+        "warmup_per_level": 20,
+        "concurrency": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ]
+      },
+      "requests": 2500,
+      "successes": 2500,
+      "failures": 0
+    }
+  },
+  "configuration_consistent": true,
+  "all_requests_successful": true,
+  "notes": [
+    "JSON version is a benchmark-script label, not the loaded extension version.",
+    "Experiment identities are assigned from directory names and prior run records.",
+    "Only one v0.8.0-B run and two v0.8.1 runs are included.",
+    "Statistical significance is not established."
+  ]
+}

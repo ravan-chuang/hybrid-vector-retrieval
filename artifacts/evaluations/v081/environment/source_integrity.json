@@ -1,0 +1,236 @@
+{
+  "captured_at_utc": "2026-10-16T03:54:18.410613+00:00",
+  "hash_algorithm": "SHA-256",
+  "experiments": {
+    "v080_gil_release": {
+      "source_file_count": 13,
+      "files": [
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/CMakeLists.txt",
+          "sha256": "62860ffa03d09fd2005b14e46afb4ff699798142f0106772f164faf9c50e7731",
+          "size_bytes": 2359
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/benchmarks/benchmark_dense.cpp",
+          "sha256": "f7b15937cc42079fb4ad98101926a04a8d3bd814b2307bc097edf1c34973f18f",
+          "size_bytes": 5497
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/benchmarks/benchmark_index.cpp",
+          "sha256": "bde96775aee13471c9050acff5f2bb53157a58161043004143e897e102e88f96",
+          "size_bytes": 4146
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/include/retrieval/corpus_loader.hpp",
+          "sha256": "9301159568a40b6d1d3f3843a5ef32381bfda3d674b6003aeccd92942eb2303b",
+          "size_bytes": 200
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/include/retrieval/search_engine.hpp",
+          "sha256": "7af6786751e632e31b83990c159627e871633cc6bf32dcaafadc439ba9c93e9c",
+          "size_bytes": 1583
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/python/benchmark_bindings.py",
+          "sha256": "01678a0fa803bcd9b0a9e680d168975c1c1a3cd43a71f0835cc6e7e99e4df138",
+          "size_bytes": 1421
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/python/bindings.cpp",
+          "sha256": "bc331718494c22ac9cec75fb98438de41150f2f90e46b2dce82ad2c726b44ab4",
+          "size_bytes": 3868
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/python/test_bindings.py",
+          "sha256": "ae0efa46d853dadd879116039fd9e304d4272e7dcff0364211c989fe75c35abe",
+          "size_bytes": 1224
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/src/corpus_loader.cpp",
+          "sha256": "9e9b1c462dd05fa289f0ce7142eca2dcf5ac4f60597ba3096c7e985d16547fc8",
+          "size_bytes": 2050
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/src/search_engine.cpp",
+          "sha256": "0caff9484a902c9205f6c403c79b37ab773ae6d5b9c976655776243183d51477",
+          "size_bytes": 8543
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/tests/test_bm25_reference.cpp",
+          "sha256": "e58f1c2d06500d7e935b7f2b178c4558dbeac6a0ea0ce0d2cd910f26df67411b",
+          "size_bytes": 1637
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/tests/test_dense_accumulator.cpp",
+          "sha256": "eb93656dff726e2276725de0ee96e00f1e5f8dc3ce5c75bea01953baee956989",
+          "size_bytes": 1989
+        },
+        {
+          "path": "artifacts/experiments/v080_gil_release/source/tests/test_search_engine.cpp",
+          "sha256": "c5caf4ead9ccb5d97ee0660aed36494c616cff07c7c2c752f1da7e7535882fea",
+          "size_bytes": 3253
+        }
+      ]
+    },
+    "v081_parallel_search": {
+      "source_file_count": 15,
+      "files": [
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/CMakeLists.txt",
+          "sha256": "4204f6c60d6787307cf94707e8398ccbe9858d11811ef5d8994b371623527cb6",
+          "size_bytes": 2367
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/benchmarks/benchmark_dense.cpp",
+          "sha256": "f7b15937cc42079fb4ad98101926a04a8d3bd814b2307bc097edf1c34973f18f",
+          "size_bytes": 5497
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/benchmarks/benchmark_index.cpp",
+          "sha256": "bde96775aee13471c9050acff5f2bb53157a58161043004143e897e102e88f96",
+          "size_bytes": 4146
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/include/retrieval/corpus_loader.hpp",
+          "sha256": "9301159568a40b6d1d3f3843a5ef32381bfda3d674b6003aeccd92942eb2303b",
+          "size_bytes": 200
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/include/retrieval/search_engine.hpp",
+          "sha256": "7af6786751e632e31b83990c159627e871633cc6bf32dcaafadc439ba9c93e9c",
+          "size_bytes": 1583
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/python/benchmark_bindings.py",
+          "sha256": "01678a0fa803bcd9b0a9e680d168975c1c1a3cd43a71f0835cc6e7e99e4df138",
+          "size_bytes": 1421
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/python/bindings.cpp",
+          "sha256": "91a1768d6c8760a17ac495aab7a007d5fb22943da90aa3e36c82bd39cf702949",
+          "size_bytes": 5366
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/python/test_bindings.py",
+          "sha256": "ae0efa46d853dadd879116039fd9e304d4272e7dcff0364211c989fe75c35abe",
+          "size_bytes": 1224
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/src/corpus_loader.cpp",
+          "sha256": "9e9b1c462dd05fa289f0ce7142eca2dcf5ac4f60597ba3096c7e985d16547fc8",
+          "size_bytes": 2050
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/src/search_engine.cpp",
+          "sha256": "0caff9484a902c9205f6c403c79b37ab773ae6d5b9c976655776243183d51477",
+          "size_bytes": 8543
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/tests/test_bm25_reference.cpp",
+          "sha256": "e58f1c2d06500d7e935b7f2b178c4558dbeac6a0ea0ce0d2cd910f26df67411b",
+          "size_bytes": 1637
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/tests/test_dense_accumulator.cpp",
+          "sha256": "eb93656dff726e2276725de0ee96e00f1e5f8dc3ce5c75bea01953baee956989",
+          "size_bytes": 1989
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/tests/test_search_engine.cpp",
+          "sha256": "c5caf4ead9ccb5d97ee0660aed36494c616cff07c7c2c752f1da7e7535882fea",
+          "size_bytes": 3253
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/tools/convert_corpus.py",
+          "sha256": "8af3763e9dc8eb7e8e6bf7195ba55aa6cdc2a5339e961ea161a3ba40cfd7745e",
+          "size_bytes": 1293
+        },
+        {
+          "path": "artifacts/experiments/v081_parallel_search/source/validation/reference_bm25.py",
+          "sha256": "647d83c5431559edc5b1c11cde2423ebf189e07108de2af9c3d93c57daacd669",
+          "size_bytes": 1851
+        }
+      ]
+    },
+    "v081_workspace_memory": {
+      "source_file_count": 15,
+      "files": [
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/CMakeLists.txt",
+          "sha256": "4204f6c60d6787307cf94707e8398ccbe9858d11811ef5d8994b371623527cb6",
+          "size_bytes": 2367
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/benchmarks/benchmark_dense.cpp",
+          "sha256": "f7b15937cc42079fb4ad98101926a04a8d3bd814b2307bc097edf1c34973f18f",
+          "size_bytes": 5497
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/benchmarks/benchmark_index.cpp",
+          "sha256": "bde96775aee13471c9050acff5f2bb53157a58161043004143e897e102e88f96",
+          "size_bytes": 4146
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/include/retrieval/corpus_loader.hpp",
+          "sha256": "9301159568a40b6d1d3f3843a5ef32381bfda3d674b6003aeccd92942eb2303b",
+          "size_bytes": 200
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/include/retrieval/search_engine.hpp",
+          "sha256": "7af6786751e632e31b83990c159627e871633cc6bf32dcaafadc439ba9c93e9c",
+          "size_bytes": 1583
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/python/benchmark_bindings.py",
+          "sha256": "01678a0fa803bcd9b0a9e680d168975c1c1a3cd43a71f0835cc6e7e99e4df138",
+          "size_bytes": 1421
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/python/bindings.cpp",
+          "sha256": "d43235ca826f3a14faff20496b3e6ad364ed7bda6e479ff535b50d2befe6a4ff",
+          "size_bytes": 7879
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/python/test_bindings.py",
+          "sha256": "ae0efa46d853dadd879116039fd9e304d4272e7dcff0364211c989fe75c35abe",
+          "size_bytes": 1224
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/src/corpus_loader.cpp",
+          "sha256": "9e9b1c462dd05fa289f0ce7142eca2dcf5ac4f60597ba3096c7e985d16547fc8",
+          "size_bytes": 2050
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/src/search_engine.cpp",
+          "sha256": "0caff9484a902c9205f6c403c79b37ab773ae6d5b9c976655776243183d51477",
+          "size_bytes": 8543
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/tests/test_bm25_reference.cpp",
+          "sha256": "e58f1c2d06500d7e935b7f2b178c4558dbeac6a0ea0ce0d2cd910f26df67411b",
+          "size_bytes": 1637
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/tests/test_dense_accumulator.cpp",
+          "sha256": "eb93656dff726e2276725de0ee96e00f1e5f8dc3ce5c75bea01953baee956989",
+          "size_bytes": 1989
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/tests/test_search_engine.cpp",
+          "sha256": "c5caf4ead9ccb5d97ee0660aed36494c616cff07c7c2c752f1da7e7535882fea",
+          "size_bytes": 3253
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/tools/convert_corpus.py",
+          "sha256": "8af3763e9dc8eb7e8e6bf7195ba55aa6cdc2a5339e961ea161a3ba40cfd7745e",
+          "size_bytes": 1293
+        },
+        {
+          "path": "artifacts/experiments/v081_workspace_memory/source/validation/reference_bm25.py",
+          "sha256": "647d83c5431559edc5b1c11cde2423ebf189e07108de2af9c3d93c57daacd669",
+          "size_bytes": 1851
+        }
+      ]
+    }
+  }
+}
