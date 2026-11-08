@@ -3,12 +3,20 @@
 import os
 import time
 from collections import deque
-from concurrent.futures import Future, TimeoutError as FutureTimeoutError
+from concurrent.futures import (
+    Future,
+    InvalidStateError,
+    TimeoutError as FutureTimeoutError,
+)
 from dataclasses import dataclass
 from threading import Condition, Thread
 
 import numpy as np
 import torch
+
+from backend.api.services.token_budget import (
+    estimate_request_tokens,
+)
 
 from backend.api.services.cross_encoder import (
     _inference_lock,
@@ -33,6 +41,8 @@ class BatchJob:
     top_k: int
     future: Future
     submitted_at: float
+    token_count: int = 0
+    token_counting_ms: float = 0.0
 
 
 class DynamicBatchReranker:
@@ -45,6 +55,8 @@ class DynamicBatchReranker:
         max_wait_ms: float = 5.0,
         max_queue_size: int = 128,
         timeout_seconds: float = 10.0,
+        batch_policy: str = 'pair',
+        max_tokens: int = 65536,
     ):
         if min(max_requests, max_pairs, max_queue_size) < 1:
             raise ValueError("Batch limits must be positive.")
@@ -52,6 +64,13 @@ class DynamicBatchReranker:
         if max_wait_ms < 0 or timeout_seconds <= 0:
             raise ValueError("Invalid timing configuration.")
 
+        if batch_policy not in {'pair', 'token'}:
+            raise ValueError('Invalid batch_policy.')
+        if max_tokens < 1:
+            raise ValueError('max_tokens must be positive.')
+
+        self.batch_policy = batch_policy
+        self.max_tokens = max_tokens
         self.max_requests = max_requests
         self.max_pairs = max_pairs
         self.max_wait_seconds = max_wait_ms / 1000.0
@@ -78,15 +97,46 @@ class DynamicBatchReranker:
         if not candidates:
             return [], {
                 "batch_queue_wait_ms": 0.0,
+                "batch_backlog_wait_ms": 0.0,
+                "batch_formation_wait_ms": 0.0,
                 "batch_inference_ms": 0.0,
                 "batch_request_count": 0,
                 "batch_pair_count": 0,
+                "token_counting_ms": 0.0,
+                "batch_token_count": (
+                    0 if self.batch_policy == "token" else None
+                ),
+                "batch_token_utilization": (
+                    0.0 if self.batch_policy == "token" else None
+                ),
             }
 
         if len(candidates) > self.max_pairs:
             raise ValueError(
                 "Request candidate count exceeds max_pairs."
             )
+
+        token_count = 0
+        token_counting_ms = 0.0
+
+        if self.batch_policy == 'token':
+            counting_started_at = time.perf_counter()
+            model = get_cross_encoder()
+            estimate = estimate_request_tokens(
+                tokenizer=model.tokenizer,
+                query=query,
+                candidates=candidates,
+                max_length=model.max_seq_length,
+            )
+            token_count = estimate.total_tokens
+            token_counting_ms = (
+                time.perf_counter() - counting_started_at
+            ) * 1000.0
+
+            if token_count > self.max_tokens:
+                raise ValueError(
+                    'Request token count exceeds max_tokens.'
+                )
 
         future = Future()
 
@@ -96,11 +146,21 @@ class DynamicBatchReranker:
             top_k=top_k,
             future=future,
             submitted_at=time.perf_counter(),
+            token_count=token_count,
+            token_counting_ms=token_counting_ms,
         )
 
         with self._condition:
             if self._closed:
                 raise RuntimeError("Batch scheduler is closed.")
+
+            # Reclaim capacity occupied by cancelled requests.
+            if self._queue:
+                self._queue = deque(
+                    queued_job
+                    for queued_job in self._queue
+                    if not queued_job.future.cancelled()
+                )
 
             if len(self._queue) >= self.max_queue_size:
                 raise BatchQueueFullError(
@@ -132,8 +192,11 @@ class DynamicBatchReranker:
                 if first.future.cancelled():
                     continue
 
+                formation_started_at = time.perf_counter()
+
                 batch = [first]
                 pair_count = len(first.candidates)
+                token_count = first.token_count
 
                 deadline = (
                     first.submitted_at + self.max_wait_seconds
@@ -150,6 +213,13 @@ class DynamicBatchReranker:
                         if pair_count + next_pairs > self.max_pairs:
                             break
 
+                        if (
+                            self.batch_policy == 'token'
+                            and token_count + next_job.token_count
+                            > self.max_tokens
+                        ):
+                            break
+
                         next_job = self._queue.popleft()
 
                         if next_job.future.cancelled():
@@ -157,6 +227,7 @@ class DynamicBatchReranker:
 
                         batch.append(next_job)
                         pair_count += next_pairs
+                        token_count += next_job.token_count
                         continue
 
                     remaining = deadline - time.perf_counter()
@@ -166,9 +237,19 @@ class DynamicBatchReranker:
 
                     self._condition.wait(timeout=remaining)
 
-            self._process_batch(batch)
+            self._process_batch(
+                batch,
+                formation_started_at=formation_started_at,
+            )
 
-    def _process_batch(self, batch):
+    def _process_batch(
+        self,
+        batch,
+        formation_started_at: float | None = None,
+    ):
+        if formation_started_at is None:
+            formation_started_at = time.perf_counter()
+
         active = [
             job for job in batch
             if not job.future.cancelled()
@@ -178,6 +259,9 @@ class DynamicBatchReranker:
             return
 
         started_at = time.perf_counter()
+        batch_token_count = sum(
+            job.token_count for job in active
+        )
 
         pairs = [
             (job.query, candidate["content"])
@@ -233,9 +317,27 @@ class DynamicBatchReranker:
                     )
                 )
 
+                effective_formation_start = max(
+                    formation_started_at,
+                    job.submitted_at,
+                )
+
                 profile = {
                     "batch_queue_wait_ms": round(
                         (started_at - job.submitted_at) * 1000,
+                        3,
+                    ),
+                    "batch_backlog_wait_ms": round(
+                        max(
+                            0.0,
+                            formation_started_at - job.submitted_at,
+                        ) * 1000,
+                        3,
+                    ),
+                    "batch_formation_wait_ms": round(
+                        (
+                            started_at - effective_formation_start
+                        ) * 1000,
                         3,
                     ),
                     "batch_inference_ms": round(
@@ -244,12 +346,23 @@ class DynamicBatchReranker:
                     ),
                     "batch_request_count": len(active),
                     "batch_pair_count": len(pairs),
+                    "token_counting_ms": round(
+                        job.token_counting_ms, 3
+                    ),
+                    "batch_token_count": (batch_token_count if self.batch_policy == "token" else None),
+                    "batch_token_utilization": round(
+                        batch_token_count / self.max_tokens, 6
+                    ) if self.batch_policy == "token" else None,
                 }
 
-                if not job.future.cancelled():
+                try:
                     job.future.set_result(
                         (ranked[:job.top_k], profile)
                     )
+                except InvalidStateError:
+                    # Request may have timed out during inference.
+                    # Do not fail other jobs in the same batch.
+                    pass
 
         except Exception as exc:
             for job in active:
@@ -310,6 +423,12 @@ def get_dynamic_batch_reranker():
                 ),
                 timeout_seconds=float(
                     os.getenv("RERANK_BATCH_TIMEOUT_SECONDS", "10")
+                ),
+                batch_policy=os.getenv(
+                    "RERANK_BATCH_POLICY", "pair"
+                ),
+                max_tokens=int(
+                    os.getenv("RERANK_MAX_BATCH_TOKENS", "65536")
                 ),
             )
 

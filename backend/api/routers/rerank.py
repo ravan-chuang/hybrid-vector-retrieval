@@ -228,5 +228,10 @@ def rerank_search_batched(request: RerankSearchRequest):
         batch_inference_ms=batch_profile["batch_inference_ms"],
         batch_request_count=batch_profile["batch_request_count"],
         batch_pair_count=batch_profile["batch_pair_count"],
+        batch_backlog_wait_ms=batch_profile["batch_backlog_wait_ms"],
+        batch_formation_wait_ms=batch_profile["batch_formation_wait_ms"],
+        token_counting_ms=batch_profile["token_counting_ms"],
+        batch_token_count=batch_profile["batch_token_count"],
+        batch_token_utilization=batch_profile["batch_token_utilization"],
         results=results,
     )

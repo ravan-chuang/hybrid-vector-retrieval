@@ -260,3 +260,8 @@ class BatchedRerankSearchResponse(RerankSearchResponse):
     batch_inference_ms: float
     batch_request_count: int
     batch_pair_count: int
+    batch_backlog_wait_ms: float = 0.0
+    batch_formation_wait_ms: float = 0.0
+    token_counting_ms: float = 0.0
+    batch_token_count: int | None = None
+    batch_token_utilization: float | None = None
