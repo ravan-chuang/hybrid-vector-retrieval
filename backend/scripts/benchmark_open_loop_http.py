@@ -203,6 +203,7 @@ def send_request(
             {
                 key: result.get(key)
                 for key in (
+                    "batch_id",
                     "batch_request_count",
                     "batch_pair_count",
                     "batch_queue_wait_ms",

@@ -2,6 +2,7 @@
 
 import os
 import time
+import uuid
 from collections import deque
 from concurrent.futures import (
     Future,
@@ -80,6 +81,8 @@ class DynamicBatchReranker:
         self._queue = deque()
         self._condition = Condition()
         self._closed = False
+        self._scheduler_id = uuid.uuid4().hex
+        self._batch_sequence = 0
 
         self._worker = Thread(
             target=self._worker_loop,
@@ -96,6 +99,7 @@ class DynamicBatchReranker:
     ):
         if not candidates:
             return [], {
+                "batch_id": None,
                 "batch_queue_wait_ms": 0.0,
                 "batch_backlog_wait_ms": 0.0,
                 "batch_formation_wait_ms": 0.0,
@@ -258,6 +262,12 @@ class DynamicBatchReranker:
         if not active:
             return
 
+        self._batch_sequence += 1
+        batch_id = (
+            f"{self._scheduler_id}-"
+            f"{self._batch_sequence}"
+        )
+
         started_at = time.perf_counter()
         batch_token_count = sum(
             job.token_count for job in active
@@ -323,6 +333,7 @@ class DynamicBatchReranker:
                 )
 
                 profile = {
+                    "batch_id": batch_id,
                     "batch_queue_wait_ms": round(
                         (started_at - job.submitted_at) * 1000,
                         3,

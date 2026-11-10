@@ -12,6 +12,7 @@ from sentence_transformers import CrossEncoder
 CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 _inference_lock = Lock()
+_model_initialization_lock = Lock()
 
 
 def resolve_device() -> str:
@@ -61,8 +62,8 @@ def resolve_batch_size() -> int:
 
 
 @lru_cache(maxsize=1)
-def get_cross_encoder() -> CrossEncoder:
-    """Load the reranker once per process, on first use."""
+def _load_cross_encoder() -> CrossEncoder:
+    """Create and cache the process-local Cross-Encoder."""
 
     device = resolve_device()
 
@@ -77,6 +78,13 @@ def get_cross_encoder() -> CrossEncoder:
     )
 
     return model
+
+
+def get_cross_encoder() -> CrossEncoder:
+    """Return the Cross-Encoder with serialized initialization."""
+
+    with _model_initialization_lock:
+        return _load_cross_encoder()
 
 
 

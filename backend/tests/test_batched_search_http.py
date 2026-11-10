@@ -46,6 +46,7 @@ def fake_retrieval(request):
 
 def make_profile(policy):
     return {
+        "batch_id": f"test-scheduler-{policy}-batch-1",
         "batch_queue_wait_ms": 1.5,
         "batch_backlog_wait_ms": 0.5,
         "batch_formation_wait_ms": 1.0,
@@ -109,6 +110,7 @@ def test_production_batched_http_profile(policy):
 
     assert data["method"] == "cross_encoder_dynamic_batch"
     assert data["candidate_count"] == 1
+    assert data["batch_id"] == f"test-scheduler-{policy}-batch-1"
     assert data["batch_request_count"] == 1
     assert data["batch_pair_count"] == 1
 

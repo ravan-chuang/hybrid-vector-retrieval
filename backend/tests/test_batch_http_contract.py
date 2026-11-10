@@ -36,6 +36,7 @@ CANDIDATE = {
 
 def make_profile(policy):
     return {
+        "batch_id": f"test-scheduler-{policy}-batch-1",
         "batch_queue_wait_ms": 1.5,
         "batch_backlog_wait_ms": 0.5,
         "batch_formation_wait_ms": 1.0,
@@ -92,6 +93,9 @@ def test_frozen_batched_http_contract(monkeypatch, policy):
     data = response.json()
 
     assert data["pipeline"] == "batched"
+    assert data["batch_id"] == (
+        f"test-scheduler-{policy}-batch-1"
+    )
     assert data["batch_request_count"] == 1
     assert data["batch_pair_count"] == 1
 

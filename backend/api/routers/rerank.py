@@ -224,6 +224,7 @@ def rerank_search_batched(request: RerankSearchRequest):
         rerank_inference_ms=batch_profile["batch_inference_ms"],
         rerank_other_ms=0.0,
         total_ms=round(total_ms, 3),
+        batch_id=batch_profile["batch_id"],
         batch_queue_wait_ms=batch_profile["batch_queue_wait_ms"],
         batch_inference_ms=batch_profile["batch_inference_ms"],
         batch_request_count=batch_profile["batch_request_count"],

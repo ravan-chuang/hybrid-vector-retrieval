@@ -1,619 +1,366 @@
 # Hybrid Vector Retrieval System
 
-**Full-corpus information retrieval · PostgreSQL / pgvector · C++ BM25 · Cross-Encoder serving**
+An information retrieval prototype built with **PostgreSQL 17, pgvector, C++ BM25, FastAPI, and React**. It manages documents, tags, and search history, and evaluates lexical search, dense retrieval, hybrid ranking, and Cross-Encoder reranking on **8,841,823 MS MARCO passages**.
 
-A multi-stage search system combining relational data management, lexical and dense retrieval, approximate nearest-neighbor (ANN) indexing, hybrid candidate generation, Cross-Encoder reranking, and bounded **cross-request dynamic batching**. The project emphasizes measurable retrieval quality, database systems engineering, and reproducible performance analysis.
-
-> **Project status — October 24, 2026 (v0.8.1 experimental BM25 branch):** The database, full MS MARCO corpus, retrieval pipelines, relevance evaluation, FastAPI backend, relational CRUD, and React/Vite dashboard are implemented. C++ BM25 serving, batched Cross-Encoder inference, concurrency/parity tests, real-document profiling, and a 6,980-query dev-set ANN study have also been evaluated. The v0.8.1 BM25 implementation is an isolated experimental build; the deployed extension remains v0.7.9. This is an **engineering/research prototype**, not a production-ready hosted search service.
-
-![Project overview: dev-small ANN and retrieval results](docs/system-overview.jpg)
-
-## At a glance
-
-| Dimension | Measured result / implementation |
+| Experiment | Main result |
 | --- | --- |
-| Indexed corpus | **8,841,823 MS MARCO passages** |
-| Dense representation | Normalized **384-dimensional** `all-MiniLM-L6-v2` embeddings |
-| Vector index | PostgreSQL 17 + pgvector **HNSW** (`m=16`, `ef_construction=64`) |
-| Lexical retrieval | PostgreSQL FTS/GIN and **C++ BM25** serving backend |
-| Dev-small query set | All **6,980 MS MARCO passage dev-small queries** with positive qrels |
-| Best measured dev pipeline | **Hybrid union + Cross-Encoder** · MRR@10 **0.4012** · nDCG@10 **0.4635** · relevance Recall@10 **0.6740** |
-| 6,980-query ANN, `ef_search=40` | **73.36 ms SQL P50 · ANN Recall@10 0.8924 · MRR@10 0.2673** (exact SQL P50: 12,441.19 ms) |
-| ANN relevance, `ef_search=40` versus exact | **ΔMRR@10 −0.038264**, paired bootstrap 95% CI **[−0.042486, −0.034186]** |
-| Experimental C++ BM25 v0.8.1 | **~2.59× C16 HTTP QPS** vs isolated v0.8.0; 6,980-query Top-100 rankings identical |
-| Dynamic batching, C16 | **10.895 vs 8.360 QPS** (batched vs baseline, one historical 1,000-request test) |
-| Batch ranking parity | **10/10** tested queries: identical Top-1, Top-10 membership and order |
+| Full-corpus dense retrieval | Across 6,980 dev-small queries, exact search had a SQL-path P50 of **12,441.19 ms**. HNSW at `ef_search=40` reached **73.36 ms** with **0.8924 ANN Recall@10**. |
+| Full-corpus ranking quality | Hybrid Union + Cross-Encoder achieved **0.4012 MRR@10**, **0.4635 nDCG@10**, and **0.6740 relevance Recall@10** in the historical dev-small comparison. |
+| C++ BM25 concurrency | At concurrency 16, HTTP throughput increased from **31.15 QPS** with v0.8.0 to **80.54 QPS** with the isolated v0.8.1 build. Both versions returned identical BM25 Top-100 rankings across all 6,980 queries. |
+| Open-loop batching pilot | With frozen candidates and a 60-second measurement window, both the pair and token32 policies completed all **574 requests** successfully. Scheduled-to-completion P95 was **545.00 ms** and **675.80 ms**, respectively. |
 
-**Interpretation:** ANN Recall is **exact-neighbor overlap**, not judged relevance. SQL timings exclude embedding, reranking and HTTP overhead; concurrency QPS is measured separately. The retrieval-pipeline methods were evaluated under partly different historical configurations and **are not a fully matched ablation**. MS MARCO dev-small labels are sparse. No result presented here is claimed as an official leaderboard submission.
+[Quickstart](#quickstart) · [Architecture](#architecture) · [API](#api) · [Evaluation](#evaluation) · [Reproduction](#reproduction) · [Repository Layout](#repository)
 
-## Contents
+<details>
+<summary>System overview (October 2026 evaluation snapshot)</summary>
 
-- [Architecture](#architecture)
-- [Features and technology](#features-and-technology)
-- [Database design](#database-design)
-- [Retrieval pipelines](#retrieval-pipelines)
-- [Evaluation protocol](#evaluation-protocol)
-- [Retrieval quality](#retrieval-quality)
-- [ANN and scalability](#ann-and-scalability)
-- [MS MARCO dev-small ANN and relevance study](#ms-marco-dev-small-ann-and-relevance-study)
-- [Experimental C++ BM25 v0.8.1](#experimental-c-bm25-v081)
-- [Dynamic batching and serving](#dynamic-batching-and-serving)
-- [Cross-Encoder profiling](#cross-encoder-profiling)
-- [Getting started](#getting-started)
-- [API examples](#api-examples)
-- [Repository guide](#repository-guide)
-- [Testing and reproducibility](#testing-and-reproducibility)
-- [Limitations and roadmap](#limitations-and-roadmap)
+![System overview covering document management, multistage retrieval, the full corpus, and dev-small evaluation](docs/system-overview.png)
 
+</details>
+
+<a id="quickstart"></a>
+## Quickstart
+
+Use this setup to try document CRUD, tags, and lexical, dense, or hybrid search on application documents. It starts the API with a small BM25 corpus. To build the full MS MARCO corpus, embeddings, and indexes, see [Reproduction](#reproduction).
+
+**Prerequisites** — Docker Compose, Python 3.13 (the version verified locally), CMake 3.20+, a C++20 compiler, and Node.js 22.12+. The first model load requires access to the model source or an existing local cache.
+
+### 1. Start PostgreSQL and create the tables
+
+Run these commands from the repository root. If `.env` already exists, check that `DATABASE_URL` matches the Compose credentials and host port.
+
+```bash
+test -f .env || cp .env.example .env
+set -a
+source .env
+set +a
+
+docker compose up -d postgres
+docker compose exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Wait for `pg_isready` to report that it is accepting connections. On a **new database**, run the two schema files in order. The second creates an empty benchmark table so the dashboard can read its size.
+
+```bash
+docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < database/01_schema.sql
+docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < database/13_msmarco_full.sql
+```
+
+`01_schema.sql` creates tables directly. Check the schema before applying it to an existing database. For an older application database, see [12_application_retrieval.sql](database/12_application_retrieval.sql) for the search column and indexes.
+
+### 2. Install the backend and prepare a startup corpus
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt pybind11
+
+cmake -S cpp -B cpp/build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_PYTHON_BINDINGS=ON \
+  -DPython_EXECUTABLE="$(command -v python)" \
+  -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"
+cmake --build cpp/build --parallel
+
+mkdir -p cpp/data
+python cpp/tools/convert_corpus.py cpp/tests/fixtures/demo.csv cpp/data/demo.bin
+
+CPP_CORPUS_PATH="$PWD/cpp/data/demo.bin" \
+  python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+CMake writes the `retrieval_cpp` Python extension to `backend/`. At startup, the API warms up the embedding model, opens a PostgreSQL connection pool, and loads the BM25 corpus. Application-only search also requires an importable extension and a valid `.bin` file. If you change Python versions, rebuild the extension with the interpreter that runs the API. [Application startup](backend/api/main.py) · [C++ corpus loader](backend/api/services/cpp_retrieval.py)
+
+### 3. Create a document and verify search
+
+Keep the API running and execute the following in another terminal. Creating a document also generates its embedding, so the new content is searchable by both text and vector.
+
+```bash
+curl -fsS http://127.0.0.1:8000/health
+
+curl -fsS -X POST http://127.0.0.1:8000/documents \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"PostgreSQL search","content":"PostgreSQL supports full-text search and vector search with pgvector."}'
+
+curl -fsS -X POST http://127.0.0.1:8000/search/hybrid \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"PostgreSQL search","corpus":"application","lexical_backend":"postgresql_fts","top_k":5}'
+```
+
+Open [Swagger UI](http://127.0.0.1:8000/docs) to explore the API. Start the frontend from the repository root.
+
+```bash
+cd frontend
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open the [local dashboard](http://127.0.0.1:5173) and switch the corpus from MS MARCO to application documents. The benchmark table is empty in this setup, while `/stats` displays a fixed reference count for the full corpus. Query the table directly for the actual row count. The evaluation tab displays archived results. [Frontend API configuration](frontend/src/api.js) · [Statistics route](backend/api/routers/system.py) · [Evaluation view](frontend/src/components/FullCorpusEvaluation.jsx)
+
+<a id="architecture"></a>
 ## Architecture
 
-![System architecture: frontend, backend, models, PostgreSQL, retrieval pipeline](docs/system-architecture.jpg)
+![System architecture showing React, FastAPI, model and index workers, PostgreSQL, and the multistage retrieval pipeline](docs/system-architecture.png)
 
-```text
-                         React / Vite dashboard
-                                  │ REST / JSON
-                                  ▼
-                              FastAPI
-                                  │
-                  ┌───────────────┴────────────────┐
-                  │                                │
-          Relational application             Search pipeline
-          documents / tags / history               │
-                  │                         Query embedding
-                  │                                │
-                  │              ┌─────────────────┴──────────────────┐
-                  │              ▼                                    ▼
-                  │       Lexical retrieval                      Dense retrieval
-                  │       PostgreSQL FTS / GIN                  pgvector HNSW
-                  │       or C++ BM25                           cosine distance
-                  │              │                                    │
-                  │              └─────────────────┬──────────────────┘
-                  │                                ▼
-                  │                       Candidate union / fusion
-                  │                                │
-                  │                   ┌────────────┴─────────────┐
-                  │                   ▼                          ▼
-                  │              Standard CE              Batched CE worker
-                  │                   │                    bounded queue +
-                  │                   │                    cross-request batching
-                  │                   └────────────┬─────────────┘
-                  │                                ▼
-                  │                          Ranked Top-K
-                  ▼
-          PostgreSQL 17 + pgvector
-```
-
-The normalized application schema and the large benchmark/serving corpus are logically separated. Application CRUD, referential integrity, and search history remain database-backed. The full MS MARCO corpus and its HNSW/GIN indexes support large-scale retrieval experiments. The Cross-Encoder is `cross-encoder/ms-marco-MiniLM-L-6-v2`.
-
-## Features and technology
-
-| Layer | Components |
+| Layer | Implementation |
 | --- | --- |
-| Database | PostgreSQL 17, pgvector, B-tree, GIN, HNSW, experimental IVFFlat |
-| Backend | Python, FastAPI, Uvicorn, psycopg 3, `psycopg_pool` |
-| Dense retrieval | `sentence-transformers/all-MiniLM-L6-v2` (384D, normalized) |
-| Lexical retrieval | PostgreSQL `tsvector` / `websearch_to_tsquery`; C++ BM25 |
-| Reranking | `cross-encoder/ms-marco-MiniLM-L-6-v2`, PyTorch CPU/MPS |
-| Serving | Per-process bounded dynamic batch worker, queue/timeout controls, single-request baseline |
-| Frontend | React 19, Vite 8, CSS |
-| Infrastructure | Docker Compose, local Python virtual environment |
-| Evaluation | MS MARCO relevance judgments, ANN exact-neighbor comparisons, HTTP concurrency tests, paired bootstrap |
+| Frontend | React 19 and Vite 8 provide document and tag management, search modes, query history, full-corpus evaluation, and C++ concurrency charts. |
+| API | FastAPI, Uvicorn, and a psycopg 3 connection pool handle validation, candidate retrieval, scores, and timing. |
+| Lexical retrieval | PostgreSQL English full-text search (FTS) uses GIN, `websearch_to_tsquery`, and `ts_rank_cd`. The benchmark corpus also supports C++20 BM25 through pybind11. |
+| Dense retrieval | `sentence-transformers/all-MiniLM-L6-v2` produces 384-dimensional, L2-normalized vectors. pgvector searches by cosine distance (`<=>`) using an HNSW index built with `m=16` and `ef_construction=64`. |
+| Fusion and reranking | The hybrid endpoint uses weighted Reciprocal Rank Fusion (RRF). The reranking endpoints deduplicate the union of lexical and dense candidates and score it with `cross-encoder/ms-marco-MiniLM-L-6-v2`. |
+| Batched inference | Each API process has a bounded queue and one Cross-Encoder worker. The scheduler supports pair and token budgets and returns each request's results separately. |
 
-### Supported capabilities
+Weighted RRF sums `weight / (rrf_k + rank)` across the lists in which a candidate appears. The API defaults to `rrf_k=60` and equal lexical and dense weights of 0.5. Historical experiments also used 0.1/0.9 weights and normalized-score fusion under their own configurations. The Cross-Encoder scores the original query and each candidate passage as a pair. [Weighted RRF](backend/api/services/weighted_rrf.py) · [Reranking routes](backend/api/routers/rerank.py)
 
-- Exact cosine vector retrieval and approximate HNSW retrieval.
-- PostgreSQL full-text search and C++ BM25 lexical retrieval.
-- Hybrid RRF and normalized-score fusion baselines; lexical/dense candidate union.
-- Cross-Encoder reranking with both standard and batched API paths.
-- Search-history persistence and document/tag CRUD with foreign-key constraints.
-- Dashboard for retrieval, statistics, and relational database operations.
-- Index-build, ingestion, relevance, latency, throughput, and ranking-parity experiments.
+### Database Design
 
-## Database design
+![Application database ERD with six tables, primary and foreign keys, and delete rules](docs/database-erd.png)
 
-![Database entity-relationship diagram: six application tables](docs/database-erd.jpg)
-
-| Table | Role |
+| Table | Purpose and constraints |
 | --- | --- |
-| `users` | Application users |
-| `documents` | Document metadata |
-| `document_chunks` | Searchable chunks, embeddings, generated full-text representation |
-| `tags` | Unique tag definitions |
-| `document_tags` | Document–tag many-to-many association |
-| `search_history` | Query type, result count, timing, and history |
+| `users` | User records with unique usernames and nullable, unique email addresses. |
+| `documents` | Document title, author, source, and publication year. |
+| `document_chunks` | Document text, a nullable `vector(384)`, and a generated English `tsvector`. The pair `(document_id, chunk_index)` is unique. Deleting a document cascades to its chunks. |
+| `tags`, `document_tags` | Tag names are unique. The join table uses `(document_id, tag_id)` as its composite primary key. Deleting a document or tag removes its associations. |
+| `search_history` | Stores the query, search type, result count, and latency. The schema allows `keyword`, `vector`, and `hybrid` as search types. Deleting a user preserves the history and sets its user foreign key to null. |
 
-The normalized application schema enforces primary/foreign keys, uniqueness, checks, and cascade rules. Deleting a document cascades to its chunks and tag associations without deleting reusable tag records. Application chunks have full-text and vector indexes. Large-scale benchmark tables are maintained separately from the application workload.
+The ERD summarizes the application tables. See the schema SQL for `document_chunks.search_vector` and the index definitions. Application search retrieves chunks and keeps the best matching chunk per document. The benchmark uses a separate `msmarco_full_documents` table with one row per passage and internal IDs of `pid + 1`. C++ retrieval uses the same IDs to fetch passage text from PostgreSQL. [Application schema](database/01_schema.sql) · [Application retrieval](backend/api/services/application_retrieval.py) · [Benchmark schema](database/13_msmarco_full.sql) · [Benchmark indexes](database/14_msmarco_full_indexes.sql) · [C++ candidate lookup](backend/api/services/cpp_candidates.py)
 
-**Representative vector query** (illustrative schema; adapt to the actual table and connection parameters):
+<a id="api"></a>
+## API
 
-```sql
-SELECT document_id, content, embedding <=> %s::vector AS distance
-FROM msmarco_full_documents
-ORDER BY embedding <=> %s::vector
-LIMIT 10;
+| Method and route | Purpose |
+| --- | --- |
+| `GET /health`, `GET /stats` | Check database connectivity and view benchmark table and index statistics. |
+| `POST /search/vector`, `POST /search/lexical` | Run HNSW vector search or PostgreSQL full-text search. |
+| `POST /search/cpp`, `POST /search/cpp/lexical` | Return C++ BM25 IDs and scores, or results with passage text fetched from PostgreSQL. |
+| `POST /search/hybrid` | Fuse lexical and dense candidate rankings with weighted RRF. |
+| `POST /search/rerank`, `POST /search/rerank/batched` | Rerank the candidate union using per-request or cross-request batched inference. |
+| `GET /search/history` | Read search history. |
+| `GET /documents`, `POST /documents` | List or create documents. |
+| `GET /documents/{document_id}`, `PUT /documents/{document_id}`, `DELETE /documents/{document_id}` | Read, update, or delete a document. |
+| `GET /documents/{document_id}/tags`, `POST /documents/{document_id}/tags` | List or attach document tags. |
+| `DELETE /documents/{document_id}/tags/{tag_id}` | Detach a tag from a document. |
+
+- Search defaults to the `benchmark` corpus. For the small demo, send `"corpus":"application"` and use PostgreSQL FTS for the lexical branch. C++ BM25 in the hybrid and reranking endpoints is supported for the benchmark corpus.
+- Use `postgresql_fts` with `/search/hybrid` and `postgres_fts` with both reranking endpoints. Hybrid search and reranking require `candidate_k >= top_k`. Hybrid weights must sum to 1. Responses report the HNSW search breadth in `effective_ef_search`. [Request models](backend/api/schemas/search.py)
+- `/internal/benchmark/candidates` exports benchmark candidates from a loopback connection. The two frozen-candidate endpoints, `/internal/benchmark/rerank` and `/internal/benchmark/rerank/batched`, also require `ENABLE_FROZEN_BENCHMARK=1`. [Frozen-candidate API](backend/api/routers/benchmark_rerank.py)
+
+With the full corpus and indexes loaded, send the same request to the standard and batched reranking endpoints.
+
+```bash
+for route in rerank rerank/batched; do
+  curl -fsS -X POST "http://127.0.0.1:8000/search/$route" \
+    -H 'Content-Type: application/json' \
+    -d '{"query":"what is information retrieval","corpus":"benchmark","lexical_backend":"cpp_bm25","stopword_filter":true,"top_k":10,"candidate_k":50,"ef_search":160}'
+  printf '\n'
+done
 ```
 
-**Representative HNSW index:**
+### Batch Configuration
 
-```sql
-CREATE INDEX idx_msmarco_full_embedding_hnsw
-ON msmarco_full_documents
-USING hnsw (embedding vector_cosine_ops)
-WITH (m = 16, ef_construction = 64);
-```
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `CROSS_ENCODER_DEVICE` | `cpu` | Selects `cpu`, `mps`, or `auto`. The model falls back to CPU if Apple MPS is unavailable. |
+| `CROSS_ENCODER_BATCH_SIZE` | `32` | Internal batch size used by the model's `predict()` call. |
+| `RERANK_BATCH_POLICY` | `pair` | Select `token` to apply an additional token budget. |
+| `RERANK_MAX_BATCH_REQUESTS` / `RERANK_MAX_BATCH_PAIRS` | `4` / `512` | Maximum requests and query–passage pairs per worker batch. |
+| `RERANK_MAX_BATCH_TOKENS` | `65536` | Token-policy budget after truncation and before padding. |
+| `RERANK_MAX_BATCH_WAIT_MS` / `RERANK_MAX_QUEUE_SIZE` | `5` / `128` | Batch formation window and pending queue capacity. |
+| `RERANK_BATCH_TIMEOUT_SECONDS` | `10` | Wait limit per submission. A full queue returns HTTP 503, and a timeout returns HTTP 504. |
+| `CPP_CORPUS_PATH` / `RETRIEVAL_CPP_EXTENSION` | `cpp/data/msmarco_full.bin` / unset | Overrides the corpus path or loads an isolated C++ extension. |
 
-`ef_search` is varied at query time to study ANN recall–latency trade-offs. A GIN index accelerates PostgreSQL full-text queries. Full-corpus HNSW and GIN indexes are substantial local assets; they are **not included in this Git repository**.
+Batch responses report backlog wait, batch formation wait, and shared batch duration. `batch_id` groups responses from the same batch so the shared duration is counted once. The batch duration covers the entire worker step. Use a model profile for GPU forward-pass timing. [Batch worker](backend/api/services/dynamic_batch.py) · [Token budget](backend/api/services/token_budget.py) · [Model configuration](backend/api/services/cross_encoder.py)
 
-## Retrieval pipelines
+<a id="evaluation"></a>
+## Evaluation
 
-### First-stage retrieval
+Each comparison has its own corpus, workload, and timing boundary. **ANN Recall@10** measures the fraction of the exact dense Top-10 recovered by HNSW. **MRR@10, nDCG@10, Hit@10, and relevance Recall@10** use human relevance judgments (qrels). MS MARCO has sparse qrels, so these relevance scores describe performance on the available judgments. [MS MARCO Passage Ranking dataset](https://github.com/microsoft/msmarco/blob/master/Datasets.md) · [Dev-small manifest](artifacts/msmarco_full/dev_small_manifest.json)
 
-1. **Lexical:** PostgreSQL FTS/GIN or the local C++ BM25 backend.
-2. **Dense:** Encode the query with normalized MiniLM embeddings; retrieve cosine nearest neighbors through pgvector HNSW.
-3. **Fusion:** Compare reciprocal rank fusion (RRF), weighted RRF, and normalized-score fusion; alternatively take the lexical/dense union for reranking.
+### Full-Corpus ANN, Latency, and Relevance
 
-For two ranked lists, RRF is:
+The benchmark retrieves the Top-10 for each of 6,980 dev-small queries over 8,841,823 passages. Timing starts when the SQL query is issued and ends when the client fetches the results. It includes the database round trip and excludes query encoding, HTTP, and reranking. The exact baseline disables index scans. The HNSW runs use the same index and vary `ef_search`.
 
-$$
-\mathrm{RRF}(d)=\sum_{r\in\mathcal R}\frac{1}{k+\operatorname{rank}_r(d)}
-$$
-
-The evaluated weighted-RRF baseline uses `k=60`, lexical weight `0.1`, and dense weight `0.9`.
-
-### Multi-stage reranking
-
-```text
-Query → lexical Top-50 + dense Top-50 → deduplicated union
-      → Cross-Encoder(query, passage) → final Top-10
-```
-
-The **6,980-query dev-small retrieval-quality table** below includes the C++ BM25 lexical baseline. Its pipelines were measured across different historical configurations; query-set alignment alone does not make the methods a controlled ablation. Do not attribute a gain exclusively to fusion or reranking without matching candidate depth, component version and search settings.
-
-## Evaluation protocol
-
-- **Corpus:** 8,841,823 MS MARCO passages in PostgreSQL/pgvector, queried using normalized 384D MiniLM embeddings.
-- **Queries and judgments:** **6,980 MS MARCO passage dev-small** queries with positive qrels. The local document-ID mapping is official `pid + 1`.
-- **ANN Recall@10:** percentage overlap of approximate vector Top-10 with exact cosine vector Top-10; not human relevance.
-- **Qrel MRR@10 / Hit@10:** judged passage positions and judged hit rate for dense exact versus HNSW; sparse qrels are not exhaustive.
-- **Qrel MRR@10 / nDCG@10 / relevance Recall@10:** separate pipeline comparison on 6,980 dev-small queries; not a strict single-version ablation.
-- **SQL latency:** database query execution only, excluding embedding, network, API and Cross-Encoder; HNSW `ef_search` varied while the corpus/index remained fixed.
-- **Uncertainty:** 10,000 paired query bootstrap resamples, seed 42, percentile 95% intervals for ANN-versus-exact MRR loss. A separate paired nDCG interval is reported for hybrid-CE versus dense-CE under its own experiment configuration.
-- **Serving metrics:** closed-loop HTTP concurrency QPS/P95 are kept separate from database-only sequential SQL latency.
-
-## Retrieval quality
-
-### MS MARCO passage dev-small — 6,980 queries
-
-| Retrieval pipeline | MRR@10 | nDCG@10 | Relevance Recall@10 |
-| --- | ---: | ---: | ---: |
-| C++ BM25 (sparse) | 0.178503 | 0.222467 | 0.371466 |
-| Dense HNSW | 0.288959 | 0.345345 | 0.536151 |
-| Weighted hybrid RRF | 0.290823 | 0.349124 | 0.545463 |
-| Dense + Cross-Encoder | 0.372126 | 0.428756 | 0.620690 |
-| **Hybrid candidate union + Cross-Encoder** | **0.401195** | **0.463473** | **0.674009** |
-
-**Paired reranking comparison:** Union+CE minus Dense+CE yielded **ΔnDCG@10 +0.034717**, with a 95% paired-bootstrap interval **[+0.030622, +0.038986]** (10,000 resamples) in the recorded comparison. This interval is not from the exact-vs-HNSW ANN experiment and must not be mixed with those intervals.
-
-**Caveat:** These reported pipeline results span historical retrieval configurations, component versions, and candidate settings. They demonstrate observed quality levels but do not isolate the causal effect of each individual stage.
-
-## ANN and scalability
-
-The full corpus is stored separately from the normalized application tables. The HNSW vector index uses cosine distance with `m=16` and `ef_construction=64`; PostgreSQL FTS uses GIN. In local storage observations, the database occupied roughly **39 GB**, the HNSW index roughly **17 GB**, and the full-corpus GIN index roughly **904 MB**. Docker shared memory was increased to 8 GB during index construction; the exact full-corpus HNSW build duration was not recorded.
-
-The main ANN comparison is the **complete 6,980-query dev-small benchmark** in the following section. It includes SQL P50/P95, exact-neighbor overlap and qrel relevance, and should replace earlier small-query timing snapshots when presenting the current benchmark. The raw corpus, model caches, index assets and query checkpoints are **not distributed through Git**.
-
-## MS MARCO dev-small ANN and relevance study
-
-**Protocol (October 2026).** The full **8,841,823-passage** corpus was searched using **all 6,980 queries** in the MS MARCO passage **dev-small** set, with positive qrels from `artifacts/msmarco_full/dev_small_manifest.json`. The local document-ID mapping is **official MS MARCO passage ID + 1**. Query embeddings use normalized `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions); pgvector cosine distance (`<=>`) and HNSW `m=16`, `ef_construction=64` were used. Each query retrieves **Top-10**. The database was PostgreSQL 17 / pgvector 0.8.6 in the measured environment.
-
-**Latency scope:** SQL retrieval latency only; excludes query encoding, HTTP, and reranking. Exact nearest-neighbor search was forced without index scans; HNSW runs used `ef_search` values 10, 20, 40, 80, 160. Cache state, query order, client configuration and execution environment can affect timings; the P50 ratios are descriptive, not controlled end-to-end speedup estimates.
-
-| Method | SQL P50 (ms) | SQL P95 (ms) | ANN Recall@10 vs exact | Qrel MRR@10 | Qrel Hit@10 |
+| Dense retrieval method | SQL P50 (ms) | SQL P95 (ms) | ANN Recall@10 | Qrel MRR@10 | Qrel Hit@10 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Exact dense | 12,441.19 | 14,343.13 | 1.0000 | 0.3056 | 0.5781 |
+| Exact | 12,441.19 | 14,343.13 | 1.0000 | 0.3056 | 0.5781 |
 | HNSW `ef=10` | 30.49 | 62.22 | 0.7596 | 0.2252 | 0.4307 |
 | HNSW `ef=20` | 41.87 | 83.50 | 0.8406 | 0.2508 | 0.4778 |
 | HNSW `ef=40` | 73.36 | 140.10 | 0.8924 | 0.2673 | 0.5089 |
 | HNSW `ef=80` | 105.58 | 193.52 | 0.9287 | 0.2809 | 0.5311 |
 | HNSW `ef=160` | 180.54 | 332.48 | 0.9517 | 0.2890 | 0.5464 |
 
-The approximate **169.6× P50 ratio** for `ef=40` compares measured exact-scan P50 with HNSW P50; it is **not** an end-to-end service speedup. Increasing `ef_search` improves exact-neighbor overlap and qrel MRR in this evaluation, but even `ef=160` does not reproduce exact dense relevance.
+The exact-to-HNSW SQL P50 ratio was **169.6×** at `ef=40`. With 10,000 paired bootstrap resamples at the query level (seed 42), HNSW minus exact yielded **−0.038264 ΔMRR@10** at `ef=40`, with a 95% CI of **[−0.042486, −0.034186]**. At `ef=160`, the difference was **−0.016602**, with a 95% CI of **[−0.019482, −0.013816]**. The evaluation view records all five intervals. The timing data comes from one full sweep and depends on cache state, query order, and environment. [ANN benchmark](backend/scripts/benchmark_msmarco_dev_ann.py) · [Relevance analysis](backend/scripts/analyze_ann_relevance.py) · [Results and confidence intervals](frontend/src/components/FullCorpusEvaluation.jsx)
 
-### Paired statistical analysis: HNSW versus exact dense
+### Full-Corpus Multistage Ranking
 
-Paired query-level bootstrap on **reciprocal rank at 10**, **10,000 resamples**, random seed **42**, percentile **95% confidence intervals**. Each delta is **HNSW MRR@10 − exact-dense MRR@10**; a negative number indicates a measured relevance loss relative to exact dense retrieval.
+These historical runs used the same 6,980 queries. Candidate depths, component versions, and retrieval settings varied across pipelines, so each row describes its run. Isolating the effect of a stage requires a matched comparison.
 
-| HNSW setting | ΔMRR@10 | 95% CI lower | 95% CI upper |
+| Retrieval pipeline | MRR@10 | nDCG@10 | Relevance Recall@10 |
 | --- | ---: | ---: | ---: |
-| `ef=10` | −0.080323 | −0.086050 | −0.074643 |
-| `ef=20` | −0.054763 | −0.059688 | −0.050013 |
-| `ef=40` | −0.038264 | −0.042486 | −0.034186 |
-| `ef=80` | −0.024649 | −0.028105 | −0.021338 |
-| `ef=160` | −0.016602 | −0.019482 | −0.013816 |
+| C++ BM25 | 0.178503 | 0.222467 | 0.371466 |
+| Dense HNSW | 0.288959 | 0.345345 | 0.536151 |
+| Weighted Hybrid RRF | 0.290823 | 0.349124 | 0.545463 |
+| Dense + Cross-Encoder | 0.372126 | 0.428756 | 0.620690 |
+| **Hybrid Union + Cross-Encoder** | **0.401195** | **0.463473** | **0.674009** |
 
-All intervals exclude zero for this sample and protocol. This is **not** proof that every individual query gets worse: at `ef=160`, **107** queries improved in reciprocal rank, **240** degraded, and **6,633** were unchanged. MS MARCO dev-small qrels are sparse; neighbor-overlap Recall and qrel-based relevance answer different questions.
+In the historical full-corpus comparison, union reranking improved nDCG@10 over dense reranking by **+0.034717**, with a 95% paired CI of **[+0.030622, +0.038986]**. This interval captures the difference between the two complete pipelines. A separate frozen protocol with **500,000 passages and 500 held-out queries** used PostgreSQL FTS Top-50 and dense Top-50. It measured **0.66329** nDCG@10 for Dense + Cross-Encoder and **0.67883** for Union + Cross-Encoder, a paired difference of **+0.01554** with a 95% CI of **[+0.00697, +0.02533]**. The two studies used different corpus coverage and query selection. [Historical full-corpus results](frontend/src/components/FullCorpusEvaluation.jsx) · [Full-corpus paired analysis script](backend/scripts/evaluate_paired_bootstrap_dev.py) · [500-query protocol](artifacts/relevance/protocol_frozen.json) · [500-query analysis](artifacts/relevance/final_reranking_analysis.json)
 
-### HNSW failure diagnostics (exploratory)
+### Cross-Encoder Candidate Budgets
 
-Four selected dev queries were examined with `ef_search` **160, 320, 640, 1000**. Two of the four remained at **0.30** and **0.50** ANN Recall@10, respectively, even at `ef=1000`; another reached **1.00** at `ef=640`. These are **selected cases**, not a representative population estimate. In one low-overlap example, exact and approximate search both ranked the judged relevant passage first; low ANN overlap alone does not establish relevance loss.
+A separate local research checkout includes an exploratory candidate study. A hash of each query ID assigned 3,567 queries to validation and 3,413 to test. The study compares dense candidates, RRF, and dense/BM25-only quotas under a budget of 40 Cross-Encoder candidates. BM25-only candidates exclude passages in the dense Top-50. Dense candidates fill any remaining slots. The evaluation combines cached scores with newly computed scores for missing pairs.
 
-### Local artifacts and reproducibility
+| Candidate strategy | Cross-Encoder budget | Validation nDCG@10 | Test nDCG@10 |
+| --- | ---: | ---: | ---: |
+| Dense40 | 40 | 0.415994 | 0.436644 |
+| RRF40 | 40 | 0.435553 | 0.459400 |
+| Dense30 + BM25-only 10 | 40 | 0.441218 | 0.462431 |
+| RRF50 (higher-budget reference) | 50 | 0.445107 | 0.465191 |
 
-The following scripts are part of the **current development checkout**; they may not yet be committed to the public branch. Full-corpus data, checkpoint JSONs, database indexes, and model caches are **not** distributed through Git.
+The 30+10 quota had the highest validation nDCG@10 among the 40-candidate quotas. The budgets count candidates. Measuring serving cost requires actual token counts and latency. This is an offline study on the public dev-small split. The full local results are in `results/msmarco_full/relevance/dev_v067/ce_candidate_ablation/quota_experiment/quota_ablation_results.json`.
 
-| Script | Role |
+### C++ BM25 Concurrency
+
+The C++ core uses an inverted index for BM25 and exposes it to Python through pybind11. Historical records identify v0.7.9 as the default serving extension. v0.8.0 and v0.8.1 were isolated experimental builds. The v0.8.1 configuration releases the Python GIL during search and provides four reusable workspaces.
+
+At concurrency 16, with 500 requests per concurrency level against `/search/hybrid`, HTTP P95 dropped from **630.33 ms** in v0.8.0 to **261.36 ms** in v0.8.1, with **2.59×** the throughput. A separate v0.8.1 memory-check run reached **80.06 QPS**. The per-query comparison found identical BM25 Top-100 rankings across all 6,980 dev-small queries. [Performance CSV](artifacts/evaluations/v081/performance/performance_comparison.csv) · [Benchmark configuration and counts](artifacts/evaluations/v081/performance/benchmark_validation.json) · [Ranking parity script](backend/scripts/verify_bm25_version_parity_v081.py)
+
+### Cross-Encoder Serving and Load Tests
+
+| Workload | Observation |
 | --- | --- |
-| `backend/scripts/benchmark_msmarco_dev_ann.py` | Full 6,980-query exact/HNSW benchmark with resumable per-query checkpoints |
-| `backend/scripts/analyze_ann_relevance.py` | Compute qrel MRR@10, Hit@10, and per-query relevance deltas from checkpoints |
-| `backend/scripts/diagnose_hnsw_failures.py` | Inspect four selected low-overlap cases at higher `ef_search` |
+| Historical closed-loop HTTP, Apple MPS, concurrency 16 | The test measured 1,000 requests across two pipelines and five concurrency levels. At concurrency 16, standard and batched reranking reached **8.360** and **10.895 QPS**, with P95 of **2,078.05** and **1,836.62 ms**, respectively. Throughput stayed flat or fell at concurrency 1–2. |
+| Frozen-candidate open-loop pilot, 10 RPS target, 60 seconds | The pair and token32 policies each scheduled and completed **574** requests. Each completed **571** within the measurement window, for **9.52 RPS** of window goodput. Scheduled-to-completion P95 was **545.00 ms** for pair and **675.80 ms** for token32. |
+| Model profiling on Apple MPS | A historical profile used real candidates from 10 queries. At 128 pairs, the real inputs took about **130.30 ms** and short synthetic inputs took about **45.00 ms**. Sorting inputs by length before calling the model yielded inconsistent gains under that setup. |
 
-Expected local inputs and outputs:
+In a closed-loop test, clients send the next request after a response. The open-loop test schedules Poisson arrivals with a fixed seed. The frozen-candidate endpoints bypass live retrieval, so the pilot reflects the model, batch configuration, and offered load of that run. To assess capacity, read the generated arrival rate, in-window completions, HTTP and scheduled latency, dispatch lag, backlog, and drain together. A historical live-route parity check matched the Top-10 order for all 10 queries. Frozen-candidate tests and current regression tests use separate protocols. [Historical closed-loop benchmark](backend/scripts/benchmark_dynamic_batch_v075.py) · [Frozen-candidate closed-loop benchmark](backend/scripts/benchmark_frozen_http.py) · [Open-loop benchmark](backend/scripts/benchmark_open_loop_duration.py) · [Real-input model profile](backend/scripts/profile_real_cross_encoder_v077.py)
 
-```text
-artifacts/msmarco_full/dev_small_manifest.json
-results/msmarco_full/ann_dev_6980/
-  experiment_config.json
-  exact_ground_truth.json
-  hnsw_checkpoint.json
-  ann_benchmark_6980q.json
-  ann_relevance_analysis_6980q.json
-  hnsw_failure_diagnostics.json
-```
+Local evidence includes `results/msmarco_full/latency/api_v076/config_B_formal_1000/summary.json` and `reports/performance/cross_encoder/open_loop_batch_id/{pair,token32}_10rps_pilot.json`. Earlier pair/token sweeps, capacity tests, and MPS profiles are in `reports/performance/cross_encoder/`.
 
-**Prerequisites:** an already-populated full-corpus PostgreSQL/pgvector database, the HNSW index, Python dependencies, and an explicit `DATABASE_URL` environment variable. The two database-connected scripts **require** `DATABASE_URL`; credentials are intentionally not embedded in source code. Example environment setup (replace the placeholders privately):
+<a id="reproduction"></a>
+## Reproduction
+
+### 1. Build the Full MS MARCO Corpus
+
+Complete the database and dependency setup in [Quickstart](#quickstart). Load `.env` and run the following from the repository root. This downloads the passages, writes 384-dimensional embeddings, and builds the indexes. The original setup recorded about **39 GB** of database usage, including about **17 GB** for HNSW and **904 MB** for GIN. Allow additional space for the CSV export, C++ binary corpus, model cache, and index builds. The API loads the C++ BM25 corpus into memory at startup.
 
 ```bash
-# Load DATABASE_URL privately from the local, Git-ignored environment file.
-set -a
-source .env
-set +a
+python backend/scripts/ingest_msmarco_full.py
+python backend/scripts/embed_msmarco_full.py
 
-# Check the benchmark interface without launching a full-corpus evaluation.
-python backend/scripts/benchmark_msmarco_dev_ann.py --help
+docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < database/14_msmarco_full_indexes.sql
+
+docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT count(*) AS passages, count(embedding) AS embedded FROM msmarco_full_documents;"'
 ```
 
-**Do not rerun the 6,980-query exact benchmark merely to inspect results.** Read the saved JSON summaries/checkpoints instead. If rerunning, verify the manifest, corpus/index identity, exact-vs-ANN query plans, configuration validation, and checkpoint reuse. The bootstrap confidence intervals above were calculated in a separate NumPy analysis and are displayed as recorded values in the dashboard; a dedicated persisted bootstrap-results JSON has **not** been verified.
-
-## Experimental C++ BM25 v0.8.1
-
-The production C++ extension remains **v0.7.9**. The v0.8.0 and v0.8.1 extensions were built and tested **in isolated experiment locations**, without replacing the production `.so`. The v0.8.1 experimental implementation uses **four workspaces** and releases the Python GIL during the BM25 search path.
-
-In the measured HTTP **C16** comparison against isolated v0.8.0, v0.8.1 achieved approximately **2.59× successful QPS** and **58.5% lower P95 client latency**. These are configuration-specific observations, not generalized throughput guarantees. On all **6,980 MS MARCO dev-small queries**, v0.8.1 and v0.8.0 returned identical **BM25 Top-100** rankings in the parity evaluation. A prior development backend suite reported **52 passing tests**; this is not a claim that every script has been rerun after the latest edits.
-
-| Script | Role |
-| --- | --- |
-| `backend/scripts/verify_bm25_version_parity_v081.py` | v0.8.0 vs v0.8.1 full-dev-query Top-100 ranking parity |
-| `backend/scripts/evaluate_dense_ce_dev.py` | Dense + Cross-Encoder dev-set quality evaluation |
-| `backend/scripts/evaluate_paired_bootstrap_dev.py` | Paired relevance comparisons for reranking pipelines |
-
-The complete five-pipeline **dev-small retrieval-quality table** is in [Retrieval quality](#retrieval-quality). The experimental C++ extension comparisons assess ranking parity and HTTP throughput; they do not establish a production deployment or a matched pipeline-quality causal effect.
-
-## Dynamic batching and serving
-
-The standard endpoint reranks each request independently. The batched endpoint submits requests to a **process-local bounded queue**, where a worker aggregates query–candidate pairs and calls the same Cross-Encoder. Results are split back into the originating requests. Controls include maximum requests, maximum pairs, queue wait window, queue capacity, and request timeout.
-
-**Current tested configuration B** (local Apple Silicon MPS):
+After a full build, both counts should be **8,841,823**. Export IDs and text from the same table to build the C++ corpus. To test ingestion or embedding with `--max-docs`, use a separate database and keep the full-corpus output paths for the full build.
 
 ```bash
-CROSS_ENCODER_DEVICE=mps
-CROSS_ENCODER_BATCH_SIZE=128
-RERANK_MAX_BATCH_REQUESTS=8
-RERANK_MAX_BATCH_PAIRS=1024
-RERANK_MAX_BATCH_WAIT_MS=5
+mkdir -p cpp/data
+docker compose exec -T postgres sh -c 'psql -q -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "COPY (SELECT document_id, content FROM msmarco_full_documents ORDER BY document_id) TO STDOUT WITH (FORMAT csv, HEADER true)"' > cpp/data/msmarco_full.csv
+python cpp/tools/convert_corpus.py cpp/data/msmarco_full.csv cpp/data/msmarco_full.bin
+
+CPP_CORPUS_PATH="$PWD/cpp/data/msmarco_full.bin" \
+  python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-### Formal online concurrency test — configuration B
+Ingestion resumes from the maximum stored passage ID. Embedding resumes from the maximum ID with an embedding. If you have partially edited the data, check for missing IDs and unembedded rows. [Ingestion](backend/scripts/ingest_msmarco_full.py) · [Embedding](backend/scripts/embed_msmarco_full.py) · [Indexes](database/14_msmarco_full_indexes.sql) · [C++ corpus conversion](cpp/tools/convert_corpus.py)
 
-100 requests per concurrency level **per pipeline** (1,000 total measured requests); both endpoints returned successfully in this run.
+### 2. Run Vector and Relevance Evaluations
 
-| Concurrent clients | Baseline QPS | Batched QPS | Baseline mean client (ms) | Batched mean client (ms) | Baseline P95 (ms) | Batched P95 (ms) |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 8.228 | 8.213 | 121.49 | 121.71 | 152.72 | 147.43 |
-| 2 | 9.930 | 9.314 | 200.23 | 214.68 | 239.68 | 263.01 |
-| 4 | 9.381 | 10.177 | 418.96 | 392.94 | 485.79 | 450.33 |
-| 8 | 9.296 | 10.238 | 829.16 | 758.91 | 898.39 | 865.39 |
-| 16 | 8.360 | **10.895** | 1770.23 | **1401.22** | 2078.05 | **1836.62** |
+The repository includes the [6,980-query dev-small manifest](artifacts/msmarco_full/dev_small_manifest.json). To rebuild it from the official files, put `queries.dev.small.tsv` and `qrels.dev.small.tsv` in `data/msmarco/dev/` and run [prepare_msmarco_dev.py](backend/scripts/prepare_msmarco_dev.py). Start with 10 queries to verify the configuration and query plans. In the original setup, the exact SQL path averaged about 12.8 seconds per query, or about 25 hours for the 6,980 exact searches alone.
 
-At C16, batched throughput was **30.3% higher than baseline within this run**. At C1–C2 batching provided no throughput benefit. The benchmark uses a closed-loop workload and a fixed baseline-before-batched execution order; this result **does not establish a general 30.3% improvement**. Randomized order, repeated runs, and open-loop load tests remain future work.
-
-### Ranking parity
-
-A separate 10-query HTTP comparison observed **10/10 Top-1, 10/10 Top-10 set, and 10/10 exact Top-10 order agreement**, with no request errors; eight of ten batched requests participated in cross-request batches. This is a useful regression check, not a large-scale parity guarantee. Retrieval was independently executed for the two endpoints rather than using frozen identical candidate sets.
-
-### Metric interpretation
-
-`batch_queue_wait_ms` includes waiting behind earlier batches. `batch_inference_ms` is the **entire worker batch-processing interval** (including pair construction, model access, inference-lock wait, prediction, and MPS synchronization), not GPU-only forward time. Batch-level timing is copied into each member response; summing those values over requests double-counts batch execution. The batched endpoint's `rerank_lock_wait_ms=0.0` is a placeholder and **must not be interpreted as measured zero lock contention**.
-
-## Cross-Encoder profiling
-
-The v0.7.7 profiling studies used the same Cross-Encoder on Apple Silicon MPS with internal `batch_size=128`.
-
-### Synthetic versus real input
-
-| Pairs | Synthetic predict (ms) | Real-document predict (ms) | Real / synthetic |
-| ---: | ---: | ---: | ---: |
-| 64 | 25.72 | 61.10 | 2.38× |
-| 128 | 45.00 | 130.30 | 2.90× |
-| 256 | 78.02 | 203.94 | 2.61× |
-| 384 | 119.97 | 274.26 | 2.29× |
-| 512 | 151.66 | 369.69 | 2.44× |
-| 768 | 230.04 | 557.80 | 2.42× |
-
-The synthetic pairs were short (approximately **20 tokens**). The real workload contained **914 pairs from 10 queries**, with mean **78.60**, P50 **71**, P95 **138**, maximum **254**, and **0%** exceeding the model's 512-token limit. These experiments were run separately and are **not** a fully controlled causal comparison.
-
-### Real-document stage breakdown
-
-| Pairs | Total (ms) | Tokenization (ms) | MPS forward (ms) | Padding waste |
-| ---: | ---: | ---: | ---: | ---: |
-| 128 | 111.92 | 15.70 | 93.64 | 58.2% |
-| 256 | 216.30 | 27.33 | 184.40 | 55.9% |
-| 384 | 317.11 | 39.50 | 270.13 | 55.3% |
-| 512 | 402.44 | 50.39 | 341.49 | 54.0% |
-| 768 | 629.03 | 78.36 | 533.53 | 51.8% |
-
-This manual breakdown measures a **different execution path** from `CrossEncoder.predict()` and should not be subtracted directly from its total. At 768 pairs, model forward accounted for approximately **84.8% of this manual profile's total**.
-
-### Exploratory length-aware input ordering
-
-| Pairs | Original predict (ms) | Externally length-sorted (ms) | Estimated padding waste (original → sorted) |
-| ---: | ---: | ---: | ---: |
-| 128 | 130.84 | 130.91 | 58.2% → 58.2% |
-| 256 | 204.91 | 205.27 | 55.9% → 40.2% |
-| 384 | 273.72 | 274.33 | 55.3% → 29.3% |
-| 512 | 382.86 | 369.99 | 54.0% → 24.1% |
-| 768 | 558.01 | 559.49 | 51.8% → 15.1% |
-
-The reported score differences were **0.000000 at six-decimal display precision**. External sorting did **not** produce a consistent end-to-end speedup. **Interpretation caveat:** the padding estimate models input ordering in 128-item chunks; `CrossEncoder.predict()` may already perform internal length sorting, depending on the installed version. Verify its implementation before attributing the measured timing to actual padding reduction. Length-aware scheduling has **not** been deployed online.
-
-## Getting started
-
-> **Resource warning:** The full 8.84M corpus, embeddings, HNSW graph, and C++ BM25 index require substantial disk/RAM and lengthy preparation. The commands below initialize the **application environment**; they do not automatically download or build the full benchmark corpus. Avoid rebuilding indexes or starting multiple API workers when using a prebuilt local index.
-
-### 1. Clone and configure
+The benchmark checks `results/msmarco_full/ann_dev_6980/experiment_config.json`. On a fresh setup, the following command creates the configuration if the file is missing.
 
 ```bash
-git clone https://github.com/ravan-chuang/hybrid-vector-retrieval.git
-cd hybrid-vector-retrieval
-cp .env.example .env
+mkdir -p results/msmarco_full/ann_dev_6980
+if [ ! -e results/msmarco_full/ann_dev_6980/experiment_config.json ]; then
+  cat > results/msmarco_full/ann_dev_6980/experiment_config.json <<'JSON'
+{
+  "dataset": "msmarco_passage_dev_small",
+  "manifest": "artifacts/msmarco_full/dev_small_manifest.json",
+  "corpus": "msmarco_full_documents",
+  "expected_documents": 8841823,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_normalized": true,
+  "embedding_dimensions": 384,
+  "distance": "cosine",
+  "top_k": 10,
+  "hnsw_index": "idx_msmarco_full_embedding_hnsw",
+  "hnsw_m": 16,
+  "hnsw_ef_construction": 64,
+  "ef_search": [
+    10,
+    20,
+    40,
+    80,
+    160
+  ],
+  "query_order": "manifest_order",
+  "document_id_mapping": "msmarco_pid_plus_1"
+}
+JSON
+fi
+
+python backend/scripts/benchmark_msmarco_dev_ann.py --limit 10
+
+# Run after verifying the full database, index, and configuration.
+python backend/scripts/benchmark_msmarco_dev_ann.py --limit 6980
+python backend/scripts/analyze_ann_relevance.py
 ```
 
-Edit `.env` to match your Docker port, credentials, and local device. Example values from the original local setup:
+Results and checkpoints are stored in `results/msmarco_full/ann_dev_6980/`. Reuse the checkpoints from the 10-query trial with the same database and index. Before changing the data or model, move the old outputs to another directory to avoid reusing stale checkpoints. The full relevance analysis requires the same 6,980 query IDs in the manifest, the exact results, and every HNSW configuration. See the [full-corpus artifacts](artifacts/msmarco_full/) for earlier 500- and 10,000-query summaries.
 
-```dotenv
-POSTGRES_DB=retrieval_db
-POSTGRES_USER=retrieval
-POSTGRES_PASSWORD=change_me
-POSTGRES_PORT=5433
-DATABASE_URL=postgresql://retrieval:<YOUR_PASSWORD>@127.0.0.1:5433/retrieval_db
-CROSS_ENCODER_DEVICE=mps
-CROSS_ENCODER_BATCH_SIZE=128
-```
+### 3. Benchmark Batching With Frozen Candidates
 
-**These are examples, not guaranteed current defaults.** Match `DATABASE_URL` to the active Compose configuration. Use `CROSS_ENCODER_DEVICE=cpu` on machines without compatible MPS support. Never commit `.env` or credentials.
-
-### 2. Start PostgreSQL
+Set `ENABLE_FROZEN_BENCHMARK=1` before starting the API. To compare the pair and token policies, use one Uvicorn worker and keep the query sample, seed, and server settings fixed apart from the policy and token budget. Use the original `msmarco_frozen_k50.json` to compare with the pilot. This dataset is local to the working tree.
 
 ```bash
-docker compose up -d
-docker compose ps
+python backend/scripts/benchmark_open_loop_duration.py \
+  --base-url http://127.0.0.1:8000 \
+  --dataset reports/performance/cross_encoder/datasets/msmarco_frozen_k50.json \
+  --pipeline batched --arrival-rate 10 \
+  --warmup-seconds 10 --measurement-seconds 60 --workers 128 \
+  --seed 42 --timeout 60 --output results/open_loop_pair_10rps.json
 ```
 
-The original Compose service used a container named `hybrid-retrieval-db`; verify the name with `docker compose ps` before using `docker exec`.
+The pilot used MPS, a model batch size of 32, a limit of 4 requests and 800 pairs per worker batch, a 5 ms formation window, and a 60-second timeout. The token32 policy used a budget of 32,768 tokens. Use a separate output filename for the other policy. Use `--pipeline baseline` to measure per-request reranking on the same frozen candidates. Record the commit, working-tree state, dataset hash, hardware, package versions, model and index settings, warmup, arrival rate, in-window goodput, and error rate. [Open-loop output and capacity metrics](backend/scripts/benchmark_open_loop_duration.py) · [Frozen-candidate request format](backend/api/routers/benchmark_rerank.py)
 
-### 3. Install backend dependencies
+### 4. Run Tests
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-set -a
-source .env
-set +a
-```
-
-### 4. Initialize the application schema (new databases only)
-
-```bash
-docker exec -i hybrid-retrieval-db \
-  psql -U retrieval -d retrieval_db < database/01_schema.sql
-```
-
-**Do not rerun schema/index scripts blindly against an existing populated database.** Review migration and index creation statements first. The full-corpus ingestion and indexing pipeline is separate; see the scripts in `backend/scripts/` and SQL in `database/`.
-
-### 5. Start the API
-
-```bash
-python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --workers 1
-```
-
-Open `http://127.0.0.1:8000/docs` for OpenAPI. On a machine with the full C++ BM25 index, startup may take significant time; keep the server running while executing benchmarks from another terminal. The batch worker is **process-local**; adding Uvicorn workers changes batching behavior and is not equivalent to the measured one-worker configuration.
-
-For the **measured configuration B**, set the following environment variables before launching Uvicorn:
-
-```bash
-RERANK_MAX_BATCH_REQUESTS=8 \
-RERANK_MAX_BATCH_PAIRS=1024 \
-RERANK_MAX_BATCH_WAIT_MS=5 \
-python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --workers 1
-```
-
-### 6. Start the dashboard
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173`. The dashboard covers retrieval and relational operations; newer C++ BM25/batched endpoints are API capabilities and are **not asserted to have dedicated dashboard controls**.
-
-## API examples
-
-The main retrieval endpoints include:
-
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/health` | Health and database connectivity |
-| `GET` | `/stats` | Database, corpus, model, and index statistics |
-| `POST` | `/search/vector` | Dense HNSW retrieval |
-| `POST` | `/search/lexical` | Lexical retrieval |
-| `POST` | `/search/hybrid` | Hybrid fusion retrieval |
-| `POST` | `/search/rerank` | Standard Cross-Encoder reranking |
-| `POST` | `/search/rerank/batched` | Cross-request dynamic batching |
-| `GET` | `/search/history` | Persisted search history |
-| `GET/POST` | `/documents` | List/create application documents |
-| `GET/PUT/DELETE` | `/documents/{document_id}` | Read/update/delete a document |
-| `GET/POST` | `/documents/{document_id}/tags` | List/attach tags |
-| `DELETE` | `/documents/{document_id}/tags/{tag_id}` | Detach a tag |
-
-**Live benchmark rerank example** (requires the prebuilt benchmark corpus/index):
-
-```bash
-curl -sS -X POST http://127.0.0.1:8000/search/rerank/batched \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "query": "what is information retrieval",
-    "corpus": "benchmark",
-    "lexical_backend": "cpp_bm25",
-    "stopword_filter": true,
-    "top_k": 10,
-    "candidate_k": 50,
-    "ef_search": 160
-  }'
-```
-
-To compare the standard path, change the URL to `/search/rerank` and keep the request body identical. The repository also contains a **localhost-restricted, undocumented** `/internal/benchmark/candidates` endpoint for exporting the full candidate union in local tests; it is not intended as a public interface.
-
-## Repository guide
-
-```text
-backend/
-  api/
-    routers/          # search, rerank, documents, tags, system
-    schemas/          # request and response validation
-    services/         # embedding, Cross-Encoder, dynamic batching
-    main.py           # FastAPI application and lifespan
-  scripts/            # ingestion, evaluation, profiling, benchmarks
-  benchmark_*.py      # smaller-scale database benchmarks
-database/             # relational schema, corpus, FTS and ANN SQL
-frontend/             # React / Vite dashboard
-artifacts/            # compact versioned experiment summaries
-results/              # larger local benchmark outputs (may be Git-ignored)
-docs/                 # architecture and ERD figures
-requirements.txt
-.env.example
-docker-compose.yml
-pytest.ini
-```
-
-### Selected experiment scripts
-
-| Script | Purpose |
-| --- | --- |
-| `backend/scripts/benchmark_dynamic_batch_v075.py` | Closed-loop HTTP concurrency benchmark |
-| `backend/scripts/benchmark_ranking_parity_v075.py` | Standard vs batched Top-K agreement |
-| `backend/scripts/profile_cross_encoder_v077.py` | Synthetic Cross-Encoder profile |
-| `backend/scripts/analyze_real_tokens_v077.py` | Real candidate token-length distribution |
-| `backend/scripts/profile_real_cross_encoder_v077.py` | Real-pair `predict()` throughput |
-| `backend/scripts/profile_real_breakdown_v077.py` | Manual tokenization/transfer/forward breakdown |
-| `backend/scripts/benchmark_length_aware_v077.py` | Exploratory external length-ordering comparison |
-| `backend/scripts/benchmark_msmarco_dev_ann.py` | Full 6,980 dev-query ANN benchmark (current local checkout) |
-| `backend/scripts/analyze_ann_relevance.py` | Dev-query ANN qrel relevance analysis (current local checkout) |
-| `backend/scripts/diagnose_hnsw_failures.py` | Exploratory HNSW failure analysis (current local checkout) |
-| `backend/scripts/verify_bm25_version_parity_v081.py` | v0.8.0/v0.8.1 C++ BM25 parity (current local checkout) |
-| `backend/scripts/evaluate_dense_ce_dev.py` | Dense + Cross-Encoder dev-small relevance evaluation (current local checkout) |
-| `backend/scripts/evaluate_paired_bootstrap_dev.py` | Dev-small paired pipeline bootstrap (current local checkout) |
-
-Some experimental scripts and `results/` files may exist only in the local development checkout. Check `git status` and the tracked repository before assuming every listed artifact is available after cloning.
-
-## Testing and reproducibility
-
-```bash
-# From repository root, with the virtual environment active
+# Run from the repository root with .venv active and DATABASE_URL loaded.
+python -m pip install httpx
 python -m pytest -q
+ctest --test-dir cpp/build --output-on-failure
+(cd frontend && npm run build && npm run lint)
 ```
 
-A development run of the v0.7.5 suite reported **52 passing tests** (with one warning). This is a historical result, **not a claim that the latest checkout has been retested**. Integration tests may require a configured PostgreSQL instance and local corpus assets.
+The pytest suite covers API request and response contracts, RRF, candidate handling, reranking parity, and batching. Some tests may require a model cache, a reachable PostgreSQL instance, or a running API. With the Quickstart API running against a test database, run `python backend/tests/document_search_lifecycle.py` to verify create, update, delete, and lexical, dense, and hybrid search. Set `DOCUMENT_SEARCH_BASE_URL` if the test API runs on a different port. Older adaptive-gate and text preprocessing experiments may also require `pandas`, `scikit-learn`, or `ftfy`. See each script for its dependencies.
 
-For the formal dynamic-batching experiment, the development command was:
+<a id="repository"></a>
+## Repository Layout
 
-```bash
-python -m backend.scripts.benchmark_dynamic_batch_v075 \
-  --requests 100 \
-  --concurrency 1 2 4 8 16 \
-  --timeout 30 \
-  --output results/msmarco_full/latency/api_v076/config_B_formal_1000
-```
+| Path | Contents |
+| --- | --- |
+| [`backend/api/`](backend/api/) | API, database connections, request models, retrieval, model inference, and dynamic batching. |
+| [`backend/scripts/`](backend/scripts/) | Full-corpus ingestion and embedding, ANN and relevance evaluation, profiling, candidate studies, and HTTP load tests. |
+| [`backend/tests/`](backend/tests/) | API contract, ranking, model, and batching regression tests. |
+| [`cpp/`](cpp/) | C++20 BM25 core, pybind11 bindings, tests, benchmarks, and corpus conversion. |
+| [`database/`](database/) | Application and full-corpus schemas, earlier scale tests, and FTS, HNSW, and IVFFlat SQL. |
+| [`frontend/`](frontend/) | React and Vite dashboard with visualizations of archived evaluations. |
+| [`artifacts/`](artifacts/) | Versioned experiment manifests, summaries, charts, and C++ experiment sources. |
+| [`benchmarks/`](benchmarks/) | HTTP benchmarks for hybrid retrieval and reranking. |
+| [`docs/`](docs/) | Overview, architecture, and ERD figures in PNG and JPG formats. |
+| `data/`, `cpp/data/`, `results/`, `reports/` | Local datasets, binary corpora, raw results, and research reports. Check which files your checkout includes before reproducing a run. |
 
-Selected local result paths:
+The fixed-duration open-loop tool is included in this checkout. Candidate quota scripts, some batching diagnostics, frozen candidates, and raw reports are local research assets. Use the versions, models, and assets recorded for the experiment you want to reproduce.
 
-```text
-results/msmarco_full/latency/api_v076/config_B_formal_1000/
-  summary.json
-  per_request.json
-results/msmarco_full/parity/v075/
-  summary.json
-  comparisons.json
-results/msmarco_full/latency/api_v077/
-  real_token_summary.json
-  real_cross_encoder_profile.json
-  real_breakdown_profile.json
-  length_aware_profile.json
-```
+## Research and Deployment Scope
 
-For meaningful performance comparisons, record the exact commit, hardware, Python/PyTorch/`sentence-transformers` versions, PostgreSQL settings, index configuration, warm-up policy, request distribution, and raw per-run results. Prefer randomized or alternating baseline/treatment order with multiple runs; do not mix **database-only latency**, **model-only latency**, and **end-to-end API latency**.
+The project provides a full-stack demo and large-corpus research evaluations. Its data and models primarily target English queries. Full-scale runs require rebuilding or obtaining the large local assets. Production deployment would require additional validation of sustained capacity, repeatability across hardware, authentication, and service availability. The reported results apply to the stated experiment conditions.
 
-## Key engineering findings
+## Author and License
 
-1. **ANN speed and human relevance are distinct dimensions.** In the 6,980-query dev-small benchmark, HNSW reduced SQL retrieval time while sacrificing qrel MRR relative to exact dense retrieval; the measured ef=40 ΔMRR@10 was **−0.038264**.
-2. **Increasing `ef_search` improves retrieval fidelity in this benchmark.** Exact-neighbor ANN Recall@10 increased from **0.7596** (ef=10) to **0.9517** (ef=160), while SQL P50 rose from **30.49 ms** to **180.54 ms**.
-3. **Candidate union + Cross-Encoder achieved the best recorded dev-small pipeline metrics**, but comparisons across historical setups are not controlled component ablations.
-4. **C++ BM25 concurrency requires explicit GIL management.** Isolated v0.8.1 delivered ~2.59× the C16 HTTP QPS of v0.8.0 in the tested setup while preserving Top-100 ranks for all 6,980 dev queries.
-5. **Serving optimizations are workload-dependent.** Cross-request batching helped at high tested concurrency but not at C1–C2.
-6. **Real input lengths matter.** Synthetic reranking pairs understated latency relative to sampled real passages; external length sorting did not consistently accelerate `CrossEncoder.predict()`.
-7. **Database engineering affects the cost–quality frontier.** HNSW build memory, physical plans, query caching, indexes and connection management all contribute to observed behavior.
-
-## Limitations and roadmap
-
-### Current limitations
-
-- MS MARCO **dev-small** relevance judgments are incomplete. This local 6,980-query study is not presented as an official leaderboard submission.
-- The 6,980-query retrieval-pipeline comparison is not a strictly matched candidate-depth/version ablation; historical changes to lexical backend, ANN settings and candidate depth can confound stage-by-stage comparisons.
-- The online concurrency results are a single fixed-order closed-loop benchmark; statistical repeatability and open-loop load behavior remain to be established.
-- Batched parity has been tested on 10 queries, not the full relevance set; request timeout/cancellation, queue saturation, and shutdown paths require deeper stress testing.
-- The length-aware comparison may be confounded by internal `CrossEncoder.predict()` sorting.
-- Full-corpus assets are large and not distributed through Git; a fresh clone does not reproduce the full-scale deployment automatically.
-- Authentication, SLOs, replication/failover, backups, comprehensive observability, and sustained production load testing are outside the current prototype scope.
-
-### Planned work (not implemented)
-
-| Priority | Next step | Success criterion |
-| --- | --- | --- |
-| P0 | Inspect `CrossEncoder.predict()` sorting and sweep internal batch size | Reproducible throughput/latency comparison on identical real pairs |
-| P0 | Repeat and randomize HTTP A/B benchmarks | Stable QPS/P95/error estimates across multiple runs |
-| P0 | Perform matched-configuration **C++ BM25** retrieval quality ablations | Hold query set, candidate depth, corpus, and model constant against PostgreSQL FTS and dense retrieval |
-| P1 | Repeat full-dev ANN SQL latency with randomized/alternating method order | Control cache/order effects and report per-run variability |
-| P1 | Profile SQL/pgvector and C++ BM25 separately | Per-stage latency, physical plans, and resource utilization |
-| P1 | Candidate-depth and fusion ablations | nDCG/MRR/Recall versus inference cost |
-| P1 | Queue saturation, cancellation, and lifecycle tests | Correctness under failure and overload |
-| P2 | Adaptive candidate selection / selective reranking | Better quality–cost frontier than fixed policies |
-| P2 | Polish reproducibility, dashboard/demo, and technical report | Documented v1.0 release |
-
-## Demo outline
-
-1. Show the ERD, PK/FK constraints, many-to-many tags, and CRUD cascade behavior.
-2. Compare PostgreSQL FTS, C++ BM25, HNSW dense retrieval, and hybrid results.
-3. Show the 6,980-query dev-small exact-vs-HNSW latency, ANN overlap, qrel MRR, and paired-bootstrap confidence intervals.
-4. Present the five 6,980-query dev-small retrieval pipelines and discuss the controlled-comparison limitations.
-5. Compare standard and batched reranking under controlled concurrency, including low-concurrency regressions.
-6. Explain the real-document profiling findings and what they do **not** prove.
-
-## Author
-
-**Ravan Chuang**
-Computer Science · Information Retrieval · Backend & Systems Engineering
-
-## License
-
-The original project README identifies the project as MIT-licensed; confirm the `LICENSE` file is present in the distributed repository. Third-party datasets, model weights, and dependencies retain their respective terms and licenses.
+Ravan Chuang · [MIT License](LICENSE). MS MARCO, model weights, and dependencies are subject to their respective terms.

@@ -255,6 +255,7 @@ class RerankSearchResponse(BaseModel):
 
 class BatchedRerankSearchResponse(RerankSearchResponse):
     """Cross-request batching response with queue profiling."""
+    batch_id: str | None = None
 
     batch_queue_wait_ms: float
     batch_inference_ms: float
