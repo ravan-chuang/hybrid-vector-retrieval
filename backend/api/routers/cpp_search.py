@@ -97,6 +97,7 @@ class CppLexicalSearchResponse(BaseModel):
     tags=["Search"],
 )
 def cpp_lexical_search(request: CppSearchRequest):
+    from backend.api.routers.search import log_search_history
     from backend.api.services.cpp_candidates import (
         retrieve_cpp_candidates,
     )
@@ -142,6 +143,13 @@ def cpp_lexical_search(request: CppSearchRequest):
         )
         for row in rows
     ]
+
+    log_search_history(
+        query_text=request.query,
+        search_type="keyword",
+        result_count=len(results),
+        latency_ms=total_ms,
+    )
 
     return CppLexicalSearchResponse(
         query=request.query,

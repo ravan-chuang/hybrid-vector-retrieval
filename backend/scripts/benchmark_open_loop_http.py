@@ -154,6 +154,11 @@ def send_request(
         ) as response:
             status_code = response.status
             result = json.load(response)
+            if status_code == 200 and (
+                not isinstance(result, dict)
+                or not isinstance(result.get("results"), list)
+            ):
+                raise ValueError("Expected a rerank response with a results list")
 
     except urllib.error.HTTPError as exc:
         status_code = exc.code
@@ -171,6 +176,7 @@ def send_request(
             f"{type(exc).__name__}: {exc}"
         )
 
+    success = status_code == 200 and error is None
     completed_at = time.perf_counter()
 
     return {
@@ -194,7 +200,7 @@ def send_request(
             completed_at - scheduled_at
         ) * 1000,
         "status_code": status_code,
-        "success": status_code == 200,
+        "success": success,
         "error": error,
         "candidate_count": len(
             payload["candidates"]
@@ -215,8 +221,7 @@ def send_request(
                     "batch_token_utilization",
                 )
             }
-            if isinstance(result, dict)
-            and status_code == 200
+            if success
             else None
         ),
     }

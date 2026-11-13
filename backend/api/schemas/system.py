@@ -7,7 +7,8 @@ class IndexStats(BaseModel):
 
 
 class SystemStatsResponse(BaseModel):
-    documents: int
+    documents: int | None
+    benchmark_has_documents: bool
     embedding_dimension: int
     embedding_model: str
     database: str

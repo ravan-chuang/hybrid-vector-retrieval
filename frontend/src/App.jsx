@@ -38,37 +38,35 @@ function App() {
   const [stats, setStats] = useState(null)
   const [history, setHistory] = useState([])
   const [method, setMethod] = useState('hybrid')
-  const [corpus, setCorpus] = useState('benchmark')
+  const [selectedCorpus, setCorpus] = useState(null)
   const [fusionStrategy, setFusionStrategy] = useState('dense')
   const [query, setQuery] = useState('Manhattan Project')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [systemLoading, setSystemLoading] = useState(true)
   const [error, setError] = useState('')
+  const benchmarkAvailable = stats?.benchmark_has_documents ?? (stats?.documents > 0)
+  const corpus = selectedCorpus ?? (benchmarkAvailable ? 'benchmark' : 'application')
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([
+    Promise.allSettled([
       api.health(),
       api.stats(),
       api.history(),
     ])
-      .then(([healthData, statsData, historyData]) => {
+      .then(([healthResponse, statsResponse, historyResponse]) => {
         if (cancelled) return
-        setHealth(healthData)
-        setStats(statsData)
-        setHistory(historyData)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(`Backend connection failed: ${err.message}`)
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setSystemLoading(false)
-        }
+
+        if (healthResponse.status === 'fulfilled') setHealth(healthResponse.value)
+        if (statsResponse.status === 'fulfilled') setStats(statsResponse.value)
+        if (historyResponse.status === 'fulfilled') setHistory(historyResponse.value)
+
+        const failed = [healthResponse, statsResponse, historyResponse]
+          .find((response) => response.status === 'rejected')
+        if (failed) setError(`Some backend information is unavailable: ${failed.reason.message}`)
+        setSystemLoading(false)
       })
 
     return () => {
@@ -79,7 +77,7 @@ function App() {
   async function handleSearch(event) {
     event.preventDefault()
     const cleanQuery = query.trim()
-    if (!cleanQuery) return
+    if (systemLoading || loading || !cleanQuery) return
 
     setLoading(true)
     setError('')
@@ -162,7 +160,7 @@ function App() {
               <em>at Scale.</em>
             </h2>
             <p>
-              Search 8.84 million MS MARCO passages using parallel C++ BM25,
+              Search MS MARCO passages using C++ BM25,
               pgvector HNSW, weighted Reciprocal Rank Fusion, and
               Cross-Encoder reranking. Managed documents use PostgreSQL
               full-text search with pgvector HNSW.
@@ -187,7 +185,7 @@ function App() {
             value={
               systemLoading ? '…' : formatNumber(stats?.documents)
             }
-            detail="MS MARCO passages"
+            detail={benchmarkAvailable ? 'Estimated MS MARCO passages' : 'MS MARCO passages'}
           />
           <StatCard
             label="DATABASE"
@@ -223,7 +221,13 @@ function App() {
                 <button
                   key={item.id}
                   className={method === item.id ? 'active' : ''}
-                  onClick={() => setMethod(item.id)}
+                  disabled={loading}
+                  onClick={() => {
+                    if (method === item.id) return
+                    setMethod(item.id)
+                    setResult(null)
+                    setError('')
+                  }}
                   type="button"
                 >
                   {item.label}
@@ -237,15 +241,15 @@ function App() {
             <select
               id="search-corpus"
               value={corpus}
-              disabled={loading}
+              disabled={loading || systemLoading}
               onChange={(event) => {
                 setCorpus(event.target.value)
                 setResult(null)
                 setError('')
               }}
             >
-              <option value="benchmark">
-                Full MS MARCO · 8.84M
+              <option value="benchmark" disabled={!benchmarkAvailable}>
+                {benchmarkAvailable ? 'MS MARCO · Benchmark' : 'MS MARCO · Unavailable'}
               </option>
               <option value="application">
                 Application · Managed Documents
@@ -283,11 +287,11 @@ function App() {
               placeholder={
                 corpus === 'application'
                   ? 'Search application documents...'
-                  : 'Search 8.84M MS MARCO passages...'
+                  : 'Search MS MARCO passages...'
               }
               aria-label="Search query"
             />
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading || systemLoading}>
               {loading ? 'Searching…' : 'Search'}
             </button>
           </form>

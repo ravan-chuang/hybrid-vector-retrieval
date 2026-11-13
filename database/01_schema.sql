@@ -79,7 +79,7 @@ CREATE TABLE search_history (
         REFERENCES users(user_id)
         ON DELETE SET NULL,
 
-    CHECK (
-        search_type IN ('keyword', 'vector', 'hybrid')
+    CONSTRAINT search_history_search_type_check CHECK (
+        search_type IN ('keyword', 'vector', 'hybrid', 'rerank')
     )
 );

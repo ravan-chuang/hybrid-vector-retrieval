@@ -15,9 +15,19 @@ function toPayload(form) {
     content: form.content.trim(),
     author: form.author.trim() || null,
     source: form.source.trim() || null,
-    publication_year: form.publication_year
-      ? Number(form.publication_year)
-      : null,
+    publication_year: form.publication_year === ''
+      ? null
+      : Number(form.publication_year),
+  }
+}
+
+function documentToForm(document) {
+  return {
+    title: document.title ?? '',
+    content: document.content ?? '',
+    author: document.author ?? '',
+    source: document.source ?? '',
+    publication_year: document.publication_year ?? '',
   }
 }
 
@@ -34,6 +44,7 @@ function DocumentManager() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const hasSelectedDocument = selected !== null && selected.document_id === selectedId
 
   async function refreshDocuments(preferredId = null) {
     const data = await documentApi.list()
@@ -88,13 +99,7 @@ function DocumentManager() {
 
         setSelected(document)
         setTags(documentTags)
-        setForm({
-          title: document.title ?? '',
-          content: document.content ?? '',
-          author: document.author ?? '',
-          source: document.source ?? '',
-          publication_year: document.publication_year ?? '',
-        })
+        setForm(documentToForm(document))
       })
       .catch((err) => {
         if (!cancelled) setError(err.message)
@@ -131,13 +136,7 @@ function DocumentManager() {
     setMessage('')
 
     if (selected) {
-      setForm({
-        title: selected.title ?? '',
-        content: selected.content ?? '',
-        author: selected.author ?? '',
-        source: selected.source ?? '',
-        publication_year: selected.publication_year ?? '',
-      })
+      setForm(documentToForm(selected))
     } else if (documents.length > 0) {
       setSelectedId(documents[0].document_id)
     }
@@ -145,6 +144,8 @@ function DocumentManager() {
 
   async function saveDocument(event) {
     event.preventDefault()
+
+    if (saving || (!creating && !hasSelectedDocument)) return
 
     if (!form.title.trim() || !form.content.trim()) {
       setError('Title and content are required.')
@@ -165,9 +166,14 @@ function DocumentManager() {
         setEditing(false)
         setMessage(`Document #${created.document_id} created.`)
       } else {
-        const updated = await documentApi.update(selectedId, payload)
+        const original = toPayload(documentToForm(selected))
+        const changes = Object.fromEntries(
+          Object.entries(payload).filter(([field, value]) => value !== original[field]),
+        )
+        const updated = await documentApi.update(selected.document_id, changes)
         await refreshDocuments(updated.document_id)
         setSelected(updated)
+        setForm(documentToForm(updated))
         setEditing(false)
         setMessage(`Document #${updated.document_id} updated.`)
       }
@@ -179,7 +185,7 @@ function DocumentManager() {
   }
 
   async function deleteDocument() {
-    if (!selectedId || !selected) return
+    if (saving || !hasSelectedDocument) return
 
     const confirmed = window.confirm(
       `Delete "${selected.title}"?\n\nIts document_chunks and document_tags associations will be removed by the database cascade rules.`,
@@ -192,7 +198,7 @@ function DocumentManager() {
     setMessage('')
 
     try {
-      await documentApi.remove(selectedId)
+      await documentApi.remove(selected.document_id)
       setSelected(null)
       setTags([])
       setEditing(false)
@@ -209,14 +215,14 @@ function DocumentManager() {
     event.preventDefault()
 
     const cleanName = tagName.trim()
-    if (!cleanName || !selectedId) return
+    if (saving || !cleanName || !hasSelectedDocument) return
 
     setSaving(true)
     setError('')
 
     try {
-      await documentApi.addTag(selectedId, cleanName)
-      setTags(await documentApi.tags(selectedId))
+      await documentApi.addTag(selected.document_id, cleanName)
+      setTags(await documentApi.tags(selected.document_id))
       setTagName('')
       setMessage(`Tag "${cleanName}" associated with this document.`)
     } catch (err) {
@@ -227,14 +233,14 @@ function DocumentManager() {
   }
 
   async function removeTag(tag) {
-    if (!selectedId) return
+    if (saving || !hasSelectedDocument) return
 
     setSaving(true)
     setError('')
 
     try {
-      await documentApi.removeTag(selectedId, tag.tag_id)
-      setTags(await documentApi.tags(selectedId))
+      await documentApi.removeTag(selected.document_id, tag.tag_id)
+      setTags(await documentApi.tags(selected.document_id))
       setMessage(
         `Association with "${tag.name}" removed. The tag itself remains in the tags table.`,
       )
@@ -297,7 +303,13 @@ function DocumentManager() {
                     ? 'document-nav active'
                     : 'document-nav'
                 }
+                disabled={saving}
                 onClick={() => {
+                  if (selectedId !== document.document_id) {
+                    setSelected(null)
+                    setTags([])
+                    setTagName('')
+                  }
                   setCreating(false)
                   setEditing(false)
                   setSelectedId(document.document_id)
@@ -313,7 +325,7 @@ function DocumentManager() {
         </aside>
 
         <div className="document-workspace">
-          {(selected || creating) && (
+          {(hasSelectedDocument || creating) && (
             <>
               <div className="document-toolbar">
                 <div>
@@ -334,7 +346,11 @@ function DocumentManager() {
                     <button
                       className="secondary-button"
                       type="button"
-                      onClick={() => setEditing(true)}
+                      onClick={() => {
+                        setForm(documentToForm(selected))
+                        setEditing(true)
+                      }}
+                      disabled={saving}
                     >
                       Edit
                     </button>
@@ -438,7 +454,7 @@ function DocumentManager() {
                       </div>
                       <div>
                         <span>YEAR</span>
-                        <strong>{selected.publication_year || '—'}</strong>
+                        <strong>{selected.publication_year ?? '—'}</strong>
                       </div>
                       <div>
                         <span>SOURCE</span>
@@ -519,9 +535,11 @@ function DocumentManager() {
             </>
           )}
 
-          {!selected && !creating && (
+          {!hasSelectedDocument && !creating && (
             <p className="empty-state">
-              Select a document or create a new one.
+              {selectedId && !error
+                ? 'Loading document…'
+                : 'Select a document or create a new one.'}
             </p>
           )}
         </div>
