@@ -48,6 +48,12 @@ docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_
 
 `01_schema.sql` creates tables directly. Check the schema before applying it to an existing database. For an older application database, see [12_application_retrieval.sql](database/12_application_retrieval.sql) for the search column and indexes.
 
+For an existing application database, apply [15_search_history_rerank.sql](database/15_search_history_rerank.sql) to enable rerank history.
+
+```bash
+docker compose exec -T postgres sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < database/15_search_history_rerank.sql
+```
+
 ### 2. Install the backend and prepare a startup corpus
 
 ```bash
@@ -95,7 +101,7 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Open the [local dashboard](http://127.0.0.1:5173) and switch the corpus from MS MARCO to application documents. The benchmark table is empty in this setup, while `/stats` displays a fixed reference count for the full corpus. Query the table directly for the actual row count. The evaluation tab displays archived results. [Frontend API configuration](frontend/src/api.js) · [Statistics route](backend/api/routers/system.py) · [Evaluation view](frontend/src/components/FullCorpusEvaluation.jsx)
+Open the [local dashboard](http://127.0.0.1:5173). It selects application documents when the benchmark table is empty. For a populated benchmark table, `/stats` reports PostgreSQL's estimated row count after statistics are available. The evaluation tab displays archived results. [Frontend API configuration](frontend/src/api.js) · [Statistics route](backend/api/routers/system.py) · [Evaluation view](frontend/src/components/FullCorpusEvaluation.jsx)
 
 <a id="architecture"></a>
 ## Architecture
@@ -123,7 +129,7 @@ Weighted RRF sums `weight / (rrf_k + rank)` across the lists in which a candidat
 | `documents` | Document title, author, source, and publication year. |
 | `document_chunks` | Document text, a nullable `vector(384)`, and a generated English `tsvector`. The pair `(document_id, chunk_index)` is unique. Deleting a document cascades to its chunks. |
 | `tags`, `document_tags` | Tag names are unique. The join table uses `(document_id, tag_id)` as its composite primary key. Deleting a document or tag removes its associations. |
-| `search_history` | Stores the query, search type, result count, and latency. The schema allows `keyword`, `vector`, and `hybrid` as search types. Deleting a user preserves the history and sets its user foreign key to null. |
+| `search_history` | Stores the query, search type, result count, and latency. The schema allows `keyword`, `vector`, `hybrid`, and `rerank` as search types. Deleting a user preserves the history and sets its user foreign key to null. |
 
 The ERD summarizes the application tables. See the schema SQL for `document_chunks.search_vector` and the index definitions. Application search retrieves chunks and keeps the best matching chunk per document. The benchmark uses a separate `msmarco_full_documents` table with one row per passage and internal IDs of `pid + 1`. C++ retrieval uses the same IDs to fetch passage text from PostgreSQL. [Application schema](database/01_schema.sql) · [Application retrieval](backend/api/services/application_retrieval.py) · [Benchmark schema](database/13_msmarco_full.sql) · [Benchmark indexes](database/14_msmarco_full_indexes.sql) · [C++ candidate lookup](backend/api/services/cpp_candidates.py)
 
@@ -325,7 +331,7 @@ python backend/scripts/benchmark_open_loop_duration.py \
   --seed 42 --timeout 60 --output results/open_loop_pair_10rps.json
 ```
 
-The pilot used MPS, a model batch size of 32, a limit of 4 requests and 800 pairs per worker batch, a 5 ms formation window, and a 60-second timeout. The token32 policy used a budget of 32,768 tokens. Use a separate output filename for the other policy. Use `--pipeline baseline` to measure per-request reranking on the same frozen candidates. Record the commit, working-tree state, dataset hash, hardware, package versions, model and index settings, warmup, arrival rate, in-window goodput, and error rate. [Open-loop output and capacity metrics](backend/scripts/benchmark_open_loop_duration.py) · [Frozen-candidate request format](backend/api/routers/benchmark_rerank.py)
+The pilot used MPS, a model batch size of 32, a limit of 4 requests and 800 pairs per worker batch, a 5 ms formation window, and a 60-second timeout. The token32 policy used a budget of 32,768 tokens. Use a separate output filename for the other policy. Use `--pipeline baseline` to measure per-request reranking on the same frozen candidates. Capacity results include requests waiting for a load-generator worker at the end of the window. `server_profile` summarizes request-level observations. `server_batch_profile` counts each observed batch ID once. Record the commit, working-tree state, dataset hash, hardware, package versions, model and index settings, warmup, arrival rate, in-window goodput, and error rate. [Open-loop output and capacity metrics](backend/scripts/benchmark_open_loop_duration.py) · [Frozen-candidate request format](backend/api/routers/benchmark_rerank.py)
 
 ### 4. Run Tests
 

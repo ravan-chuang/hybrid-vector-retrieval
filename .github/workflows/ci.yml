@@ -23,6 +23,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test
       - run: npm run build
 
   backend:
@@ -77,6 +78,8 @@ jobs:
               for sql in ("01_schema.sql", "13_msmarco_full.sql"):
                   conn.execute((Path("database") / sql).read_text())
           PY
+
+          REGRESSION_DATABASE_URL="$DATABASE_URL" python -m pytest -q backend/tests/test_postgres_regressions.py
 
           python cpp/tools/convert_corpus.py cpp/tests/fixtures/demo.csv "${RUNNER_TEMP}/demo.bin"
           CPP_CORPUS_PATH="${RUNNER_TEMP}/demo.bin" \

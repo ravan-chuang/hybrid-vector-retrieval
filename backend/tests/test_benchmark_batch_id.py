@@ -27,6 +27,7 @@ class FakeHTTPResponse:
 
 def test_benchmark_client_preserves_batch_id():
     response = {
+        "results": [],
         "batch_id": "scheduler-123",
         "batch_request_count": 2,
         "batch_pair_count": 100,

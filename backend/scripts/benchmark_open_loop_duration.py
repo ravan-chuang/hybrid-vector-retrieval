@@ -171,6 +171,10 @@ def summarize_measurement(phase_result, arrival_rate):
     ]
 
     profile_metrics = {}
+    batches = {}
+    for profile in profiles:
+        if profile.get("batch_id") is not None:
+            batches.setdefault(profile["batch_id"], profile)
 
     for key in (
         "batch_request_count",
@@ -229,6 +233,22 @@ def summarize_measurement(phase_result, arrival_rate):
         ),
         "drain_seconds": phase_result["drain_seconds"],
         "server_profile": profile_metrics,
+        "server_batch_profile": {
+            "unique_batch_count": len(batches),
+            **{
+                key: summarize([
+                    batch[key] for batch in batches.values()
+                    if isinstance(batch.get(key), (int, float))
+                ])
+                for key in (
+                    "batch_request_count",
+                    "batch_pair_count",
+                    "batch_inference_ms",
+                    "batch_token_count",
+                    "batch_token_utilization",
+                )
+            },
+        },
     }
 
 
@@ -242,18 +262,22 @@ def calculate_capacity_metrics(records, duration_seconds):
     duration_ms = duration_seconds * 1000
 
     events = []
+    queued_at_window_end = 0
 
     for record in records:
         dispatch = record["dispatch_offset_ms"]
         completion = record["completed_offset_ms"]
 
-        if completion < dispatch:
-            raise ValueError(
-                "Completion timestamp precedes dispatch"
-            )
+        scheduled = record["scheduled_offset_ms"]
 
-        events.append((dispatch, 1))
-        events.append((completion, -1))
+        if not 0 <= scheduled < duration_ms or not scheduled <= dispatch <= completion:
+            raise ValueError("Invalid measurement request timestamps")
+
+        if dispatch >= duration_ms:
+            queued_at_window_end += 1
+        if dispatch < completion:
+            events.append((dispatch, 1))
+            events.append((completion, -1))
 
     # Process completions before dispatches at equal timestamps.
     events.sort(key=lambda event: (event[0], event[1]))
@@ -283,7 +307,7 @@ def calculate_capacity_metrics(records, duration_seconds):
         len(records) - completed_in_window
     )
 
-    if inflight != completed_in_drain:
+    if inflight + queued_at_window_end != completed_in_drain:
         raise ValueError(
             "In-flight accounting mismatch"
         )
@@ -291,6 +315,7 @@ def calculate_capacity_metrics(records, duration_seconds):
     return {
         "max_inflight": max_inflight,
         "inflight_at_window_end": inflight,
+        "queued_at_window_end": queued_at_window_end,
         "completed_in_window": completed_in_window,
         "completed_in_drain": completed_in_drain,
         "completion_throughput_rps": (

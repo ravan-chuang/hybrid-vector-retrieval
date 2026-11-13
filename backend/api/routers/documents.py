@@ -226,114 +226,74 @@ def update_document(
             detail="Service is not ready.",
         )
 
+    vector = None
+    if request.content is not None:
+        embedding = model.encode(
+            request.content,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+        vector = vector_to_pg(embedding)
+
     with db_pool.connection() as conn:
         with conn.cursor() as cur:
-
+            # Serialize changes to the document and its first chunk.
             cur.execute(
                 """
-                SELECT
-                    d.title,
-                    c.content,
-                    d.author,
-                    d.source,
-                    d.publication_year,
-                    d.created_at
-                FROM documents AS d
-                LEFT JOIN document_chunks AS c
-                  ON c.document_id = d.document_id
-                 AND c.chunk_index = 0
-                WHERE d.document_id = %s
+                SELECT title, author, source, publication_year, created_at
+                FROM documents
+                WHERE document_id = %s
+                FOR UPDATE
                 """,
                 (document_id,),
             )
-
             row = cur.fetchone()
-
             if row is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Document not found.",
-                )
+                raise HTTPException(status_code=404, detail="Document not found.")
 
-            (
-                old_title,
-                old_content,
-                old_author,
-                old_source,
-                old_year,
-                created_at,
-            ) = row
+            title, author, source, year, created_at = row
+            if request.title is not None:
+                title = request.title
 
-            title = (
-                request.title
-                if request.title is not None
-                else old_title
-            )
-            content = (
-                request.content
-                if request.content is not None
-                else old_content
-            )
-            author = (
-                request.author
-                if request.author is not None
-                else old_author
-            )
-            source = (
-                request.source
-                if request.source is not None
-                else old_source
-            )
-            year = (
-                request.publication_year
-                if request.publication_year is not None
-                else old_year
-            )
+            fields = request.model_fields_set
+            if "author" in fields:
+                author = request.author
+            if "source" in fields:
+                source = request.source
+            if "publication_year" in fields:
+                year = request.publication_year
 
             cur.execute(
                 """
                 UPDATE documents
-                SET
-                    title = %s,
-                    author = %s,
-                    source = %s,
-                    publication_year = %s
+                SET title = %s, author = %s, source = %s, publication_year = %s
                 WHERE document_id = %s
                 """,
-                (
-                    title,
-                    author,
-                    source,
-                    year,
-                    document_id,
-                ),
+                (title, author, source, year, document_id),
             )
 
-            if request.content is not None:
-                embedding = model.encode(
-                    content,
-                    normalize_embeddings=True,
-                    show_progress_bar=False,
-                )
-
-                vector = vector_to_pg(embedding)
-
+            content = request.content
+            if content is not None:
                 cur.execute(
                     """
-                    UPDATE document_chunks
-                    SET
-                        content = %s,
-                        embedding = %s::vector
-                    WHERE
-                        document_id = %s
-                        AND chunk_index = 0
+                    INSERT INTO document_chunks
+                        (document_id, chunk_index, content, embedding)
+                    VALUES (%s, 0, %s, %s::vector)
+                    ON CONFLICT (document_id, chunk_index) DO UPDATE
+                    SET content = EXCLUDED.content, embedding = EXCLUDED.embedding
                     """,
-                    (
-                        content,
-                        vector,
-                        document_id,
-                    ),
+                    (document_id, content, vector),
                 )
+            else:
+                cur.execute(
+                    """
+                    SELECT content FROM document_chunks
+                    WHERE document_id = %s AND chunk_index = 0
+                    """,
+                    (document_id,),
+                )
+                chunk = cur.fetchone()
+                content = chunk[0] if chunk else ""
 
     return DocumentResponse(
         document_id=document_id,
