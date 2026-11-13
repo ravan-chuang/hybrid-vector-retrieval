@@ -1,0 +1,94 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main, 'release/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://retrieval:ci-password@127.0.0.1:5432/retrieval_db
+      CROSS_ENCODER_DEVICE: cpu
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: retrieval_db
+          POSTGRES_USER: retrieval
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U retrieval -d retrieval_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install Python dependencies
+        run: |
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt httpx pybind11
+      - name: Build and test the C++ extension
+        run: |
+          cmake -S cpp -B cpp/build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_PYTHON_BINDINGS=ON \
+            -DPython_EXECUTABLE="$(command -v python)" \
+            -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"
+          cmake --build cpp/build --parallel 2
+          ctest --test-dir cpp/build --output-on-failure
+          python -m cpp.python.test_bindings
+      - run: python -m pytest -q
+      - name: Verify the document and search lifecycle
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import psycopg
+
+          with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+              for sql in ("01_schema.sql", "13_msmarco_full.sql"):
+                  conn.execute((Path("database") / sql).read_text())
+          PY
+
+          python cpp/tools/convert_corpus.py cpp/tests/fixtures/demo.csv "${RUNNER_TEMP}/demo.bin"
+          CPP_CORPUS_PATH="${RUNNER_TEMP}/demo.bin" \
+            python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 > "${RUNNER_TEMP}/demo-api.log" 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true; cat "${RUNNER_TEMP}/demo-api.log"' EXIT
+          for attempt in {1..90}; do
+            if curl --silent --fail http://127.0.0.1:8000/health; then
+              break
+            fi
+            kill -0 "$api_pid"
+            sleep 1
+          done
+          curl --silent --show-error --fail http://127.0.0.1:8000/health
+          python backend/tests/document_search_lifecycle.py

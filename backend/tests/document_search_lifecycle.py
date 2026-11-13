@@ -1,9 +1,10 @@
 import json
+import os
 import urllib.error
 import urllib.request
 
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = os.getenv("DOCUMENT_SEARCH_BASE_URL", "http://127.0.0.1:8000")
 
 CREATE_TOKEN = "zephyrlattice"
 UPDATE_TOKEN = "quartznebula"
@@ -25,7 +26,7 @@ def request(method, path, body=None):
     )
 
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             return (
                 response.status,
                 json.loads(response.read().decode("utf-8")),
