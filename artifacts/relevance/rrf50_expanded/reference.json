@@ -1,0 +1,34 @@
+{
+  "queries": 600,
+  "api_commit": "97ed68b81260ab1ea514403202476d92bc4ee98b",
+  "protocol_sha256": "33bfa9e81e41088f60d6387505896bed3e6991e0e599de0f5f09106933a2d398",
+  "observations_sha256": "c08b0f9a54b8ceeb1022cb4e7e92964cbd516dd49c070fc173e4b4e84d293bf7",
+  "strategy": {
+    "rrf50": {
+      "mean_ndcg10": 0.48226726389884067,
+      "mean_pairs": 50.0,
+      "mean_unpadded_tokens": 4129.3133333333335,
+      "http_p95_ms": 704.7281461287637,
+      "inference_p95_ms": 352.01914999999985
+    },
+    "union": {
+      "mean_ndcg10": 0.4944430805310687,
+      "mean_pairs": 88.71833333333333,
+      "mean_unpadded_tokens": 7410.496666666667,
+      "http_p95_ms": 912.9882166700554,
+      "inference_p95_ms": 574.7557999999998
+    }
+  },
+  "ndcg10_rrf50_minus_union": -0.012175816632228064,
+  "paired_95ci": [
+    -0.022078052456769876,
+    -0.0032153760457519
+  ],
+  "nDCG10_loss_margin": 0.005,
+  "quality_gate_passed": false,
+  "rrf50_token_reduction": 0.4427750906484451,
+  "rrf50_http_p95_reduction": 0.2281081691293665,
+  "wins": 21,
+  "ties": 560,
+  "losses": 19
+}
