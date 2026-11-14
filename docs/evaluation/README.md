@@ -21,6 +21,8 @@ Each latency is the median of three round P95 values. SQL time spans the databas
 
 ## Cross-Encoder candidate budgets
 
+The [four-way candidate-budget replay](candidate-budgets.md) adds the service’s current candidate union as a baseline and provides the benchmark commands and numerical observations.
+
 The pilot used 120 judged queries from the dev-small test split, excluding query texts from the HNSW study (seed 5013). It fixed `ef_search=160`, retrieved 50 candidates per method, and used the same MiniLM Cross-Encoder on CPU with an inference batch size of 32. RRF used lexical and dense weights of 0.4 and 0.6. The 30+10 quota takes 30 dense candidates and up to 10 BM25 candidates outside the dense Top-50, filling any remaining slots from the dense ranking.
 
 | Strategy | nDCG@10 | Mean tokens per query | End-to-end HTTP P95 |

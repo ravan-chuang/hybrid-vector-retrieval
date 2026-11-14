@@ -69,6 +69,10 @@ jobs:
       - run: python -m pytest -q
       - name: Reproduce held-out reranking metrics
         run: python -m backend.scripts.reproduce_heldout_reranking --check
+      - name: Recompute candidate-budget results
+        run: >-
+          python -m backend.scripts.benchmark_candidate_budgets
+          --summarize artifacts/relevance/candidate_budgets/observations.csv
       - name: Verify the document and search lifecycle
         run: |
           python - <<'PY'
