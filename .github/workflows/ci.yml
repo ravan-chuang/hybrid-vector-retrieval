@@ -67,6 +67,8 @@ jobs:
           ctest --test-dir cpp/build --output-on-failure
           python -m cpp.python.test_bindings
       - run: python -m pytest -q
+      - name: Reproduce held-out reranking metrics
+        run: python -m backend.scripts.reproduce_heldout_reranking --check
       - name: Verify the document and search lifecycle
         run: |
           python - <<'PY'
