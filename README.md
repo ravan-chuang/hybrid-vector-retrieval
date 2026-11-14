@@ -101,6 +101,8 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
+To verify create, update, delete, lexical, vector, hybrid search, and search history against a disposable database, run `python backend/tests/document_search_lifecycle.py` from the repository root while the API is running. See the [clean checkout verification](docs/demo-verification.md) for versions and test coverage.
+
 Open the [local dashboard](http://127.0.0.1:5173). It selects application documents when the benchmark table is empty. For a populated benchmark table, `/stats` reports PostgreSQL's estimated row count after statistics are available. The evaluation tab displays archived results. [Frontend API configuration](frontend/src/api.js) · [Statistics route](backend/api/routers/system.py) · [Evaluation view](frontend/src/components/FullCorpusEvaluation.jsx)
 
 <a id="architecture"></a>
@@ -183,6 +185,8 @@ Batch responses report backlog wait, batch formation wait, and shared batch dura
 ## Evaluation
 
 Each comparison has its own corpus, workload, and timing boundary. **ANN Recall@10** measures the fraction of the exact dense Top-10 recovered by HNSW. **MRR@10, nDCG@10, Hit@10, and relevance Recall@10** use human relevance judgments (qrels). MS MARCO has sparse qrels, so these relevance scores describe performance on the available judgments. [MS MARCO Passage Ranking dataset](https://github.com/microsoft/msmarco/blob/master/Datasets.md) · [Dev-small manifest](artifacts/msmarco_full/dev_small_manifest.json)
+
+The [November full-corpus experiment index](docs/evaluation/README.md) records the API HNSW sweep, the Cross-Encoder candidate budget pilot, and the live open-loop rerank comparison.
 
 ### Full-Corpus ANN, Latency, and Relevance
 
