@@ -13,7 +13,7 @@ test('document mutations follow the loaded details when selection changes', asyn
   const { createRoot } = await import('react-dom/client')
   const vite = await createServer({
     configFile: false,
-    server: { middlewareMode: true, hmr: false },
+    server: { middlewareMode: true, ws: false },
     appType: 'custom',
   })
   const root = createRoot(document.querySelector('main'))
@@ -89,6 +89,80 @@ test('document mutations follow the loaded details when selection changes', asyn
     await act(async () => selectDocument(1))
     assert.match(document.body.textContent, /Unavailable/)
     assert.equal(button('Delete'), undefined)
+  } finally {
+    await act(async () => root.unmount())
+    await vite.close()
+    dom.window.close()
+    globalThis.fetch = previousFetch
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.IS_REACT_ACT_ENVIRONMENT
+  }
+})
+
+test('document pages support navigation and recover after deleting the final page', async () => {
+  const dom = new JSDOM('<main></main>')
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true
+  const { createRoot } = await import('react-dom/client')
+  const vite = await createServer({
+    configFile: false,
+    server: { middlewareMode: true, ws: false },
+    appType: 'custom',
+  })
+  const root = createRoot(document.querySelector('main'))
+  const previousFetch = globalThis.fetch
+  const documents = Array.from({ length: 21 }, (_, i) => ({
+    document_id: 21 - i, title: `Document ${21 - i}`, content: 'Example',
+  }))
+  const offsets = []
+  window.confirm = () => true
+
+  globalThis.fetch = async (url, options) => {
+    const { pathname, searchParams } = new URL(url)
+    if (pathname === '/documents') {
+      const offset = Number(searchParams.get('offset'))
+      offsets.push(offset)
+      assert.equal(searchParams.get('limit'), '21')
+      return Response.json(documents.slice(offset, offset + 21))
+    }
+    if (pathname.endsWith('/tags')) return Response.json([])
+    const index = documents.findIndex((doc) => pathname === `/documents/${doc.document_id}`)
+    assert.notEqual(index, -1, pathname)
+    if (options?.method === 'DELETE') {
+      documents.splice(index, 1)
+      return Response.json({ deleted: true })
+    }
+    return Response.json(documents[index])
+  }
+
+  function button(label) {
+    return [...document.querySelectorAll('button')]
+      .find((element) => element.textContent.trim() === label)
+  }
+
+  try {
+    const { default: DocumentManager } = await vite.ssrLoadModule('/src/components/DocumentManager.jsx')
+    await act(async () => root.render(createElement(DocumentManager)))
+    assert.equal(document.querySelectorAll('.document-nav').length, 20)
+    assert.ok(button('Previous').disabled)
+    assert.ok(!button('Next').disabled)
+
+    await act(async () => button('Next').click())
+    assert.equal(document.querySelectorAll('.document-nav').length, 1)
+    assert.equal(document.querySelector('.document-toolbar h4').textContent, 'Document 1')
+    assert.ok(button('Next').disabled)
+
+    await act(async () => button('Previous').click())
+    assert.equal(document.querySelector('.document-toolbar h4').textContent, 'Document 21')
+
+    await act(async () => button('Next').click())
+    await act(async () => button('Delete').click())
+    assert.equal(document.querySelectorAll('.document-nav').length, 20)
+    assert.equal(document.querySelector('.document-toolbar h4').textContent, 'Document 21')
+    assert.equal(button('Next'), undefined)
+    assert.deepEqual(offsets, [0, 20, 0, 20, 20, 0])
   } finally {
     await act(async () => root.unmount())
     await vite.close()

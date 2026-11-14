@@ -117,7 +117,7 @@ export const api = {
 }
 
 export const documentApi = {
-  list: () => request('/documents'),
+  list: (limit = 20, offset = 0) => request(`/documents?limit=${limit}&offset=${offset}`),
 
   get: (documentId) =>
     request(`/documents/${documentId}`),

@@ -625,6 +625,21 @@ footer {
   color: var(--text);
 }
 
+.document-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.document-pagination .secondary-button {
+  padding: 6px 8px;
+}
+
 .document-nav {
   width: 100%;
   padding: 15px 16px;
