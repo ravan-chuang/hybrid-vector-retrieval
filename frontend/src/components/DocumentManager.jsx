@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { documentApi } from '../api'
 
+const PAGE_SIZE = 20
+
 const EMPTY_FORM = {
   title: '',
   content: '',
@@ -31,8 +33,14 @@ function documentToForm(document) {
   }
 }
 
+async function fetchDocumentPage(index) {
+  const rows = await documentApi.list(PAGE_SIZE + 1, index * PAGE_SIZE)
+  return { index, documents: rows.slice(0, PAGE_SIZE), hasNext: rows.length > PAGE_SIZE }
+}
+
 function DocumentManager() {
-  const [documents, setDocuments] = useState([])
+  const [page, setPage] = useState({ index: 0, documents: [], hasNext: false })
+  const { documents } = page
   const [selectedId, setSelectedId] = useState(null)
   const [selected, setSelected] = useState(null)
   const [tags, setTags] = useState([])
@@ -46,30 +54,43 @@ function DocumentManager() {
   const [message, setMessage] = useState('')
   const hasSelectedDocument = selected !== null && selected.document_id === selectedId
 
-  async function refreshDocuments(preferredId = null) {
-    const data = await documentApi.list()
-    setDocuments(data)
-
-    if (preferredId && data.some((doc) => doc.document_id === preferredId)) {
-      setSelectedId(preferredId)
-    } else if (selectedId && data.some((doc) => doc.document_id === selectedId)) {
-      setSelectedId(selectedId)
-    } else {
-      setSelectedId(data[0]?.document_id ?? null)
+  async function refreshDocuments(index, preferredId = null) {
+    let nextPage = await fetchDocumentPage(index)
+    while (nextPage.documents.length === 0 && nextPage.index > 0) {
+      nextPage = await fetchDocumentPage(nextPage.index - 1)
     }
 
-    return data
+    setPage(nextPage)
+    setSelectedId((current) => {
+      const target = preferredId ?? current
+      return nextPage.documents.some((doc) => doc.document_id === target)
+        ? target
+        : nextPage.documents[0]?.document_id ?? null
+    })
+  }
+
+  async function changePage(index) {
+    setLoading(true)
+    setError('')
+    setMessage('')
+    try {
+      await refreshDocuments(index)
+      setTagName('')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     let cancelled = false
 
-    documentApi
-      .list()
-      .then((data) => {
+    fetchDocumentPage(0)
+      .then((firstPage) => {
         if (cancelled) return
-        setDocuments(data)
-        setSelectedId(data[0]?.document_id ?? null)
+        setPage(firstPage)
+        setSelectedId(firstPage.documents[0]?.document_id ?? null)
       })
       .catch((err) => {
         if (!cancelled) setError(err.message)
@@ -145,7 +166,7 @@ function DocumentManager() {
   async function saveDocument(event) {
     event.preventDefault()
 
-    if (saving || (!creating && !hasSelectedDocument)) return
+    if (saving || loading || (!creating && !hasSelectedDocument)) return
 
     if (!form.title.trim() || !form.content.trim()) {
       setError('Title and content are required.')
@@ -161,21 +182,21 @@ function DocumentManager() {
 
       if (creating) {
         const created = await documentApi.create(payload)
-        await refreshDocuments(created.document_id)
         setCreating(false)
         setEditing(false)
         setMessage(`Document #${created.document_id} created.`)
+        await refreshDocuments(0, created.document_id)
       } else {
         const original = toPayload(documentToForm(selected))
         const changes = Object.fromEntries(
           Object.entries(payload).filter(([field, value]) => value !== original[field]),
         )
         const updated = await documentApi.update(selected.document_id, changes)
-        await refreshDocuments(updated.document_id)
         setSelected(updated)
         setForm(documentToForm(updated))
         setEditing(false)
         setMessage(`Document #${updated.document_id} updated.`)
+        await refreshDocuments(page.index, updated.document_id)
       }
     } catch (err) {
       setError(err.message)
@@ -185,7 +206,7 @@ function DocumentManager() {
   }
 
   async function deleteDocument() {
-    if (saving || !hasSelectedDocument) return
+    if (saving || loading || !hasSelectedDocument) return
 
     const confirmed = window.confirm(
       `Delete "${selected.title}"?\n\nIts document_chunks and document_tags associations will be removed by the database cascade rules.`,
@@ -200,10 +221,11 @@ function DocumentManager() {
     try {
       await documentApi.remove(selected.document_id)
       setSelected(null)
+      setSelectedId(null)
       setTags([])
       setEditing(false)
-      await refreshDocuments()
       setMessage('Document deleted. Foreign-key cascade completed.')
+      await refreshDocuments(page.index)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -215,7 +237,7 @@ function DocumentManager() {
     event.preventDefault()
 
     const cleanName = tagName.trim()
-    if (saving || !cleanName || !hasSelectedDocument) return
+    if (saving || loading || !cleanName || !hasSelectedDocument) return
 
     setSaving(true)
     setError('')
@@ -233,7 +255,7 @@ function DocumentManager() {
   }
 
   async function removeTag(tag) {
-    if (saving || !hasSelectedDocument) return
+    if (saving || loading || !hasSelectedDocument) return
 
     setSaving(true)
     setError('')
@@ -263,7 +285,7 @@ function DocumentManager() {
           className="secondary-button"
           type="button"
           onClick={beginCreate}
-          disabled={saving}
+          disabled={saving || loading}
         >
           + New document
         </button>
@@ -291,6 +313,28 @@ function DocumentManager() {
             <b>{documents.length}</b>
           </div>
 
+          {(page.index > 0 || page.hasNext) && (
+            <nav className="document-pagination" aria-label="Document pages">
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={loading || saving || editing || page.index === 0}
+                onClick={() => changePage(page.index - 1)}
+              >
+                Previous
+              </button>
+              <span aria-live="polite">Page {page.index + 1}</span>
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={loading || saving || editing || !page.hasNext}
+                onClick={() => changePage(page.index + 1)}
+              >
+                Next
+              </button>
+            </nav>
+          )}
+
           {loading && <p className="empty-state">Loading documents…</p>}
 
           {!loading &&
@@ -303,7 +347,7 @@ function DocumentManager() {
                     ? 'document-nav active'
                     : 'document-nav'
                 }
-                disabled={saving}
+                disabled={saving || loading}
                 onClick={() => {
                   if (selectedId !== document.document_id) {
                     setSelected(null)
@@ -350,7 +394,7 @@ function DocumentManager() {
                         setForm(documentToForm(selected))
                         setEditing(true)
                       }}
-                      disabled={saving}
+                      disabled={saving || loading}
                     >
                       Edit
                     </button>
@@ -358,7 +402,7 @@ function DocumentManager() {
                       className="danger-button"
                       type="button"
                       onClick={deleteDocument}
-                      disabled={saving}
+                      disabled={saving || loading}
                     >
                       Delete
                     </button>
@@ -427,14 +471,14 @@ function DocumentManager() {
                       className="secondary-button"
                       type="button"
                       onClick={cancelEdit}
-                      disabled={saving}
+                      disabled={saving || loading}
                     >
                       Cancel
                     </button>
                     <button
                       className="primary-button"
                       type="submit"
-                      disabled={saving}
+                      disabled={saving || loading}
                     >
                       {saving
                         ? 'Saving…'
@@ -492,7 +536,7 @@ function DocumentManager() {
                               type="button"
                               aria-label={`Remove ${tag.name}`}
                               onClick={() => removeTag(tag)}
-                              disabled={saving}
+                              disabled={saving || loading}
                             >
                               ×
                             </button>
@@ -516,7 +560,7 @@ function DocumentManager() {
                         <button
                           className="secondary-button"
                           type="submit"
-                          disabled={saving || !tagName.trim()}
+                          disabled={saving || loading || !tagName.trim()}
                         >
                           Add tag
                         </button>

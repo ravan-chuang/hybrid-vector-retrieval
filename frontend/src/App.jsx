@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import DocumentManager from './components/DocumentManager'
 import FullCorpusEvaluation from './components/FullCorpusEvaluation'
@@ -45,6 +45,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [systemLoading, setSystemLoading] = useState(true)
   const [error, setError] = useState('')
+  const searchGeneration = useRef(0)
   const benchmarkAvailable = stats?.benchmark_has_documents ?? (stats?.documents > 0)
   const corpus = selectedCorpus ?? (benchmarkAvailable ? 'benchmark' : 'application')
 
@@ -74,11 +75,19 @@ function App() {
     }
   }, [])
 
+  function resetSearch() {
+    searchGeneration.current += 1
+    setResult(null)
+    setLoading(false)
+    setError('')
+  }
+
   async function handleSearch(event) {
     event.preventDefault()
     const cleanQuery = query.trim()
     if (systemLoading || loading || !cleanQuery) return
 
+    const generation = ++searchGeneration.current
     setLoading(true)
     setError('')
 
@@ -107,17 +116,21 @@ function App() {
         )
       }
 
+      if (generation !== searchGeneration.current) return
       setResult(data)
 
       try {
-        setHistory(await api.history())
+        const recent = await api.history()
+        if (generation === searchGeneration.current) setHistory(recent)
       } catch {
         // Search results remain usable even if history refresh fails.
       }
     } catch (err) {
-      setError(`Search failed: ${err.message}`)
+      if (generation === searchGeneration.current) {
+        setError(`Search failed: ${err.message}`)
+      }
     } finally {
-      setLoading(false)
+      if (generation === searchGeneration.current) setLoading(false)
     }
   }
 
@@ -221,12 +234,10 @@ function App() {
                 <button
                   key={item.id}
                   className={method === item.id ? 'active' : ''}
-                  disabled={loading}
                   onClick={() => {
                     if (method === item.id) return
                     setMethod(item.id)
-                    setResult(null)
-                    setError('')
+                    resetSearch()
                   }}
                   type="button"
                 >
@@ -241,11 +252,10 @@ function App() {
             <select
               id="search-corpus"
               value={corpus}
-              disabled={loading || systemLoading}
+              disabled={systemLoading}
               onChange={(event) => {
                 setCorpus(event.target.value)
-                setResult(null)
-                setError('')
+                resetSearch()
               }}
             >
               <option value="benchmark" disabled={!benchmarkAvailable}>
@@ -263,11 +273,9 @@ function App() {
               <select
                 id="fusion-strategy"
                 value={fusionStrategy}
-                disabled={loading}
                 onChange={(event) => {
                   setFusionStrategy(event.target.value)
-                  setResult(null)
-                  setError('')
+                  resetSearch()
                 }}
               >
                 <option value="dense">
