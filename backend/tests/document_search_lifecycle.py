@@ -62,6 +62,10 @@ def contains_document(payload, document_id):
 
 document_id = None
 
+status, initial_history = request("GET", "/search/history?limit=20")
+assert status == 200
+initial_search_id = max((row["search_id"] for row in initial_history), default=0)
+
 try:
     # --------------------------------------------------
     # 1. CREATE
@@ -228,6 +232,24 @@ try:
     )
 
     print("PASS: deleted document is no longer searchable")
+
+    print("\n[10] SEARCH HISTORY")
+
+    status, history = request("GET", "/search/history?limit=20")
+    assert status == 200
+    expected = {
+        ("keyword", CREATE_TOKEN),
+        ("keyword", UPDATE_TOKEN),
+        ("vector", "quartznebula protocol sentinel phrase"),
+        ("hybrid", UPDATE_TOKEN),
+    }
+    recorded = {
+        (row["search_type"], row["query_text"])
+        for row in history
+        if row["search_id"] > initial_search_id
+    }
+    assert expected <= recorded, f"Missing search history: {expected - recorded}"
+    print("PASS: lexical, vector, and hybrid searches are recorded")
 
     print("\n====================================")
     print("DOCUMENT SEARCH LIFECYCLE — PASS")
