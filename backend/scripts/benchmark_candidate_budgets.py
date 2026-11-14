@@ -66,7 +66,7 @@ def summarize(rows):
     return output
 
 
-def run(base_url, manifest_path, sample_path):
+def run(base_url, manifest_path, sample_path, *, strategies=STRATEGIES):
     import httpx
 
     if urlsplit(base_url).hostname not in {"localhost", "127.0.0.1", "::1"}:
@@ -83,7 +83,7 @@ def run(base_url, manifest_path, sample_path):
     warmup = spec["warmup_count"]
     if not 0 <= warmup < len(sample):
         raise ValueError("The sample must include measured queries after warmup.")
-    orders = list(permutations(STRATEGIES))
+    orders = list(permutations(strategies))
     observed = []
     metadata = {}
 
@@ -124,7 +124,7 @@ def run(base_url, manifest_path, sample_path):
         records = []
         for index, (row, responses) in enumerate(zip(sample[warmup:], observed, strict=True), 1):
             tokens, _ = call("/_budget/tokens", {"query": row["query"]})
-            for strategy in STRATEGIES:
+            for strategy in strategies:
                 entry, elapsed = responses[strategy]
                 if tokens[strategy]["candidates"] != entry["candidates"]:
                     raise RuntimeError(f"Candidate IDs changed during token counting on row {index}.")
