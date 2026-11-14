@@ -51,6 +51,8 @@ python -m backend.scripts.reproduce_heldout_reranking \
 
 Use `--check` with `--rankings-csv` when checking rerun statistics against the archived values. A rerun uses the local corpus, index, model weights and inference device. Compare the rankings when scores differ. The one-command table check uses the committed hit ranks.
 
+On November 14, 2026 the full ranking replay used the original 500K table with read-only access, PostgreSQL 17.11, pgvector 0.8.6, sentence-transformers 6.3.0, and Torch 2.15.0 on CPU. Both first-stage candidate orders and both reranked Top-10 orders matched the archived run for all 500 queries. The archived reranking used Apple MPS.
+
 | Archived input | SHA-256 |
 | --- | --- |
 | Frozen 500-query JSONL | `c5d4fe5163dcdafec5619e38d0ed4d146a63efd0e4a9f82d81a826a0d4fbabd9` |
