@@ -15,6 +15,8 @@ from threading import Condition, Thread
 import numpy as np
 import torch
 
+from backend.api.services import rerank_trace
+
 from backend.api.services.token_budget import (
     estimate_request_tokens,
 )
@@ -44,6 +46,7 @@ class BatchJob:
     submitted_at: float
     token_count: int = 0
     token_counting_ms: float = 0.0
+    trace_id: str | None = None
 
 
 class DynamicBatchReranker:
@@ -152,6 +155,7 @@ class DynamicBatchReranker:
             submitted_at=time.perf_counter(),
             token_count=token_count,
             token_counting_ms=token_counting_ms,
+            trace_id=rerank_trace.request_id.get(),
         )
 
         with self._condition:
@@ -172,12 +176,14 @@ class DynamicBatchReranker:
                 )
 
             self._queue.append(job)
+            rerank_trace.record("batch_enqueued", job.trace_id, queue_depth=len(self._queue))
             self._condition.notify()
 
         try:
             return future.result(timeout=self.timeout_seconds)
         except FutureTimeoutError as exc:
             future.cancel()
+            rerank_trace.record("batch_timeout", job.trace_id)
             raise BatchTimeoutError(
                 "Dynamic batching request timed out."
             ) from exc
@@ -283,15 +289,22 @@ class DynamicBatchReranker:
             model = get_cross_encoder()
 
             with _inference_lock:
-                scores = model.predict(
-                    pairs,
-                    batch_size=resolve_batch_size(),
-                    show_progress_bar=False,
-                    convert_to_numpy=True,
-                )
+                for job in active:
+                    rerank_trace.record("inference_start", job.trace_id, batch_id=batch_id)
 
-                if resolve_device() == "mps":
-                    torch.mps.synchronize()
+                try:
+                    scores = model.predict(
+                        pairs,
+                        batch_size=resolve_batch_size(),
+                        show_progress_bar=False,
+                        convert_to_numpy=True,
+                    )
+
+                    if resolve_device() == "mps":
+                        torch.mps.synchronize()
+                finally:
+                    for job in active:
+                        rerank_trace.record("inference_end", job.trace_id, batch_id=batch_id)
 
             finished_at = time.perf_counter()
 

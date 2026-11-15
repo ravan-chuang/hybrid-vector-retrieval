@@ -8,6 +8,8 @@ from threading import Lock
 import torch
 from sentence_transformers import CrossEncoder
 
+from backend.api.services import rerank_trace
+
 
 CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
@@ -115,20 +117,27 @@ def rerank_candidates_profiled(
         for candidate in candidates
     ]
 
+    trace_id = rerank_trace.request_id.get()
+    rerank_trace.record("lock_wait", trace_id, pair_count=len(pairs))
     lock_start = time.perf_counter()
 
     with _inference_lock:
         lock_acquired = time.perf_counter()
 
-        scores = model.predict(
-            pairs,
-            batch_size=batch_size,
-            show_progress_bar=False,
-            convert_to_numpy=True,
-        )
+        rerank_trace.record("inference_start", trace_id)
 
-        if resolve_device() == "mps":
-            torch.mps.synchronize()
+        try:
+            scores = model.predict(
+                pairs,
+                batch_size=batch_size,
+                show_progress_bar=False,
+                convert_to_numpy=True,
+            )
+
+            if resolve_device() == "mps":
+                torch.mps.synchronize()
+        finally:
+            rerank_trace.record("inference_end", trace_id)
 
         inference_end = time.perf_counter()
 
