@@ -1,0 +1,32 @@
+{
+  "pair_10rps_pilot.json": {
+    "original_report_sha256": "24ab9b3eae99f295c0c1034a2983729b7b30c85ba86e757dca5243068b234f11",
+    "archived_records_sha256": "83c320f59f4721288677ed52f9abf3af2116694f91976901c7e8708aadb8a80e",
+    "version": "duration_v1",
+    "dataset_sha256": "3d5917456bfb535a1d470b1db72e0f37d0c97cc5e4fc48aa6237e6eb6b6ca6f9",
+    "settings": {
+      "pipeline": "batched",
+      "arrival_rate_rps": 10.0,
+      "warmup_seconds": 10.0,
+      "measurement_seconds": 60.0,
+      "workers": 128,
+      "seed": 42,
+      "timeout_seconds": 60.0
+    }
+  },
+  "token32_10rps_pilot.json": {
+    "original_report_sha256": "8afbfaf37703c1f958cbd4cdabeeaa81682ce165ba90b752f2849e69f75df33c",
+    "archived_records_sha256": "af0ec3a6c6989b8fd09305da94329dd6fbb112b132ce239e2d506782af53437c",
+    "version": "duration_v1",
+    "dataset_sha256": "3d5917456bfb535a1d470b1db72e0f37d0c97cc5e4fc48aa6237e6eb6b6ca6f9",
+    "settings": {
+      "pipeline": "batched",
+      "arrival_rate_rps": 10.0,
+      "warmup_seconds": 10.0,
+      "measurement_seconds": 60.0,
+      "workers": 128,
+      "seed": 42,
+      "timeout_seconds": 60.0
+    }
+  }
+}

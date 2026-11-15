@@ -1,0 +1,38 @@
+
+=== pair_10rps_pilot.json ===
+Successful requests: 574
+Requests missing batch_id: 0
+Observed unique batches: 353
+Complete batches: 353
+Incomplete batches: 0
+Inconsistent batches: 0
+
+--- COMPLETE BATCH METRICS ---
+Mean requests/batch: 1.626
+Mean pairs/batch: 143.091
+Inference mean (ms): 130.834
+Inference p50 (ms): 102.048
+Inference p95 (ms): 278.171
+Inference p99 (ms): 304.001
+Inference pair rate (pairs/s): 1093.678
+Total pairs: 50511
+Total inference seconds: 46.185
+
+=== token32_10rps_pilot.json ===
+Successful requests: 574
+Requests missing batch_id: 0
+Observed unique batches: 330
+Complete batches: 330
+Incomplete batches: 0
+Inconsistent batches: 0
+
+--- COMPLETE BATCH METRICS ---
+Mean requests/batch: 1.739
+Mean pairs/batch: 153.064
+Inference mean (ms): 142.797
+Inference p50 (ms): 110.294
+Inference p95 (ms): 299.097
+Inference p99 (ms): 338.36
+Inference pair rate (pairs/s): 1071.894
+Total pairs: 50511
+Total inference seconds: 47.123
