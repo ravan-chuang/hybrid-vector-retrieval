@@ -21,3 +21,11 @@ Keep credentials and the gateway CA private to the environment. Generate the pas
 4. To roll back the application, rebuild the prior commit's frontend with the gateway's API base, switch `current` back, and restart the API with the prior checkout. Keep the same staging gateway and preserve the database while verifying the previous release. If a release changes the database schema incompatibly, restore that release's snapshot into a separate volume and verify it before switching the database connection.
 
 The gateway applies the same 10-second upstream response-header timeout to both standard and batched reranking. For an open-loop comparison, use the same caller timeout and arrival schedule on both routes. A timeout may leave API work in progress, so wait for work to finish before measuring another route. [Caddy proxy timeouts](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#the-http-transport)
+
+## Trace rerank requests
+
+The gateway generates a UUID for each proxied rerank request, including requests that time out at the gateway. Find it in the `X-Request-ID` response header and the gateway's JSON access log as `uuid`. The gateway replaces any client-supplied value. Search the API's `rerank_trace` JSON log entries for the same `request_id`.
+
+The API records receipt, response completion, inference start and end, and the standard lock-wait or batched enqueue event. The scheduler adds its batch ID and records its own wait timeout. Compare the gateway completion timestamp with those events to see whether the request was still waiting or running after the gateway returned. Compare clocks before doing this across hosts. Inference end marks the end of the model call, including an exception. Use the API response status to determine the result.
+
+The staging trace carries IDs, timestamps, queue metadata and status. Request and response headers are omitted from the rerank access logs, and the trace does not record search text or passages. When rolling back to a revision that predates the trace module, run the API wrapper from the earlier staging release.
