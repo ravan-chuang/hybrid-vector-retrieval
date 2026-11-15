@@ -31,3 +31,9 @@ The API records receipt, response completion, inference start and end, and the s
 The staging trace carries IDs, timestamps, queue metadata and status. Request and response headers are omitted from the rerank access logs, and the trace does not record search text or passages. When rolling back to a revision that predates the trace module, run the API wrapper from the earlier staging release.
 
 The staging wrapper observes upstream connection loss after reading the rerank request body. Standard requests stop waiting for the inference lock. Batched jobs are excluded from further work before the model call, including jobs in a batch waiting for the shared lock. A model call already in progress can finish and return scores to connected requests in the batch. The wrapper logs `api_disconnected`, and a discarded request is recorded as an API-side 499. The client still receives the gateway's status, such as 504 when the gateway times out. Already-disconnected rerank results are discarded before recording search history.
+
+## Sample a staging load test
+
+Set `STAGING_RERANK_TELEMETRY` to a writable, private JSONL path before starting the protected API wrapper. The wrapper appends one sample per second with wall and monotonic timestamps, the API process's cumulative CPU time and peak RSS, event-loop delay, and the waiting batch deque's depth, pair count and oldest item age. The inference lock flag describes the shared lock at the sample instant. A job already removed from the deque for batch formation or inference is outside the depth counter.
+
+On macOS the sampler also records Mach host CPU ticks, compressed pages and cumulative VM counters. Derive utilization and paging activity from differences between successive samples. Use a separate file per run. Match the same host monotonic clock to the load window and the existing request UUIDs to gateway and model traces. The telemetry file contains aggregate counters and timing.
