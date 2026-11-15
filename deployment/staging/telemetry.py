@@ -82,7 +82,7 @@ async def sample_to_file(path: Path):
             process = resource.getrusage(resource.RUSAGE_SELF)
             row = {
                 "time": time.time(),
-                "monotonic": now,
+                "monotonic": time.perf_counter(),
                 "pid": os.getpid(),
                 "loop_lag_ms": max(0.0, now - deadline) * 1000,
                 "api_cpu_seconds": process.ru_utime + process.ru_stime,

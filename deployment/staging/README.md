@@ -34,6 +34,6 @@ The staging wrapper observes upstream connection loss after reading the rerank r
 
 ## Sample a staging load test
 
-Set `STAGING_RERANK_TELEMETRY` to a writable, private JSONL path before starting the protected API wrapper. The wrapper appends one sample per second with wall and monotonic timestamps, the API process's cumulative CPU time and peak RSS, event-loop delay, and the waiting batch deque's depth, pair count and oldest item age. The inference lock flag describes the shared lock at the sample instant. A job already removed from the deque for batch formation or inference is outside the depth counter.
+Set `STAGING_RERANK_TELEMETRY` to a writable, private JSONL path before starting the protected API wrapper. The wrapper appends one sample per second with wall and Python performance-counter timestamps, the API process's cumulative CPU time and peak RSS, event-loop delay, and the waiting batch deque's depth, pair count and oldest item age. The inference lock flag describes the shared lock at the sample instant. A job already removed from the deque for batch formation or inference is outside the depth counter.
 
 On macOS the sampler also records Mach host CPU ticks, compressed pages and cumulative VM counters. Derive utilization and paging activity from differences between successive samples. Use a separate file per run. Match the same host monotonic clock to the load window and the existing request UUIDs to gateway and model traces. The telemetry file contains aggregate counters and timing.
