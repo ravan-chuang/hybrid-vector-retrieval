@@ -1,6 +1,9 @@
 """Run the API on loopback and accept requests from the staging gateway."""
 
 import argparse
+import asyncio
+from concurrent.futures import Future
+from contextlib import suppress
 import hmac
 import os
 import re
@@ -8,17 +11,44 @@ import re
 import uvicorn
 from starlette.responses import JSONResponse
 
-from backend.api.services import rerank_trace
+from backend.api.services import rerank_cancellation, rerank_trace
 
 
 RERANK_PATHS = {"/search/rerank", "/search/rerank/batched"}
 REQUEST_ID = re.compile(rb"[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
 
 
-async def trace_rerank(app, scope, receive, send, trace_id):
-    token = rerank_trace.request_id.set(trace_id)
+async def serve_rerank(app, scope, receive, send, trace_id):
+    signal = Future()
+    cancellation_token = rerank_cancellation.disconnected.set(signal)
+    trace_token = rerank_trace.request_id.set(trace_id)
     rerank_trace.record("api_received", trace_id, path=scope["path"])
     status = None
+    watcher = None
+
+    def mark_disconnected():
+        if status is None and not signal.done():
+            rerank_trace.record("api_disconnected", trace_id)
+            signal.set_result(None)
+
+    async def watch_disconnect():
+        message = await receive()
+        if message["type"] == "http.disconnect":
+            mark_disconnected()
+        return message
+
+    async def receive_request():
+        nonlocal watcher
+        if watcher is not None:
+            return await asyncio.shield(watcher)
+        message = await receive()
+        if message["type"] == "http.disconnect":
+            mark_disconnected()
+        elif not message.get("more_body", False):
+            # FastAPI has read the body. Observe connection loss while its
+            # synchronous endpoint is running in the thread pool.
+            watcher = asyncio.create_task(watch_disconnect())
+        return message
 
     async def trace_send(message):
         nonlocal status
@@ -27,10 +57,17 @@ async def trace_rerank(app, scope, receive, send, trace_id):
         await send(message)
 
     try:
-        await app(scope, receive, trace_send)
+        await app(scope, receive_request, trace_send)
     finally:
-        rerank_trace.record("api_finished", trace_id, status=status)
-        rerank_trace.request_id.reset(token)
+        try:
+            if watcher is not None:
+                watcher.cancel()
+                with suppress(asyncio.CancelledError):
+                    await watcher
+        finally:
+            rerank_trace.record("api_finished", trace_id, status=status)
+            rerank_trace.request_id.reset(trace_token)
+            rerank_cancellation.disconnected.reset(cancellation_token)
 
 
 def main():
@@ -57,9 +94,13 @@ def main():
                 ids = [
                     value for key, value in scope["headers"] if key == b"x-request-id"
                 ]
-                if len(ids) == 1 and REQUEST_ID.fullmatch(ids[0]):
-                    await trace_rerank(app, scope, receive, send, ids[0].decode("ascii"))
-                    return
+                trace_id = (
+                    ids[0].decode("ascii")
+                    if len(ids) == 1 and REQUEST_ID.fullmatch(ids[0])
+                    else None
+                )
+                await serve_rerank(app, scope, receive, send, trace_id)
+                return
         await app(scope, receive, send)
 
     uvicorn.run(protected_app, host="127.0.0.1", port=args.port, proxy_headers=False)
