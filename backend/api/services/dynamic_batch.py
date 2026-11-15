@@ -454,6 +454,24 @@ _scheduler = None
 _scheduler_lock = __import__("threading").Lock()
 
 
+def batch_queue_snapshot() -> dict:
+    """Observe the waiting deque without starting the scheduler."""
+    with _scheduler_lock:
+        scheduler = _scheduler
+    if scheduler is None:
+        queued = ()
+    else:
+        with scheduler._condition:
+            queued = tuple(scheduler._queue)
+    now = time.perf_counter()
+    return {
+        "queue_depth": len(queued),
+        "queue_pairs": sum(len(job.candidates) for job in queued),
+        "queue_oldest_ms": (now - queued[0].submitted_at) * 1000 if queued else None,
+        "inference_lock_held": _inference_lock.locked(),
+    }
+
+
 def get_dynamic_batch_reranker():
     global _scheduler
 
