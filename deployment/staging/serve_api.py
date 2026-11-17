@@ -85,10 +85,11 @@ def main():
     if telemetry_file:
         from deployment.staging.telemetry import lifespan_with_telemetry
 
+        app.router.lifespan_context = lifespan_with_telemetry(
+            app.router.lifespan_context, Path(telemetry_file)
+        )
+
     async def protected_app(scope, receive, send):
-        if scope["type"] == "lifespan" and telemetry_file:
-            await lifespan_with_telemetry(app, scope, receive, send, Path(telemetry_file))
-            return
         if scope["type"] == "http":
             tokens = [
                 value for key, value in scope["headers"] if key == b"x-staging-proxy-token"

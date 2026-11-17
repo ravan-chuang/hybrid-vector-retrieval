@@ -1,7 +1,7 @@
 """Sample process, host, and rerank queue counters in the staging API."""
 
 import asyncio
-from contextlib import suppress
+from contextlib import aclosing, asynccontextmanager, suppress
 import ctypes
 import json
 import os
@@ -72,45 +72,59 @@ class _DarwinCounters:
         return fields
 
 
-async def sample_to_file(path: Path):
+async def _sample_lines():
     host = _DarwinCounters() if sys.platform == "darwin" else None
     clock = asyncio.get_running_loop().time
     deadline = clock()
-    with path.open("a", buffering=1) as log:
-        while True:
-            now = clock()
-            process = resource.getrusage(resource.RUSAGE_SELF)
-            row = {
-                "time": time.time(),
-                "monotonic": time.perf_counter(),
-                "pid": os.getpid(),
-                "loop_lag_ms": max(0.0, now - deadline) * 1000,
-                "api_cpu_seconds": process.ru_utime + process.ru_stime,
-                "api_peak_rss_bytes": process.ru_maxrss * (1 if sys.platform == "darwin" else 1024),
-                "api_major_faults": process.ru_majflt,
-                "api_involuntary_switches": process.ru_nivcsw,
-                **dynamic_batch.batch_queue_snapshot(),
-            }
-            if host is not None:
-                row.update(host.sample())
-            log.write(json.dumps(row, separators=(",", ":")) + "\n")
-            deadline = max(deadline + _PERIOD_SECONDS, now)
-            await asyncio.sleep(max(0.0, deadline - clock()))
+    while True:
+        now = clock()
+        process = resource.getrusage(resource.RUSAGE_SELF)
+        row = {
+            "time": time.time(),
+            "monotonic": time.perf_counter(),
+            "pid": os.getpid(),
+            "loop_lag_ms": max(0.0, now - deadline) * 1000,
+            "api_cpu_seconds": process.ru_utime + process.ru_stime,
+            "api_peak_rss_bytes": process.ru_maxrss * (1 if sys.platform == "darwin" else 1024),
+            "api_major_faults": process.ru_majflt,
+            "api_involuntary_switches": process.ru_nivcsw,
+            **dynamic_batch.batch_queue_snapshot(),
+        }
+        if host is not None:
+            row.update(host.sample())
+        yield json.dumps(row, separators=(",", ":")) + "\n"
+        deadline = max(deadline + _PERIOD_SECONDS, now)
+        await asyncio.sleep(max(0.0, deadline - clock()))
 
 
-async def lifespan_with_telemetry(app, scope, receive, send, path: Path):
-    sampler = None
+async def _write_samples(log, samples):
+    async for line in samples:
+        log.write(line)
 
-    async def send_with_sampler(message):
-        nonlocal sampler
-        if message["type"] == "lifespan.startup.complete":
-            sampler = asyncio.create_task(sample_to_file(path))
-        await send(message)
 
-    try:
-        await app(scope, receive, send_with_sampler)
-    finally:
-        if sampler is not None:
-            sampler.cancel()
-            with suppress(asyncio.CancelledError):
-                await sampler
+def lifespan_with_telemetry(lifespan, path: Path):
+    @asynccontextmanager
+    async def lifespan_context(app):
+        try:
+            log = path.open("a", buffering=1, encoding="utf-8")
+        except OSError as exc:
+            raise RuntimeError(f"Cannot open STAGING_RERANK_TELEMETRY output {path}: {exc}") from exc
+
+        with log:
+            async with lifespan(app) as state, aclosing(_sample_lines()) as samples:
+                try:
+                    log.write(await anext(samples))
+                except OSError as exc:
+                    raise RuntimeError(
+                        f"Cannot write STAGING_RERANK_TELEMETRY output {path}: {exc}"
+                    ) from exc
+
+                sampler = asyncio.create_task(_write_samples(log, samples))
+                try:
+                    yield state
+                finally:
+                    sampler.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await sampler
+
+    return lifespan_context
