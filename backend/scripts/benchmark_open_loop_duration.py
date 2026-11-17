@@ -56,7 +56,9 @@ def run_phase(
     workers,
     seed,
     timeout,
+    request_sender=None,
 ):
+    request_sender = send_request if request_sender is None else request_sender
     offsets = generate_duration_schedule(
         duration,
         arrival_rate,
@@ -73,6 +75,7 @@ def run_phase(
     records = []
     futures = []
 
+    started_at = datetime.now(timezone.utc).isoformat()
     phase_start = time.perf_counter()
 
     with concurrent.futures.ThreadPoolExecutor(
@@ -90,7 +93,7 @@ def run_phase(
                 time.sleep(remaining)
 
             future = executor.submit(
-                send_request,
+                request_sender,
                 base_url,
                 endpoint,
                 payload,
@@ -127,6 +130,8 @@ def run_phase(
 
     return {
         "phase": phase,
+        "started_at_utc": started_at,
+        "window_start_monotonic": phase_start,
         "duration_seconds": duration,
         "scheduled_count": len(offsets),
         "arrivals_elapsed_seconds": (

@@ -2,17 +2,37 @@
 
 import os
 import time
+from contextlib import contextmanager
 from functools import lru_cache
 from threading import Lock
 
 import torch
 from sentence_transformers import CrossEncoder
 
+from backend.api.services import rerank_cancellation, rerank_trace
+
 
 CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 _inference_lock = Lock()
 _model_initialization_lock = Lock()
+
+
+@contextmanager
+def _inference_slot(signal):
+    if signal is None:
+        with _inference_lock:
+            yield
+        return
+
+    rerank_cancellation.check_disconnected(signal)
+    while not _inference_lock.acquire(timeout=0.05):
+        rerank_cancellation.check_disconnected(signal)
+    try:
+        rerank_cancellation.check_disconnected(signal)
+        yield
+    finally:
+        _inference_lock.release()
 
 
 def resolve_device() -> str:
@@ -97,6 +117,8 @@ def rerank_candidates_profiled(
     """Rerank candidates and profile lock contention."""
 
     total_start = time.perf_counter()
+    signal = rerank_cancellation.disconnected.get()
+    rerank_cancellation.check_disconnected(signal)
 
     if not candidates:
         return [], {
@@ -115,20 +137,27 @@ def rerank_candidates_profiled(
         for candidate in candidates
     ]
 
+    trace_id = rerank_trace.request_id.get()
+    rerank_trace.record("lock_wait", trace_id, pair_count=len(pairs))
     lock_start = time.perf_counter()
 
-    with _inference_lock:
+    with _inference_slot(signal):
         lock_acquired = time.perf_counter()
 
-        scores = model.predict(
-            pairs,
-            batch_size=batch_size,
-            show_progress_bar=False,
-            convert_to_numpy=True,
-        )
+        rerank_trace.record("inference_start", trace_id)
 
-        if resolve_device() == "mps":
-            torch.mps.synchronize()
+        try:
+            scores = model.predict(
+                pairs,
+                batch_size=batch_size,
+                show_progress_bar=False,
+                convert_to_numpy=True,
+            )
+
+            if resolve_device() == "mps":
+                torch.mps.synchronize()
+        finally:
+            rerank_trace.record("inference_end", trace_id)
 
         inference_end = time.perf_counter()
 

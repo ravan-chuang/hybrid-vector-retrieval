@@ -14,6 +14,7 @@ from backend.api.routers.search import (
     retrieve_hybrid_candidates,
     log_search_history,
 )
+from backend.api.services import rerank_cancellation, rerank_trace
 from backend.api.services.cross_encoder import (
     rerank_candidates_profiled,
     union_candidates,
@@ -22,6 +23,10 @@ from backend.api.services.cross_encoder import (
 
 router = APIRouter()
 
+
+def _disconnected_response() -> HTTPException:
+    rerank_trace.record("rerank_discarded", rerank_trace.request_id.get())
+    return HTTPException(status_code=499, detail="Rerank connection closed.")
 
 
 @router.post(
@@ -90,6 +95,9 @@ def rerank_search(request: RerankSearchRequest):
             candidates=candidates,
             top_k=request.top_k,
         )
+        rerank_cancellation.check_disconnected(rerank_cancellation.disconnected.get())
+    except rerank_cancellation.RerankDisconnected as exc:
+        raise _disconnected_response() from exc
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -169,7 +177,10 @@ def rerank_search_batched(request: RerankSearchRequest):
                 top_k=request.top_k,
             )
         )
+        rerank_cancellation.check_disconnected(rerank_cancellation.disconnected.get())
 
+    except rerank_cancellation.RerankDisconnected as exc:
+        raise _disconnected_response() from exc
     except BatchQueueFullError as exc:
         raise HTTPException(
             status_code=503,

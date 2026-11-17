@@ -1,0 +1,62 @@
+{
+	admin off
+	skip_install_trust
+	auto_https disable_redirects
+}
+
+https://localhost:8443 {
+	tls internal
+
+	@other not path /api/search/rerank /api/search/rerank/batched
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>headers delete
+				resp_headers delete
+			}
+		}
+	}
+	log_skip @other
+
+	route {
+		@internal path /api/internal /api/internal/* /api/docs /api/docs/* /api/redoc /api/redoc/* /api/openapi.json
+		respond @internal 404
+
+		basic_auth {
+			{$STAGING_USER} {$STAGING_PASSWORD_HASH}
+		}
+
+		header {
+			Cache-Control "no-store"
+			X-Content-Type-Options "nosniff"
+		}
+
+		handle_path /api/* {
+			@rerankUpstream path /search/rerank /search/rerank/batched
+			request_header @rerankUpstream X-Request-ID {http.request.uuid}
+			header @rerankUpstream X-Request-ID {http.request.uuid}
+
+			reverse_proxy {$STAGING_BACKEND} {
+				header_up -Authorization
+				header_up X-Staging-Proxy-Token {$STAGING_PROXY_TOKEN}
+				transport http {
+					dial_timeout 3s
+					response_header_timeout 10s
+				}
+			}
+		}
+
+		handle {
+			root * /srv/current
+			file_server
+		}
+	}
+
+	handle_errors {
+		@rerankError expression {orig_path} in ["/api/search/rerank", "/api/search/rerank/batched"]
+		log_append @rerankError gateway_error {err.message}
+		header @rerankError X-Request-ID {http.request.uuid}
+		respond "" {err.status_code}
+	}
+}

@@ -5,15 +5,19 @@ import time
 import uuid
 from collections import deque
 from concurrent.futures import (
+    FIRST_COMPLETED,
     Future,
     InvalidStateError,
     TimeoutError as FutureTimeoutError,
+    wait,
 )
 from dataclasses import dataclass
 from threading import Condition, Thread
 
 import numpy as np
 import torch
+
+from backend.api.services import rerank_cancellation, rerank_trace
 
 from backend.api.services.token_budget import (
     estimate_request_tokens,
@@ -44,6 +48,20 @@ class BatchJob:
     submitted_at: float
     token_count: int = 0
     token_counting_ms: float = 0.0
+    trace_id: str | None = None
+    disconnect: Future[None] | None = None
+
+    def cancelled(self) -> bool:
+        return self.future.cancelled() or (
+            self.disconnect is not None and self.disconnect.done()
+        )
+
+    def fail(self, error: Exception) -> None:
+        try:
+            self.future.set_exception(error)
+        except InvalidStateError:
+            # A waiter may have cancelled the job while the worker was active.
+            pass
 
 
 class DynamicBatchReranker:
@@ -97,6 +115,9 @@ class DynamicBatchReranker:
         candidates: list[dict],
         top_k: int,
     ):
+        disconnect = rerank_cancellation.disconnected.get()
+        rerank_cancellation.check_disconnected(disconnect)
+
         if not candidates:
             return [], {
                 "batch_id": None,
@@ -152,9 +173,12 @@ class DynamicBatchReranker:
             submitted_at=time.perf_counter(),
             token_count=token_count,
             token_counting_ms=token_counting_ms,
+            trace_id=rerank_trace.request_id.get(),
+            disconnect=disconnect,
         )
 
         with self._condition:
+            rerank_cancellation.check_disconnected(disconnect)
             if self._closed:
                 raise RuntimeError("Batch scheduler is closed.")
 
@@ -163,7 +187,7 @@ class DynamicBatchReranker:
                 self._queue = deque(
                     queued_job
                     for queued_job in self._queue
-                    if not queued_job.future.cancelled()
+                    if not queued_job.cancelled()
                 )
 
             if len(self._queue) >= self.max_queue_size:
@@ -172,12 +196,22 @@ class DynamicBatchReranker:
                 )
 
             self._queue.append(job)
+            rerank_trace.record("batch_enqueued", job.trace_id, queue_depth=len(self._queue))
             self._condition.notify()
 
         try:
-            return future.result(timeout=self.timeout_seconds)
+            if disconnect is None:
+                return future.result(timeout=self.timeout_seconds)
+            wait((future, disconnect), timeout=self.timeout_seconds, return_when=FIRST_COMPLETED)
+            rerank_cancellation.check_disconnected(disconnect)
+            return future.result(timeout=0)
+        except rerank_cancellation.RerankDisconnected:
+            future.cancel()
+            rerank_trace.record("batch_disconnected", job.trace_id)
+            raise
         except FutureTimeoutError as exc:
             future.cancel()
+            rerank_trace.record("batch_timeout", job.trace_id)
             raise BatchTimeoutError(
                 "Dynamic batching request timed out."
             ) from exc
@@ -193,7 +227,7 @@ class DynamicBatchReranker:
 
                 first = self._queue.popleft()
 
-                if first.future.cancelled():
+                if first.cancelled():
                     continue
 
                 formation_started_at = time.perf_counter()
@@ -207,7 +241,7 @@ class DynamicBatchReranker:
                 )
 
                 while len(batch) < self.max_requests:
-                    while self._queue and self._queue[0].future.cancelled():
+                    while self._queue and self._queue[0].cancelled():
                         self._queue.popleft()
 
                     if self._queue:
@@ -226,7 +260,7 @@ class DynamicBatchReranker:
 
                         next_job = self._queue.popleft()
 
-                        if next_job.future.cancelled():
+                        if next_job.cancelled():
                             continue
 
                         batch.append(next_job)
@@ -256,42 +290,48 @@ class DynamicBatchReranker:
 
         active = [
             job for job in batch
-            if not job.future.cancelled()
+            if not job.cancelled()
         ]
 
         if not active:
             return
 
-        self._batch_sequence += 1
-        batch_id = (
-            f"{self._scheduler_id}-"
-            f"{self._batch_sequence}"
-        )
-
         started_at = time.perf_counter()
-        batch_token_count = sum(
-            job.token_count for job in active
-        )
-
-        pairs = [
-            (job.query, candidate["content"])
-            for job in active
-            for candidate in job.candidates
-        ]
 
         try:
             model = get_cross_encoder()
 
             with _inference_lock:
-                scores = model.predict(
-                    pairs,
-                    batch_size=resolve_batch_size(),
-                    show_progress_bar=False,
-                    convert_to_numpy=True,
-                )
+                # Jobs can be abandoned while this batch waits behind a
+                # standard request on the shared inference lock.
+                active = [job for job in active if not job.cancelled()]
+                if not active:
+                    return
 
-                if resolve_device() == "mps":
-                    torch.mps.synchronize()
+                self._batch_sequence += 1
+                batch_id = f"{self._scheduler_id}-{self._batch_sequence}"
+                batch_token_count = sum(job.token_count for job in active)
+                pairs = [
+                    (job.query, candidate["content"])
+                    for job in active
+                    for candidate in job.candidates
+                ]
+                for job in active:
+                    rerank_trace.record("inference_start", job.trace_id, batch_id=batch_id)
+
+                try:
+                    scores = model.predict(
+                        pairs,
+                        batch_size=resolve_batch_size(),
+                        show_progress_bar=False,
+                        convert_to_numpy=True,
+                    )
+
+                    if resolve_device() == "mps":
+                        torch.mps.synchronize()
+                finally:
+                    for job in active:
+                        rerank_trace.record("inference_end", job.trace_id, batch_id=batch_id)
 
             finished_at = time.perf_counter()
 
@@ -308,6 +348,8 @@ class DynamicBatchReranker:
                 count = len(job.candidates)
                 job_scores = scores[offset:offset + count]
                 offset += count
+                if job.cancelled():
+                    continue
 
                 ranked = [
                     {
@@ -377,8 +419,7 @@ class DynamicBatchReranker:
 
         except Exception as exc:
             for job in active:
-                if not job.future.done():
-                    job.future.set_exception(exc)
+                job.fail(exc)
 
     def close(self):
         """Reject queued jobs and wait briefly for active inference."""
@@ -392,12 +433,11 @@ class DynamicBatchReranker:
             while self._queue:
                 job = self._queue.popleft()
 
-                if not job.future.done():
-                    job.future.set_exception(
-                        RuntimeError(
-                            "Dynamic batching scheduler is shutting down."
-                        )
+                job.fail(
+                    RuntimeError(
+                        "Dynamic batching scheduler is shutting down."
                     )
+                )
 
             self._condition.notify_all()
 
@@ -412,6 +452,24 @@ class DynamicBatchReranker:
 
 _scheduler = None
 _scheduler_lock = __import__("threading").Lock()
+
+
+def batch_queue_snapshot() -> dict:
+    """Observe the waiting deque without starting the scheduler."""
+    with _scheduler_lock:
+        scheduler = _scheduler
+    if scheduler is None:
+        queued = ()
+    else:
+        with scheduler._condition:
+            queued = tuple(scheduler._queue)
+    now = time.perf_counter()
+    return {
+        "queue_depth": len(queued),
+        "queue_pairs": sum(len(job.candidates) for job in queued),
+        "queue_oldest_ms": (now - queued[0].submitted_at) * 1000 if queued else None,
+        "inference_lock_held": _inference_lock.locked(),
+    }
 
 
 def get_dynamic_batch_reranker():
