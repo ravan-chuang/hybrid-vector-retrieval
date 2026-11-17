@@ -1,0 +1,268 @@
+{
+  "validation": {
+    "query_count": 3567,
+    "categories": {
+      "rescue": {
+        "count": 184,
+        "fraction": 0.05158396411550322,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": 0.5002156659765356,
+            "contribution_to_overall": 0.02580310696374616,
+            "improved": 157,
+            "regressed": 0,
+            "unchanged": 27
+          },
+          "ndcg_at_10": {
+            "mean_delta": 0.5789800299305271,
+            "contribution_to_overall": 0.029866085087529293,
+            "improved": 157,
+            "regressed": 0,
+            "unchanged": 27
+          },
+          "recall_at_10": {
+            "mean_delta": 0.845108695652174,
+            "contribution_to_overall": 0.04359405663022147,
+            "improved": 157,
+            "regressed": 0,
+            "unchanged": 27
+          }
+        }
+      },
+      "loss": {
+        "count": 39,
+        "fraction": 0.010933557611438183,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": -0.09995929995929997,
+            "contribution_to_overall": -0.0010929107649040367,
+            "improved": 0,
+            "regressed": 11,
+            "unchanged": 28
+          },
+          "ndcg_at_10": {
+            "mean_delta": -0.14104256199939874,
+            "contribution_to_overall": -0.001542096977285268,
+            "improved": 0,
+            "regressed": 11,
+            "unchanged": 28
+          },
+          "recall_at_10": {
+            "mean_delta": -0.28205128205128205,
+            "contribution_to_overall": -0.0030838239416876925,
+            "improved": 0,
+            "regressed": 11,
+            "unchanged": 28
+          }
+        }
+      },
+      "both": {
+        "count": 2588,
+        "fraction": 0.7255396691897954,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": -0.004019007139177154,
+            "contribution_to_overall": -0.0029159491102300184,
+            "improved": 29,
+            "regressed": 101,
+            "unchanged": 2458
+          },
+          "ndcg_at_10": {
+            "mean_delta": -0.003357842649889689,
+            "contribution_to_overall": -0.0024362480453923507,
+            "improved": 31,
+            "regressed": 106,
+            "unchanged": 2451
+          },
+          "recall_at_10": {
+            "mean_delta": -0.0012879958784131889,
+            "contribution_to_overall": -0.000934492103541725,
+            "improved": 5,
+            "regressed": 10,
+            "unchanged": 2573
+          }
+        }
+      },
+      "neither": {
+        "count": 756,
+        "fraction": 0.21194280908326324,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 756
+          },
+          "ndcg_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 756
+          },
+          "recall_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 756
+          }
+        }
+      }
+    },
+    "overall": {
+      "mrr_at_10": {
+        "mean_delta": 0.021794247088612103,
+        "improved": 186,
+        "regressed": 112,
+        "unchanged": 3269
+      },
+      "ndcg_at_10": {
+        "mean_delta": 0.025887740064851675,
+        "improved": 188,
+        "regressed": 117,
+        "unchanged": 3262
+      },
+      "recall_at_10": {
+        "mean_delta": 0.03957574058499206,
+        "improved": 162,
+        "regressed": 21,
+        "unchanged": 3384
+      }
+    }
+  },
+  "test": {
+    "query_count": 3413,
+    "categories": {
+      "rescue": {
+        "count": 165,
+        "fraction": 0.04834456489891591,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": 0.5421404521404521,
+            "contribution_to_overall": 0.026209544272831703,
+            "improved": 143,
+            "regressed": 0,
+            "unchanged": 22
+          },
+          "ndcg_at_10": {
+            "mean_delta": 0.6120745546806982,
+            "contribution_to_overall": 0.029590478031736065,
+            "improved": 143,
+            "regressed": 0,
+            "unchanged": 22
+          },
+          "recall_at_10": {
+            "mean_delta": 0.8484848484848485,
+            "contribution_to_overall": 0.04101963082332259,
+            "improved": 143,
+            "regressed": 0,
+            "unchanged": 22
+          }
+        }
+      },
+      "loss": {
+        "count": 31,
+        "fraction": 0.009082918253735717,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": -0.043189964157706096,
+            "contribution_to_overall": -0.00039229091382622004,
+            "improved": 0,
+            "regressed": 7,
+            "unchanged": 24
+          },
+          "ndcg_at_10": {
+            "mean_delta": -0.08380655299085843,
+            "contribution_to_overall": -0.0007612080699433376,
+            "improved": 0,
+            "regressed": 7,
+            "unchanged": 24
+          },
+          "recall_at_10": {
+            "mean_delta": -0.22580645161290322,
+            "contribution_to_overall": -0.0020509815411661296,
+            "improved": 0,
+            "regressed": 7,
+            "unchanged": 24
+          }
+        }
+      },
+      "both": {
+        "count": 2567,
+        "fraction": 0.752124230881922,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": -0.003334755535768391,
+            "contribution_to_overall": -0.002508150442519033,
+            "improved": 23,
+            "regressed": 83,
+            "unchanged": 2461
+          },
+          "ndcg_at_10": {
+            "mean_delta": -0.0031401320925132483,
+            "contribution_to_overall": -0.0023617694349491675,
+            "improved": 29,
+            "regressed": 88,
+            "unchanged": 2450
+          },
+          "recall_at_10": {
+            "mean_delta": -0.0022724321516686143,
+            "contribution_to_overall": -0.0017091512843051078,
+            "improved": 8,
+            "regressed": 15,
+            "unchanged": 2544
+          }
+        }
+      },
+      "neither": {
+        "count": 650,
+        "fraction": 0.19044828596542632,
+        "metrics": {
+          "mrr_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 650
+          },
+          "ndcg_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 650
+          },
+          "recall_at_10": {
+            "mean_delta": 0.0,
+            "contribution_to_overall": 0.0,
+            "improved": 0,
+            "regressed": 0,
+            "unchanged": 650
+          }
+        }
+      }
+    },
+    "overall": {
+      "mrr_at_10": {
+        "mean_delta": 0.023309102916486447,
+        "improved": 166,
+        "regressed": 90,
+        "unchanged": 3157
+      },
+      "ndcg_at_10": {
+        "mean_delta": 0.026467500526843556,
+        "improved": 172,
+        "regressed": 95,
+        "unchanged": 3146
+      },
+      "recall_at_10": {
+        "mean_delta": 0.03725949799785135,
+        "improved": 151,
+        "regressed": 22,
+        "unchanged": 3240
+      }
+    }
+  }
+}
