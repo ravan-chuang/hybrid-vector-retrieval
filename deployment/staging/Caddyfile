@@ -55,6 +55,7 @@ https://localhost:8443 {
 
 	handle_errors {
 		@rerankError expression {orig_path} in ["/api/search/rerank", "/api/search/rerank/batched"]
+		log_append @rerankError gateway_error {err.message}
 		header @rerankError X-Request-ID {http.request.uuid}
 		respond "" {err.status_code}
 	}

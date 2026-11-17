@@ -37,3 +37,29 @@ The staging wrapper observes upstream connection loss after reading the rerank r
 Set `STAGING_RERANK_TELEMETRY` to a writable, private JSONL path before starting the protected API wrapper. The wrapper appends one sample per second with wall and Python performance-counter timestamps, the API process's cumulative CPU time and peak RSS, event-loop delay, and the waiting batch deque's depth, pair count and oldest item age. The inference lock flag describes the shared lock at the sample instant. A job already removed from the deque for batch formation or inference is outside the depth counter.
 
 On macOS the sampler also records Mach host CPU ticks, compressed pages and cumulative VM counters. Derive utilization and paging activity from differences between successive samples. Use a separate file per run. Match the same host monotonic clock to the load window and the existing request UUIDs to gateway and model traces. The telemetry file contains aggregate counters and timing.
+
+## Replay staging acceptance traffic
+
+Run the [live replay driver](benchmark_rerank.py) from a clean checkout. It replays the [fixed 120-query pool](rerank-query-pool.json) against the full MS MARCO database and the C++ lexical index. It validates the manifest digest, the returned Top-10, and each successful response's gateway request ID. The driver needs Python, the gateway's trusted CA certificate, and an owner-readable netrc file with a `machine` entry for the hostname. The output carries request IDs, rankings, and timings.
+
+Configure the target with the full corpus and index, four CPU inference threads, one API worker, pair batching, and history writes enabled to match the reference below. Set `STAGING_RERANK_TELEMETRY` on the API to capture resource and queue observations. Record the API revision, machine, and gateway configuration alongside the output.
+
+```bash
+python deployment/staging/benchmark_rerank.py \
+  --gateway "$STAGING_GATEWAY" --ca "$STAGING_CA" --netrc "$STAGING_NETRC" \
+  --seconds 1800 --warmup 60 --rate 2.5 --seed 141025 --output steady.json
+
+python deployment/staging/benchmark_rerank.py \
+  --gateway "$STAGING_GATEWAY" --ca "$STAGING_CA" --netrc "$STAGING_NETRC" \
+  --burst 46 --route batched --output burst-batched.json
+```
+
+Repeat the burst with `--route standard` as needed. Correlate the driver IDs with the gateway's `uuid`, `status`, and `gateway_error` and the API's rerank events. With a driver on the API host, use the measurement window's Python monotonic timestamp to join the telemetry. Across hosts, align their wall clocks and verify the join using request IDs.
+
+The steady acceptance thresholds are scheduled-to-response P95 at most 3 seconds, failures at most 1%, and successful completions during the window for at least 95% of scheduled arrivals. Keep failures and results that finish after the window in the raw measurement. The burst exercises timeout and disconnect behavior.
+
+## Local verification evidence
+
+- Two matched 46-request bursts at two CPU threads showed 27 requests starting inference after a gateway 504 before disconnect cancellation, and zero after the change. Totals of 22 and 21 gateway timeouts by route were unchanged. Already-running model calls completed.
+- An alternating before-and-after replay at four threads and 2.5 offered RPS completed 1,792 requests across four 180-second windows. Before/after P95 was 2.48/3.53 s on one schedule and 2.98/1.72 s on the other. Top-10 document sets matched for all 896 paired successes. Separate gateway controls identified connection refusal and upstream header timeout.
+- Two subsequent 600-second windows with cancellation and telemetry enabled completed 3,005 requests. Both met the local criteria with P95 of 2.13 and 1.62 seconds. Sampled queue depth peaked at 8 and 7. In the preceding 10 seconds, arrivals exceeded completions by 11 and 8. These measurements used a Mac with four CPU threads and one API worker.
