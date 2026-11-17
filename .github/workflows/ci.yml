@@ -75,6 +75,15 @@ jobs:
           --summarize artifacts/relevance/candidate_budgets/observations.csv
       - name: Verify expanded RRF50 results
         run: python -m backend.scripts.reproduce_expanded_rrf50 --check
+      - name: Verify historical batch accounting
+        shell: bash
+        run: |
+          archive=artifacts/evaluations/batch-accounting-pilot
+          python backend/scripts/analyze_batch_accounting.py \
+            "$archive/pair_10rps_pilot.json" "$archive/token32_10rps_pilot.json" \
+            | diff -u "$archive/expected.txt" -
+      - name: Reproduce historical candidate contribution
+        run: python -m backend.scripts.reproduce_candidate_contribution --check
       - name: Verify the document and search lifecycle
         run: |
           python - <<'PY'

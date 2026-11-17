@@ -230,6 +230,8 @@ A separate local research checkout includes an exploratory candidate study. A ha
 
 The 30+10 quota had the highest validation nDCG@10 among the 40-candidate quotas. The budgets count candidates. Measuring serving cost requires actual token counts and latency. This is an offline study on the public dev-small split. The full local results are in `results/msmarco_full/relevance/dev_v067/ce_candidate_ablation/quota_experiment/quota_ablation_results.json`.
 
+The archived [candidate-contribution analysis](artifacts/evaluations/candidate-contribution/README.md) recomputes category counts and paired metric deltas for RRF + Cross-Encoder versus Dense + Cross-Encoder across all 6,980 queries.
+
 ### C++ BM25 Concurrency
 
 The C++ core uses an inverted index for BM25 and exposes it to Python through pybind11. Historical records identify v0.7.9 as the default serving extension. v0.8.0 and v0.8.1 were isolated experimental builds. The v0.8.1 configuration releases the Python GIL during search and provides four reusable workspaces.
@@ -246,7 +248,7 @@ At concurrency 16, with 500 requests per concurrency level against `/search/hybr
 
 In a closed-loop test, clients send the next request after a response. The open-loop test schedules Poisson arrivals with a fixed seed. The frozen-candidate endpoints bypass live retrieval, so the pilot reflects the model, batch configuration, and offered load of that run. To assess capacity, read the generated arrival rate, in-window completions, HTTP and scheduled latency, dispatch lag, backlog, and drain together. A historical live-route parity check matched the Top-10 order for all 10 queries. Frozen-candidate tests and current regression tests use separate protocols. [Historical closed-loop benchmark](backend/scripts/benchmark_dynamic_batch_v075.py) · [Frozen-candidate closed-loop benchmark](backend/scripts/benchmark_frozen_http.py) · [Open-loop benchmark](backend/scripts/benchmark_open_loop_duration.py) · [Real-input model profile](backend/scripts/profile_real_cross_encoder_v077.py)
 
-Local evidence includes `results/msmarco_full/latency/api_v076/config_B_formal_1000/summary.json` and `reports/performance/cross_encoder/open_loop_batch_id/{pair,token32}_10rps_pilot.json`. Earlier pair/token sweeps, capacity tests, and MPS profiles are in `reports/performance/cross_encoder/`.
+The [batch-accounting archive](artifacts/evaluations/batch-accounting-pilot/README.md) reproduces inference metrics for the two 10 RPS pilot reports from their retained batch observations. Local evidence includes `results/msmarco_full/latency/api_v076/config_B_formal_1000/summary.json` and `reports/performance/cross_encoder/open_loop_batch_id/{pair,token32}_10rps_pilot.json`. Earlier pair/token sweeps, capacity tests, and MPS profiles are in `reports/performance/cross_encoder/`.
 
 <a id="reproduction"></a>
 ## Reproduction

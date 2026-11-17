@@ -73,6 +73,8 @@ def main():
                 raise ValueError("Invalid category, split, or duplicate query ID")
             ids.add(row["query_id"])
             splits[row["split"]].append(row)
+    if len(ids) != source["query_count"]:
+        raise ValueError("Query count differs from the source manifest")
     actual = {name: analyze(rows) for name, rows in splits.items()}
     if args.check:
         expected = json.loads((ARTIFACTS / "expected.json").read_text())
