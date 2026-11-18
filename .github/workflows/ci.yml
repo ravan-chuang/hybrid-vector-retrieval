@@ -26,6 +26,22 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  portable-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and start the portable demo
+        run: docker compose -f deployment/demo/compose.yaml --project-name hybrid-demo-verification up --build --wait --wait-timeout 300
+      - name: Verify search and persistence after container recreation
+        run: python3 deployment/demo/verify.py
+      - name: Collect demo logs on failure
+        if: failure()
+        run: docker compose -f deployment/demo/compose.yaml --project-name hybrid-demo-verification logs
+      - name: Remove the verification stack
+        if: always()
+        run: docker compose -f deployment/demo/compose.yaml --project-name hybrid-demo-verification down --volumes
+
   backend:
     runs-on: ubuntu-latest
     timeout-minutes: 25
