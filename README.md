@@ -232,6 +232,8 @@ The 30+10 quota had the highest validation nDCG@10 among the 40-candidate quotas
 
 The archived [candidate-contribution analysis](artifacts/evaluations/candidate-contribution/README.md) recomputes category counts and paired metric deltas for RRF + Cross-Encoder versus Dense + Cross-Encoder across all 6,980 queries.
 
+The [candidate coverage and CE budget archive](artifacts/evaluations/candidate-coverage/README.md) reproduces first-stage recall and the Dense + CE and RRF + CE budget sweep at 10, 20, 30, 40 and 50 candidates. It documents the RRF settings for each analysis.
+
 ### C++ BM25 Concurrency
 
 The C++ core uses an inverted index for BM25 and exposes it to Python through pybind11. Historical records identify v0.7.9 as the default serving extension. v0.8.0 and v0.8.1 were isolated experimental builds. The v0.8.1 configuration releases the Python GIL during search and provides four reusable workspaces.
