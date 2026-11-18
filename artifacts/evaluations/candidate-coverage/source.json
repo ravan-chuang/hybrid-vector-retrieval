@@ -1,0 +1,81 @@
+{
+  "query_count": 6980,
+  "manifest_sha256": "e4809fe62414882bbba2a435d1adcff7ab8227507bb7c2e56aa417084a1c7e0d",
+  "observations_sha256": "2d0c628584b19c89eb6e1c14c2839f3283afd2034d4682330d4a270bd9b8e945",
+  "sources": {
+    "manifest": {
+      "path": "artifacts/msmarco_full/dev_small_manifest.json",
+      "sha256": "e4809fe62414882bbba2a435d1adcff7ab8227507bb7c2e56aa417084a1c7e0d"
+    },
+    "dense_cache": {
+      "path": "results/msmarco_full/relevance/dev_v067/ce_candidates_dev.json",
+      "sha256": "4d349bee3c88b45906ee1ef098f5bb3042af9076bf89b9917b3fdf582dbab7aa"
+    },
+    "coverage": {
+      "path": "results/msmarco_full/relevance/candidate_coverage/dev_top50.json",
+      "sha256": "9944eee5ee67d729018792878a8300316009c80b1b402053d9dd05e0f10ff181"
+    },
+    "ablation": {
+      "path": "results/msmarco_full/relevance/dev_v067/ce_candidate_ablation/results_6980q.json",
+      "sha256": "6cca0750959fa64ac09d6314e87b73d5e27dbae935474505c95211cf9fae73ea"
+    },
+    "budget_sweep": {
+      "path": "results/msmarco_full/relevance/dev_v067/ce_candidate_ablation/ce_budget_sweep.json",
+      "sha256": "c83dc1bed1559a4e92ed148c422308b6e04c3e961faf423576c3c99aeba2f384"
+    }
+  },
+  "coverage_protocol": {
+    "dataset": "msmarco_dev_small",
+    "query_count": 6980,
+    "candidate_k": 50,
+    "rrf_k": 60,
+    "bm25_weight": 0.1,
+    "dense_weight": 0.9,
+    "dense_cache_protocol": {
+      "dataset": "msmarco_dev_small",
+      "queries": 6980,
+      "candidate_k": 50,
+      "requested_ef_search": 160,
+      "effective_ef_search": 160,
+      "query_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "normalized_embeddings": true,
+      "document_id_mapping": "msmarco_pid_plus_1"
+    }
+  },
+  "budget_protocol": {
+    "name": "fixed-depth-ce-budget-sweep",
+    "retrieval_depth": 50,
+    "budgets": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "bm25_weight": 0.4,
+    "dense_weight": 0.6,
+    "rrf_k": 60
+  },
+  "ablation_protocol": {
+    "name": "ce-candidate-ablation-v1",
+    "dataset": "msmarco_dev_small",
+    "query_count": 6980,
+    "candidate_k": 50,
+    "bm25_weight": 0.4,
+    "dense_weight": 0.6,
+    "rrf_k": 60,
+    "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "ce_batch_size": 64,
+    "dense_cache_protocol": {
+      "dataset": "msmarco_dev_small",
+      "queries": 6980,
+      "candidate_k": 50,
+      "requested_ef_search": 160,
+      "effective_ef_search": 160,
+      "query_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "normalized_embeddings": true,
+      "document_id_mapping": "msmarco_pid_plus_1"
+    },
+    "split": "sha256_query_id_50_50"
+  }
+}
