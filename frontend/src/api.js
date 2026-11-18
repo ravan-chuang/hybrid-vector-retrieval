@@ -53,6 +53,7 @@ export const api = {
     query,
     topK = 10,
     corpus = 'benchmark',
+    lexicalBackend = 'postgresql_fts',
   ) =>
     request(
       corpus === 'benchmark'
@@ -64,6 +65,7 @@ export const api = {
           corpus,
           query,
           top_k: topK,
+          ...(corpus === 'application' && { lexical_backend: lexicalBackend }),
         }),
       },
     ),

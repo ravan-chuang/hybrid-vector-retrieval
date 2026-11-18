@@ -171,6 +171,17 @@ def vector_search(request: VectorSearchRequest):
     tags=["Search"],
 )
 def lexical_search(request: LexicalSearchRequest):
+    application_bm25 = None
+    if request.lexical_backend == "cpp_bm25":
+        if request.corpus != "application":
+            raise HTTPException(
+                status_code=422,
+                detail="Use /search/cpp/lexical for benchmark BM25.",
+            )
+        application_bm25 = runtime.get_application_bm25()
+        if application_bm25 is None:
+            raise HTTPException(status_code=503, detail="Application BM25 is not ready.")
+
     db_pool = runtime.get_db_pool()
 
     if db_pool is None:
@@ -186,7 +197,11 @@ def lexical_search(request: LexicalSearchRequest):
         with db_pool.connection() as conn:
             with conn.cursor() as cur:
                 if request.corpus == "application":
-                    rows = application_lexical_search(
+                    search = (
+                        application_bm25.search if application_bm25 is not None
+                        else application_lexical_search
+                    )
+                    rows = search(
                         cur,
                         query=request.query,
                         limit=request.top_k,
@@ -262,7 +277,7 @@ def lexical_search(request: LexicalSearchRequest):
 
     return LexicalSearchResponse(
         query=request.query,
-        method="postgresql_fts_gin",
+        method="cpp_bm25" if application_bm25 is not None else "postgresql_fts_gin",
         top_k=request.top_k,
         retrieval_ms=round(retrieval_ms, 3),
         total_ms=round(total_ms, 3),

@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
+import numpy as np
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
@@ -14,6 +15,7 @@ from psycopg_pool import ConnectionPool
 
 from backend.api import runtime
 from backend.api.main import app
+from backend.api.services.application_bm25 import ApplicationBM25
 
 
 DATABASE_URL = os.getenv("REGRESSION_DATABASE_URL")
@@ -145,3 +147,62 @@ def test_cpp_lexical_search_persists_keyword_history(postgres_app, monkeypatch):
     finally:
         with psycopg.connect(DATABASE_URL) as conn:
             conn.execute("DELETE FROM search_history WHERE query_text = %s", (query,))
+
+
+def test_application_bm25_refreshes_after_document_changes(postgres_app, monkeypatch):
+    from backend import retrieval_cpp
+
+    class EmbeddingModel:
+        def encode(self, *_args, **_kwargs):
+            return np.ones(384)
+
+    client, _ = postgres_app
+    monkeypatch.setattr(runtime, "get_model", EmbeddingModel)
+    monkeypatch.setattr(runtime, "application_bm25", ApplicationBM25(retrieval_cpp.SearchEngine))
+    old_term = f"orchidledger{uuid4().hex}"
+    new_term = f"updatedledger{uuid4().hex}"
+    documents = []
+
+    def search(query, **options):
+        response = client.post("/search/lexical", json={
+            "corpus": "application", "lexical_backend": "cpp_bm25",
+            "query": query, "top_k": 2, **options,
+        })
+        assert response.status_code == 200, response.text
+        return response.json()
+
+    def create(content):
+        response = client.post("/documents", json={"title": "BM25 test", "content": content})
+        assert response.status_code == 201, response.text
+        doc_id = response.json()["document_id"]
+        documents.append(doc_id)
+        return doc_id
+
+    try:
+        assert search(old_term)["results"] == []
+        first = create(old_term)
+        second = create(f"Additional background words {old_term}")
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute(
+                "INSERT INTO document_chunks (document_id, chunk_index, content) VALUES (%s, 1, %s)",
+                (first, old_term),
+            )
+        found = search(old_term)
+        assert found["method"] == "cpp_bm25"
+        assert [hit["document_id"] for hit in found["results"]] == [first, second]
+
+        assert client.put(f"/documents/{second}", json={"content": new_term}).status_code == 200
+        assert [hit["document_id"] for hit in search(old_term)["results"]] == [first]
+        assert [(hit["external_id"], hit["content"]) for hit in search(new_term)["results"]] == [
+            (f"app-{second}", new_term),
+        ]
+        assert search(new_term, lexical_backend="postgresql_fts")["method"] == "postgresql_fts_gin"
+
+        monkeypatch.setattr(runtime, "application_bm25", ApplicationBM25(retrieval_cpp.SearchEngine))
+        assert [hit["document_id"] for hit in search(new_term)["results"]] == [second]
+        assert client.delete(f"/documents/{second}").status_code == 200
+        assert search(new_term)["results"] == []
+    finally:
+        with psycopg.connect(DATABASE_URL) as conn:
+            conn.execute("DELETE FROM documents WHERE document_id = ANY(%s)", (documents,))
+            conn.execute("DELETE FROM search_history WHERE query_text = ANY(%s)", ([old_term, new_term],))

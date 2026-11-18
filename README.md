@@ -141,7 +141,7 @@ The ERD summarizes the application tables. See the schema SQL for `document_chun
 | Method and route | Purpose |
 | --- | --- |
 | `GET /health`, `GET /stats` | Check database connectivity and view benchmark table and index statistics. |
-| `POST /search/vector`, `POST /search/lexical` | Run HNSW vector search or PostgreSQL full-text search. |
+| `POST /search/vector`, `POST /search/lexical` | Run HNSW vector search, PostgreSQL full-text search, or managed-document C++ BM25. |
 | `POST /search/cpp`, `POST /search/cpp/lexical` | Return C++ BM25 IDs and scores, or results with passage text fetched from PostgreSQL. |
 | `POST /search/hybrid` | Fuse lexical and dense candidate rankings with weighted RRF. |
 | `POST /search/rerank`, `POST /search/rerank/batched` | Rerank the candidate union using per-request or cross-request batched inference. |
@@ -151,7 +151,8 @@ The ERD summarizes the application tables. See the schema SQL for `document_chun
 | `GET /documents/{document_id}/tags`, `POST /documents/{document_id}/tags` | List or attach document tags. |
 | `DELETE /documents/{document_id}/tags/{tag_id}` | Detach a tag from a document. |
 
-- Search defaults to the `benchmark` corpus. For the small demo, send `"corpus":"application"` and use PostgreSQL FTS for the lexical branch. C++ BM25 in the hybrid and reranking endpoints is supported for the benchmark corpus.
+- Search defaults to the `benchmark` corpus. For the small demo, choose **Application · Managed Documents → Lexical → Lexical engine** to switch between PostgreSQL FTS and C++ BM25. The equivalent API option is `"lexical_backend":"cpp_bm25"` on `POST /search/lexical` with `"corpus":"application"`. PostgreSQL FTS is the default. Application Hybrid and Rerank use PostgreSQL FTS for their lexical branch.
+- Managed-document BM25 reads the committed chunks during each request. It rebuilds its in-memory index when the chunks change, returns the highest-scoring chunk for each document, and reconstructs the index on the first search after restart. This approach is intended for the small application corpus. Benchmark BM25 uses its own binary corpus and routes.
 - Use `postgresql_fts` with `/search/hybrid` and `postgres_fts` with both reranking endpoints. Hybrid search and reranking require `candidate_k >= top_k`. Hybrid weights must sum to 1. Responses report the HNSW search breadth in `effective_ef_search`. [Request models](backend/api/schemas/search.py)
 - `/internal/benchmark/candidates` exports benchmark candidates from a loopback connection. The two frozen-candidate endpoints, `/internal/benchmark/rerank` and `/internal/benchmark/rerank/batched`, also require `ENABLE_FROZEN_BENCHMARK=1`. [Frozen-candidate API](backend/api/routers/benchmark_rerank.py)
 
