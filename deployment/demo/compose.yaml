@@ -1,0 +1,61 @@
+name: hybrid-retrieval-demo
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: retrieval_db
+      POSTGRES_USER: retrieval
+      POSTGRES_PASSWORD: local-demo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../database/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ../../database/13_msmarco_full.sql:/docker-entrypoint-initdb.d/13_msmarco_full.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "retrieval", "-d", "retrieval_db"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/demo/Dockerfile
+      target: api
+    environment:
+      DATABASE_URL: postgresql://retrieval:local-demo@postgres:5432/retrieval_db
+      CPP_CORPUS_PATH: /app/demo.bin
+      CROSS_ENCODER_DEVICE: cpu
+      OMP_NUM_THREADS: "2"
+      HF_HOME: /models
+    volumes:
+      - model_cache:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+      interval: 5s
+      timeout: 4s
+      start_period: 90s
+      retries: 24
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deployment/demo/Dockerfile
+      target: web
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-5176}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/health"]
+      interval: 3s
+      timeout: 4s
+      retries: 12
+
+volumes:
+  postgres_data:
+  model_cache:

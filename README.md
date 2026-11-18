@@ -23,6 +23,16 @@ An information retrieval prototype built with **PostgreSQL 17, pgvector, C++ BM2
 
 Use this setup to try document CRUD, tags, and lexical, dense, or hybrid search on application documents. It starts the API with a small BM25 corpus. To build the full MS MARCO corpus, embeddings, and indexes, see [Reproduction](#reproduction).
 
+### Portable local demo
+
+From the repository root, start a demo with Docker Compose and open the dashboard on port 5176. The first run downloads dependencies and model weights. [Portable demo instructions](deployment/demo/README.md)
+
+```bash
+docker compose -f deployment/demo/compose.yaml up --build --wait --wait-timeout 300
+```
+
+### Local development
+
 **Prerequisites** — Docker Compose, Python 3.13 (the version verified locally), CMake 3.20+, a C++20 compiler, and Node.js 22.12+. The first model load requires access to the model source or an existing local cache.
 
 ### 1. Start PostgreSQL and create the tables
