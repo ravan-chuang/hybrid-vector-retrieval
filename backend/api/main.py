@@ -8,6 +8,7 @@ from sentence_transformers import SentenceTransformer
 from backend.api import runtime
 from backend.api.config import MODEL_NAME
 from backend.api.database import create_connection_pool
+from backend.api.services.application_bm25 import ApplicationBM25
 from backend.api.services.cpp_retrieval import load_cpp_engine
 from backend.api.services.dynamic_batch import (
     shutdown_dynamic_batch_reranker,
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):
 
     cpp_engine = load_cpp_engine()
     runtime.set_cpp_engine(cpp_engine)
+    runtime.set_application_bm25(ApplicationBM25(type(cpp_engine)))
 
     print("C++ BM25 engine ready.")
 
@@ -50,6 +52,7 @@ async def lifespan(app: FastAPI):
     shutdown_dynamic_batch_reranker()
 
     runtime.set_cpp_engine(None)
+    runtime.set_application_bm25(None)
 
     db_pool.close()
     runtime.set_db_pool(None)

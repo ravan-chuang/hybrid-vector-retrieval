@@ -69,6 +69,10 @@ class LexicalSearchRequest(BaseModel):
         le=100,
         description="Number of results to return",
     )
+    lexical_backend: LexicalBackend = Field(
+        default="postgresql_fts",
+        description="Use cpp_bm25 for the managed-document corpus. For benchmark BM25, use /search/cpp/lexical.",
+    )
 
 
 class LexicalSearchResult(BaseModel):

@@ -83,6 +83,29 @@ test('changing search settings ignores responses from the previous selection', a
     await act(async () => requests[3].resolve(successful('Obsolete dense-weighted result')))
     assert.match(document.querySelector('.results-panel').textContent, /Current balanced result/)
     assert.doesNotMatch(document.body.textContent, /Obsolete dense-weighted result/)
+
+    await act(async () => button('Lexical').click())
+    const lexicalEngine = document.querySelector('#lexical-backend')
+    assert.equal(lexicalEngine.value, 'postgresql_fts')
+    await act(async () => search())
+    await act(async () => {
+      lexicalEngine.value = 'cpp_bm25'
+      lexicalEngine.dispatchEvent(new window.Event('change', { bubbles: true }))
+    })
+    await act(async () => search())
+    const [fts, bm25] = requests.slice(-2)
+    assert.equal(fts.body.lexical_backend, 'postgresql_fts')
+    assert.equal(bm25.path, '/search/lexical')
+    assert.equal(bm25.body.lexical_backend, 'cpp_bm25')
+
+    await act(async () => bm25.resolve(Response.json({
+      query: 'Manhattan Project',
+      method: 'cpp_bm25',
+      results: [{ document_id: 1, content: 'Current BM25 result', score: 1.25 }],
+    })))
+    await act(async () => fts.resolve(successful('Obsolete FTS result')))
+    assert.match(document.querySelector('.results-panel').textContent, /BM25 1.2500/)
+    assert.doesNotMatch(document.body.textContent, /Obsolete FTS result/)
   } finally {
     await act(async () => root.unmount())
     await vite.close()

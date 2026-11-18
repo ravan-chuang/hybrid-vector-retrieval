@@ -39,6 +39,7 @@ function App() {
   const [history, setHistory] = useState([])
   const [method, setMethod] = useState('hybrid')
   const [selectedCorpus, setCorpus] = useState(null)
+  const [lexicalBackend, setLexicalBackend] = useState('postgresql_fts')
   const [fusionStrategy, setFusionStrategy] = useState('dense')
   const [query, setQuery] = useState('Manhattan Project')
   const [result, setResult] = useState(null)
@@ -99,7 +100,7 @@ function App() {
       } else if (method === 'rerank') {
         data = await api.rerankSearch(cleanQuery, 10, 50, 160, corpus)
       } else if (method === 'lexical') {
-        data = await api.lexicalSearch(cleanQuery, 10, corpus)
+        data = await api.lexicalSearch(cleanQuery, 10, corpus, lexicalBackend)
       } else {
         const lexicalWeight = fusionStrategy === 'dense' ? 0.1 : 0.5
         const denseWeight = fusionStrategy === 'dense' ? 0.9 : 0.5
@@ -267,6 +268,23 @@ function App() {
             </select>
           </div>
 
+          {method === 'lexical' && corpus === 'application' && (
+            <div className="corpus-selector">
+              <label htmlFor="lexical-backend">Lexical engine</label>
+              <select
+                id="lexical-backend"
+                value={lexicalBackend}
+                onChange={(event) => {
+                  setLexicalBackend(event.target.value)
+                  resetSearch()
+                }}
+              >
+                <option value="postgresql_fts">PostgreSQL FTS</option>
+                <option value="cpp_bm25">C++ BM25</option>
+              </select>
+            </div>
+          )}
+
           {method === 'hybrid' && (
             <div className="fusion-selector">
               <label htmlFor="fusion-strategy">Fusion Strategy</label>
@@ -318,7 +336,9 @@ function App() {
             {method === 'lexical' &&
               (corpus === 'benchmark'
                 ? 'C++ BM25 retrieval + PostgreSQL document metadata'
-                : 'PostgreSQL websearch_to_tsquery + GIN full-text index')}
+                : lexicalBackend === 'cpp_bm25'
+                  ? 'C++ BM25 over managed document chunks'
+                  : 'PostgreSQL websearch_to_tsquery + GIN full-text index')}
           </div>
         </section>
 
@@ -355,9 +375,7 @@ function App() {
                   label="RETRIEVAL"
                   value={formatMs(result.retrieval_ms)}
                   detail={
-                    method === 'lexical' && corpus === 'benchmark'
-                      ? 'C++ BM25 + metadata'
-                      : 'database search'
+                    result.method === 'cpp_bm25' ? 'C++ BM25 retrieval' : 'database search'
                   }
                 />
               )}

@@ -1,6 +1,8 @@
 from psycopg_pool import ConnectionPool
 from sentence_transformers import SentenceTransformer
 
+from backend.api.services.application_bm25 import ApplicationBM25
+
 
 model: SentenceTransformer | None = None
 db_pool: ConnectionPool | None = None
@@ -27,6 +29,7 @@ def get_db_pool() -> ConnectionPool | None:
 
 # C++ BM25 retrieval engine
 cpp_engine = None
+application_bm25: ApplicationBM25 | None = None
 
 
 def set_cpp_engine(value) -> None:
@@ -36,3 +39,12 @@ def set_cpp_engine(value) -> None:
 
 def get_cpp_engine():
     return cpp_engine
+
+
+def set_application_bm25(value: ApplicationBM25 | None) -> None:
+    global application_bm25
+    application_bm25 = value
+
+
+def get_application_bm25() -> ApplicationBM25 | None:
+    return application_bm25
