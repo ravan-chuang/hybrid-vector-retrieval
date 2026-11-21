@@ -102,6 +102,10 @@ jobs:
         run: python -m backend.scripts.reproduce_candidate_contribution --check
       - name: Reproduce historical candidate coverage and budget sweep
         run: python -m backend.scripts.reproduce_candidate_coverage --check
+      - name: Reproduce four-pipeline dev-small relevance inference
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python -m backend.scripts.reproduce_dev_small_bootstrap --check
       - name: Verify the document and search lifecycle
         run: |
           python - <<'PY'

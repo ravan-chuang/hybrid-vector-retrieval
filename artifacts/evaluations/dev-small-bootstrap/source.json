@@ -1,0 +1,56 @@
+{
+  "dataset": "MS MARCO Passage dev-small",
+  "query_count": 6980,
+  "methods": [
+    "bm25",
+    "dense",
+    "rrf",
+    "hybrid_ce"
+  ],
+  "manifest_sha256": "e4809fe62414882bbba2a435d1adcff7ab8227507bb7c2e56aa417084a1c7e0d",
+  "hit_ranks_sha256": "682e6ac11c573a2d7f9c50924eb3b7cdfe54c91380d7926ef072a3d3b05570db",
+  "raw_sources": {
+    "manifest": {
+      "path": "artifacts/msmarco_full/dev_small_manifest.json",
+      "sha256": "e4809fe62414882bbba2a435d1adcff7ab8227507bb7c2e56aa417084a1c7e0d"
+    },
+    "queries": {
+      "path": "data/msmarco/dev/queries.dev.small.tsv",
+      "sha256": "f7668d11cb7cc1c58ed0cdc3d8e9838689452789bf703c44098320923d0c8373"
+    },
+    "qrels": {
+      "path": "data/msmarco/dev/qrels.dev.small.tsv",
+      "sha256": "ddc607dbe7b748d7168e8675a242f0811d47febaa2e69d3af09d7ab249c68d7e"
+    },
+    "bm25": {
+      "path": "results/msmarco_full/parity/v081/v080_top100_n6980.json",
+      "sha256": "4030d901f850d64d829f5833a22c0128975f74db865725fb68448b4dc70a002b"
+    },
+    "bm25_parity": {
+      "path": "results/msmarco_full/parity/v081/v081_top100_n6980.json",
+      "sha256": "a0c38b172a27d511dfb04024cd9b86232646cce4c84b2f727daf29eca767677e"
+    },
+    "dense": {
+      "path": "results/msmarco_full/ann_dev_6980/ann_benchmark_6980q.json",
+      "sha256": "a60601eaa0c784be35ee9d129650145c5ad610c51dd3803b2c185dbf3c54ca53"
+    },
+    "pipeline": {
+      "path": "results/msmarco_full/relevance/dev_v067/cpp_ce/results_dev_6980q.json",
+      "sha256": "015697b0a6ec89aaffc3fa4cf981bd674f95f1b44d0d6bcc5fa3a29c8cb95ea6"
+    }
+  },
+  "dense_ef_search": 160,
+  "rank_cutoff": 10,
+  "relevance": "binary qrels; database document ID = MS MARCO pid + 1",
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 42,
+    "query_order": "lexicographic"
+  },
+  "permutation": {
+    "resamples": 10000,
+    "seed": 42,
+    "query_order": "numeric",
+    "holm_family": "all_18"
+  }
+}
