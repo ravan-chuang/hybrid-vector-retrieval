@@ -1,0 +1,261 @@
+{
+  "query_count": 6980,
+  "means": {
+    "bm25": {
+      "mrr_at_10": 0.17850314958839314,
+      "ndcg_at_10": 0.2224671201715942,
+      "recall_at_10": 0.37146609360076405
+    },
+    "dense": {
+      "mrr_at_10": 0.28895881657342976,
+      "ndcg_at_10": 0.3453447818590337,
+      "recall_at_10": 0.5361509073543457
+    },
+    "rrf": {
+      "mrr_at_10": 0.29082338427252463,
+      "ndcg_at_10": 0.34912385378432914,
+      "recall_at_10": 0.5454632282712513
+    },
+    "hybrid_ce": {
+      "mrr_at_10": 0.4011946832219039,
+      "ndcg_at_10": 0.46347295836406227,
+      "recall_at_10": 0.6740090735434576
+    }
+  },
+  "comparisons": [
+    {
+      "metric": "mrr_at_10",
+      "method_a": "bm25",
+      "method_b": "dense",
+      "delta": -0.11045566698503662,
+      "ci95": [
+        -0.11966169924273437,
+        -0.10126531160458452
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "mrr_at_10",
+      "method_a": "bm25",
+      "method_b": "rrf",
+      "delta": -0.11232023468413155,
+      "ci95": [
+        -0.12088139013962795,
+        -0.10383696047664528
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "mrr_at_10",
+      "method_a": "bm25",
+      "method_b": "hybrid_ce",
+      "delta": -0.2226915336335107,
+      "ci95": [
+        -0.23189182670441627,
+        -0.21377413500022743
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "mrr_at_10",
+      "method_a": "dense",
+      "method_b": "rrf",
+      "delta": -0.0018645676990949192,
+      "ci95": [
+        -0.005633426854504934,
+        0.0019027521944785547
+      ],
+      "extreme_permutations": 3289,
+      "permutation_p": 0.32896710328967105,
+      "holm_p": 0.32896710328967105
+    },
+    {
+      "metric": "mrr_at_10",
+      "method_a": "dense",
+      "method_b": "hybrid_ce",
+      "delta": -0.1122358666484741,
+      "ci95": [
+        -0.12018115818438169,
+        -0.10459368462045754
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "mrr_at_10",
+      "method_a": "rrf",
+      "method_b": "hybrid_ce",
+      "delta": -0.11037129894937918,
+      "ci95": [
+        -0.11826026885204893,
+        -0.10253666797425753
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "bm25",
+      "method_b": "dense",
+      "delta": -0.12287766168743952,
+      "ci95": [
+        -0.13223870300616122,
+        -0.11360738477403984
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "bm25",
+      "method_b": "rrf",
+      "delta": -0.1266567336127349,
+      "ci95": [
+        -0.13519817673797446,
+        -0.11807482421031612
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "bm25",
+      "method_b": "hybrid_ce",
+      "delta": -0.241005838192468,
+      "ci95": [
+        -0.24984494205533728,
+        -0.23249471534717833
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "dense",
+      "method_b": "rrf",
+      "delta": -0.0037790719252953847,
+      "ci95": [
+        -0.006888228482213279,
+        -0.0006421602966201496
+      ],
+      "extreme_permutations": 189,
+      "permutation_p": 0.018998100189981004,
+      "holm_p": 0.03799620037996201
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "dense",
+      "method_b": "hybrid_ce",
+      "delta": -0.11812817650502848,
+      "ci95": [
+        -0.12556950933973876,
+        -0.11091254476469498
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "ndcg_at_10",
+      "method_a": "rrf",
+      "method_b": "hybrid_ce",
+      "delta": -0.1143491045797331,
+      "ci95": [
+        -0.12152239411958463,
+        -0.10723411625441988
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "bm25",
+      "method_b": "dense",
+      "delta": -0.16468481375358165,
+      "ci95": [
+        -0.177865329512894,
+        -0.15150370105062083
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "bm25",
+      "method_b": "rrf",
+      "delta": -0.1739971346704871,
+      "ci95": [
+        -0.18682008118433618,
+        -0.16084049665711556
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "bm25",
+      "method_b": "hybrid_ce",
+      "delta": -0.3025429799426934,
+      "ci95": [
+        -0.3143636580706781,
+        -0.2908303486150907
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "dense",
+      "method_b": "rrf",
+      "delta": -0.009312320916905445,
+      "ci95": [
+        -0.013658070678127984,
+        -0.005062082139446037
+      ],
+      "extreme_permutations": 1,
+      "permutation_p": 0.00019998000199980003,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "dense",
+      "method_b": "hybrid_ce",
+      "delta": -0.13785816618911176,
+      "ci95": [
+        -0.14764834049665712,
+        -0.128056053008596
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    },
+    {
+      "metric": "recall_at_10",
+      "method_a": "rrf",
+      "method_b": "hybrid_ce",
+      "delta": -0.1285458452722063,
+      "ci95": [
+        -0.1381805157593123,
+        -0.11898280802292263
+      ],
+      "extreme_permutations": 0,
+      "permutation_p": 9.999000099990002e-05,
+      "holm_p": 0.0017998200179982003
+    }
+  ]
+}
