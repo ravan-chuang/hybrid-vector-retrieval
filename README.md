@@ -226,6 +226,8 @@ These historical runs used the same 6,980 queries. Candidate depths, component v
 | Dense + Cross-Encoder | 0.372126 | 0.428756 | 0.620690 |
 | **Hybrid Union + Cross-Encoder** | **0.401195** | **0.463473** | **0.674009** |
 
+The four-pipeline replay covers C++ BM25, Dense HNSW at `ef_search=160`, Weighted RRF, and Hybrid Union + Cross-Encoder. It recomputes all 18 pairwise metric comparisons with paired 95% bootstrap intervals and Holm-adjusted permutation p-values. Weighted RRF improved nDCG@10 over Dense by **0.003779** (95% CI **[0.000642, 0.006888]**, adjusted p = **0.0380**). Its MRR@10 difference was **0.001865** (95% CI **[−0.001903, 0.005633]**, adjusted p = **0.3290**). [Four-pipeline results and method](artifacts/evaluations/dev-small-bootstrap/README.md)
+
 In the historical full-corpus comparison, union reranking improved nDCG@10 over dense reranking by **+0.034717**, with a 95% paired CI of **[+0.030622, +0.038986]**. This interval captures the difference between the two complete pipelines. A separate frozen protocol with **500,000 passages and 500 held-out queries** used PostgreSQL FTS Top-50 and dense Top-50. It measured **0.66329** nDCG@10 for Dense + Cross-Encoder and **0.67883** for Union + Cross-Encoder, a paired difference of **+0.01554** with a 95% CI of **[+0.00697, +0.02533]**. The two studies used different corpus coverage and query selection. [Historical full-corpus results](frontend/src/components/FullCorpusEvaluation.jsx) · [Full-corpus paired analysis script](backend/scripts/evaluate_paired_bootstrap_dev.py) · [500-query protocol](artifacts/relevance/protocol_frozen.json) · [Reproduce the 500-query results](docs/evaluation/heldout-reranking.md)
 
 ### Cross-Encoder Candidate Budgets
@@ -293,6 +295,12 @@ CPP_CORPUS_PATH="$PWD/cpp/data/msmarco_full.bin" \
 Ingestion resumes from the maximum stored passage ID. Embedding resumes from the maximum ID with an embedding. If you have partially edited the data, check for missing IDs and unembedded rows. [Ingestion](backend/scripts/ingest_msmarco_full.py) · [Embedding](backend/scripts/embed_msmarco_full.py) · [Indexes](database/14_msmarco_full_indexes.sql) · [C++ corpus conversion](cpp/tools/convert_corpus.py)
 
 ### 2. Run Vector and Relevance Evaluations
+
+Recompute the archived four-pipeline ranking analysis from a clean checkout with NumPy 2.x installed. The replay runs without PostgreSQL, corpus files, or model weights.
+
+```bash
+python -m backend.scripts.reproduce_dev_small_bootstrap --check
+```
 
 The repository includes the [6,980-query dev-small manifest](artifacts/msmarco_full/dev_small_manifest.json). To rebuild it from the official files, put `queries.dev.small.tsv` and `qrels.dev.small.tsv` in `data/msmarco/dev/` and run [prepare_msmarco_dev.py](backend/scripts/prepare_msmarco_dev.py). Start with 10 queries to verify the configuration and query plans. In the original setup, the exact SQL path averaged about 12.8 seconds per query, or about 25 hours for the 6,980 exact searches alone.
 
