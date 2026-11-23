@@ -1,0 +1,242 @@
+{
+  "request_count": 3591,
+  "trials": {
+    "steady-1": {
+      "requests": 1482,
+      "successes": 1482,
+      "status_counts": {
+        "200": 1482
+      },
+      "scheduled_p95_ms": 1589.771,
+      "warmup_successes": 133,
+      "window_successes": 1482
+    },
+    "steady-2": {
+      "requests": 1461,
+      "successes": 1461,
+      "status_counts": {
+        "200": 1461
+      },
+      "scheduled_p95_ms": 1231.769,
+      "warmup_successes": 139,
+      "window_successes": 1460
+    },
+    "burst-24-1": {
+      "requests": 24,
+      "successes": 24,
+      "status_counts": {
+        "200": 24
+      },
+      "scheduled_p95_ms": 5895.326,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 24,
+      "last_response_ms": 5895.468
+    },
+    "burst-32-1": {
+      "requests": 32,
+      "successes": 32,
+      "status_counts": {
+        "200": 32
+      },
+      "scheduled_p95_ms": 7915.313,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 32,
+      "last_response_ms": 7915.605
+    },
+    "burst-40-1": {
+      "requests": 40,
+      "successes": 40,
+      "status_counts": {
+        "200": 40
+      },
+      "scheduled_p95_ms": 10001.078,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 37,
+      "last_response_ms": 10001.267
+    },
+    "burst-46-1": {
+      "requests": 46,
+      "successes": 37,
+      "status_counts": {
+        "200": 37,
+        "504": 9
+      },
+      "scheduled_p95_ms": 10042.05,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 37,
+      "last_response_ms": 10042.255
+    },
+    "burst-24-2": {
+      "requests": 24,
+      "successes": 24,
+      "status_counts": {
+        "200": 24
+      },
+      "scheduled_p95_ms": 5921.261,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 24,
+      "last_response_ms": 5921.462
+    },
+    "burst-32-2": {
+      "requests": 32,
+      "successes": 32,
+      "status_counts": {
+        "200": 32
+      },
+      "scheduled_p95_ms": 7537.408,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 32,
+      "last_response_ms": 7799.321
+    },
+    "burst-40-2": {
+      "requests": 40,
+      "successes": 35,
+      "status_counts": {
+        "200": 35,
+        "504": 5
+      },
+      "scheduled_p95_ms": 10043.785,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 35,
+      "last_response_ms": 10043.861
+    },
+    "burst-46-2": {
+      "requests": 46,
+      "successes": 34,
+      "status_counts": {
+        "504": 12,
+        "200": 34
+      },
+      "scheduled_p95_ms": 10044.958,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 34,
+      "last_response_ms": 10045.112
+    },
+    "paced-46-1": {
+      "requests": 46,
+      "successes": 46,
+      "status_counts": {
+        "200": 46
+      },
+      "scheduled_p95_ms": 1336.051,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 36,
+      "last_response_ms": 11661.478
+    },
+    "paced-46-2": {
+      "requests": 46,
+      "successes": 46,
+      "status_counts": {
+        "200": 46
+      },
+      "scheduled_p95_ms": 1123.167,
+      "warmup_successes": 0,
+      "successes_in_first_10s": 37,
+      "last_response_ms": 11476.666
+    }
+  },
+  "trace_audit": {
+    "by_trial": {
+      "steady-1": {
+        "history_rows": 1615,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "steady-2": {
+        "history_rows": 1600,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-24-1": {
+        "history_rows": 24,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-32-1": {
+        "history_rows": 32,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-40-1": {
+        "history_rows": 40,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-46-1": {
+        "history_rows": 37,
+        "new_inference_after_504": 0,
+        "failures": [
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_not_started",
+            "count": 5
+          },
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_running_at_gateway",
+            "count": 4
+          }
+        ]
+      },
+      "burst-24-2": {
+        "history_rows": 24,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-32-2": {
+        "history_rows": 32,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "burst-40-2": {
+        "history_rows": 35,
+        "new_inference_after_504": 0,
+        "failures": [
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_running_at_gateway",
+            "count": 4
+          },
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_not_started",
+            "count": 1
+          }
+        ]
+      },
+      "burst-46-2": {
+        "history_rows": 34,
+        "new_inference_after_504": 0,
+        "failures": [
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_not_started",
+            "count": 8
+          },
+          {
+            "status": "504",
+            "reason": "net/http: timeout awaiting response headers",
+            "state": "inference_running_at_gateway",
+            "count": 4
+          }
+        ]
+      },
+      "paced-46-1": {
+        "history_rows": 46,
+        "new_inference_after_504": 0,
+        "failures": []
+      },
+      "paced-46-2": {
+        "history_rows": 46,
+        "new_inference_after_504": 0,
+        "failures": []
+      }
+    },
+    "history_total": 3565
+  }
+}

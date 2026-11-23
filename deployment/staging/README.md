@@ -44,6 +44,8 @@ On macOS the sampler also records Mach host CPU ticks, compressed pages and cumu
 
 ## Replay staging acceptance traffic
 
+The [eight-thread Full Union profile](cpu8-full-union.md) documents the 600-second runs, repeated burst ladder, and paced replay. Its numerical archive can be checked on a clean checkout.
+
 Run the [live replay driver](benchmark_rerank.py) from a clean checkout. It replays the [fixed 120-query pool](rerank-query-pool.json) against the full MS MARCO database and the C++ lexical index. It validates the manifest digest, the returned Top-10, and each successful response's gateway request ID. The driver needs Python, the gateway's trusted CA certificate, and an owner-readable netrc file with a `machine` entry for the hostname. The output carries request IDs, rankings, and timings.
 
 Configure the target with the full corpus and index, four CPU inference threads, one API worker, pair batching, and history writes enabled to match the reference below. Set `STAGING_RERANK_TELEMETRY` on the API to capture resource and queue observations. Record the API revision, machine, and gateway configuration alongside the output.

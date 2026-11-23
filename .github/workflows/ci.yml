@@ -106,6 +106,8 @@ jobs:
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: python -m backend.scripts.reproduce_dev_small_bootstrap --check
+      - name: Reproduce CPU8 staging acceptance metrics
+        run: python -m backend.scripts.reproduce_cpu8_staging --check
       - name: Verify the document and search lifecycle
         run: |
           python - <<'PY'
