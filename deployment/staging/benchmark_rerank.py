@@ -135,12 +135,17 @@ def steady(args, payloads, send):
 
 def burst(args, payloads, send):
     start = time.perf_counter() + 0.5
+    group_size = args.burst_group_size or args.burst
+    interval = args.burst_interval or 0.0
+
+    def send_request(pair):
+        request_id, payload = pair
+        scheduled = start + (request_id // group_size) * interval
+        return send(args.gateway.rstrip("/"), ROUTES[args.route], payload,
+                    request_id, scheduled, start, args.timeout)
+
     with ThreadPoolExecutor(max_workers=args.burst) as executor:
-        records = list(executor.map(
-            lambda pair: send(args.gateway.rstrip("/"), ROUTES[args.route], pair[1],
-                              pair[0], start, start, args.timeout),
-            enumerate(payloads[:args.burst]),
-        ))
+        records = list(executor.map(send_request, enumerate(payloads[:args.burst])))
     return {
         "mode": "burst", "records": records,
         "summary": {
@@ -167,6 +172,8 @@ def main():
     parser.add_argument("--timeout", type=float, default=15)
     parser.add_argument("--seed", type=int, default=141025)
     parser.add_argument("--burst", type=int, metavar="REQUESTS")
+    parser.add_argument("--burst-group-size", type=int, metavar="REQUESTS", help="Release a burst in groups")
+    parser.add_argument("--burst-interval", type=float, metavar="SECONDS", help="Time between burst groups")
     args = parser.parse_args()
 
     origin = urlparse(args.gateway)
@@ -179,6 +186,11 @@ def main():
     pool, payloads = read_pool()
     if args.burst is not None and not 1 <= args.burst <= len(payloads):
         parser.error(f"--burst must be between 1 and {len(payloads)}")
+    if args.burst_group_size is not None or args.burst_interval is not None:
+        if (args.burst is None or args.burst_group_size is None or args.burst_interval is None
+                or not 1 <= args.burst_group_size <= args.burst
+                or not math.isfinite(args.burst_interval) or args.burst_interval <= 0):
+            parser.error("Pacing requires --burst, a valid --burst-group-size, and a positive --burst-interval")
     auth = netrc.netrc(args.netrc).hosts.get(origin.hostname)
     if not auth or not auth[0] or not auth[2]:
         parser.error("The netrc file needs a login and password for the gateway hostname")
@@ -195,6 +207,9 @@ def main():
     }
     if args.burst is not None:
         result["protocol"]["burst_requests"] = args.burst
+        if args.burst_group_size is not None:
+            result["protocol"].update(burst_group_size=args.burst_group_size,
+                                      burst_interval_seconds=args.burst_interval)
     else:
         result["protocol"].update(seed=args.seed, rate_rps=args.rate, warmup_seconds=args.warmup,
                                   measurement_seconds=args.seconds, max_workers=args.workers)

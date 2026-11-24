@@ -199,6 +199,8 @@ Each comparison has its own corpus, workload, and timing boundary. **ANN Recall@
 
 The [November full-corpus experiment index](docs/evaluation/README.md) records the API HNSW sweep, the Cross-Encoder candidate budget pilot, and the live open-loop rerank comparison.
 
+The [CPU8 Full Union staging replay](deployment/staging/cpu8-full-union.md) includes two ten-minute windows at a nominal 2.5 RPS and a repeated burst ladder. The scheduled-to-response P95 was **1.59 s** and **1.23 s**. Both 32-request bursts completed successfully. At 46 simultaneous requests the two runs returned 9 and 12 gateway timeouts.
+
 ### Full-Corpus ANN, Latency, and Relevance
 
 The benchmark retrieves the Top-10 for each of 6,980 dev-small queries over 8,841,823 passages. Timing starts when the SQL query is issued and ends when the client fetches the results. It includes the database round trip and excludes query encoding, HTTP, and reranking. The exact baseline disables index scans. The HNSW runs use the same index and vary `ef_search`.
